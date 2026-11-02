@@ -105,8 +105,8 @@ class YellowTelegram {
         $body = "";
 
         foreach ($paragraphs as $paragraph) {
-            $safeParagraph = htmlspecialchars($paragraph, ENT_QUOTES, "UTF-8");
-            $candidate = $body === "" ? $safeParagraph : $body."\n\n".$safeParagraph;
+
+            $candidate = $body === "" ? $paragraph : $body."\n\n".$paragraph;
             if ($this->telegramTextLength($candidate."\n\n".$link) > 4096) break;
             $body = $candidate;
         }
