@@ -18,7 +18,14 @@ return array(
 
 The bot must be an administrator in the channel with permission to publish messages. It no longer needs access to the linked discussion group, and no webhook or webhook secret is required.
 
-If you previously registered the discussion webhook, remove it once through the Telegram Bot API using `deleteWebhook` with `drop_pending_updates=true`. The current worker does not use or register a webhook.
+If you previously registered the discussion webhook, remove it once. In PowerShell, run:
+
+```powershell
+$token = Read-Host "Bot token"
+Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/deleteWebhook?drop_pending_updates=true"
+```
+
+The current worker does not use or register a webhook.
 
 ## Behaviour
 
