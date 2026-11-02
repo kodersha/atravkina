@@ -21,14 +21,14 @@ class YellowTelegram {
     // Handle Telegram webhook before normal page routing.
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         if (rtrim($location, "/") != $this->webhookPath) return 0;
-        if ($_SERVER["REQUEST_METHOD"] != "POST") return $this->webhookResponse(405, array("ok" => false));
+        if (!isset($_SERVER["REQUEST_METHOD"]) || $_SERVER["REQUEST_METHOD"] != "POST") return $this->webhookResponse(405, array("ok" => false));
         if (!is_file($this->configFile) || !is_readable($this->configFile)) return $this->webhookResponse(503, array("ok" => false));
         $config = include $this->configFile;
         $secret = is_array($config) && isset($config["webhook_secret"]) ? $config["webhook_secret"] : "";
         $provided = isset($_SERVER["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"]) ? $_SERVER["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"] : "";
         if (!is_string($secret) || strlen($secret) < 32 || !hash_equals($secret, $provided)) return $this->webhookResponse(403, array("ok" => false));
         $update = json_decode(file_get_contents("php://input"), true);
-        if (is_array($update)) $this->handleTelegramUpdate($update, $config);
+        if (is_array($update)) $this->handleTelegramUpdate($update, $config);\n        else $this->yellow->toolbox->log("error", "Telegram webhook: invalid JSON update");
         return $this->webhookResponse(200, array("ok" => true));
     }
 
@@ -71,36 +71,63 @@ class YellowTelegram {
         if (empty($update["message"]["is_automatic_forward"])) return;
         $message = $update["message"];
         $origin = isset($message["forward_origin"]) ? $message["forward_origin"] : array();
-        if (!isset($origin["type"]) || $origin["type"] != "channel" || empty($origin["message_id"]) || empty($origin["chat"]["username"])) return;
+        if (!isset($origin["type"]) || $origin["type"] != "channel" || empty($origin["message_id"]) || empty($origin["chat"]["username"])) {
+            $this->yellow->toolbox->log("info", "Telegram webhook: automatic forward has no usable channel origin");
+            return;
+        }
         if (empty($message["message_id"]) || empty($message["chat"]["id"])) return;
         $username = isset($config["channel_username"]) ? ltrim($config["channel_username"], "@") : (isset($config["channel"]) && substr($config["channel"], 0, 1) == "@" ? substr($config["channel"], 1) : "");
         if ($username == "" || strcasecmp($username, $origin["chat"]["username"]) != 0) return;
+        $this->yellow->toolbox->log("info", "Telegram webhook: received discussion forward for channel message ".$origin["message_id"].", discussion message ".$message["message_id"]);
+        $this->applyDiscussionUpdate($update, $config);
+    }
 
+    // Queue the update before matching it. Telegram may forward a post before
+    // sendMessage() has returned and the channel message ID has been persisted.
+    private function applyDiscussionUpdate($update, $config) {
+        $message = $update["message"];
+        $origin = $message["forward_origin"];
+        $pendingKey = intval($message["chat"]["id"]).":".intval($message["message_id"]);
+        $prefix = "<?php http_response_code(404); exit; ?>\\n";
         $handle = @fopen($this->stateFile, "c+");
-        if (!$handle || !flock($handle, LOCK_EX)) { if ($handle) fclose($handle); return; }
-        $prefix = "<?php http_response_code(404); exit; ?>\n";
+        if (!$handle || !flock($handle, LOCK_EX)) {
+            if ($handle) fclose($handle);
+            $this->yellow->toolbox->log("error", "Telegram webhook: cannot lock publication state");
+            return;
+        }
         rewind($handle);
         $raw = stream_get_contents($handle);
         if (strpos($raw, $prefix) === 0) $raw = substr($raw, strlen($prefix));
         $state = $raw ? json_decode($raw, true) : array();
         if (!is_array($state)) $state = array();
+        if (!isset($state["__pending_discussion_updates"]) || !is_array($state["__pending_discussion_updates"])) $state["__pending_discussion_updates"] = array();
+        $state["__pending_discussion_updates"][$pendingKey] = $update;
+
         $matchedKey = null;
         foreach ($state as $key => $item) {
+            if ($key === "__pending_discussion_updates" || !is_array($item)) continue;
             if (isset($item["status"], $item["channel_message_id"]) && $item["status"] == "sent" && intval($item["channel_message_id"]) == intval($origin["message_id"])) {
                 $matchedKey = $key;
                 break;
             }
         }
-        if ($matchedKey === null) { flock($handle, LOCK_UN); fclose($handle); return; }
-        $state[$matchedKey]["discussion_message_id"] = intval($message["message_id"]);
-        $state[$matchedKey]["discussion_chat_id"] = $message["chat"]["id"];
+        if ($matchedKey === null) {
+            $this->writeState($handle, $prefix, $state);
+            flock($handle, LOCK_UN);
+            fclose($handle);
+            $this->yellow->toolbox->log("info", "Telegram webhook: queued update; waiting for publication ID");
+            return;
+        }
+
         $postUrl = isset($state[$matchedKey]["post_url"]) ? $state[$matchedKey]["post_url"] : "";
         $channelMessageId = intval($state[$matchedKey]["channel_message_id"]);
+        $state[$matchedKey]["discussion_message_id"] = intval($message["message_id"]);
+        $state[$matchedKey]["discussion_chat_id"] = $message["chat"]["id"];
         $this->writeState($handle, $prefix, $state);
         flock($handle, LOCK_UN);
         fclose($handle);
 
-        $commentUrl = "https://t.me/".$username."/".$channelMessageId."?comment=".intval($message["message_id"]);
+        $commentUrl = "https://t.me/".ltrim($config["channel_username"], "@")."/".$channelMessageId."?comment=".intval($message["message_id"]);
         $keyboard = array("inline_keyboard" => array(array(
             array("text" => "Читать на сайте →", "url" => $postUrl),
             array("text" => "Комментировать", "url" => $commentUrl)
@@ -110,7 +137,51 @@ class YellowTelegram {
             "message_id" => $channelMessageId,
             "reply_markup" => json_encode($keyboard, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ));
-        if (!is_array($result) || empty($result["ok"])) $this->yellow->toolbox->log("error", "Telegram: cannot add discussion button to post ".$channelMessageId);
+        if (is_array($result) && !empty($result["ok"])) {
+            $this->removePendingDiscussionUpdate($pendingKey);
+            $this->yellow->toolbox->log("info", "Telegram webhook: comment button added to channel message ".$channelMessageId);
+        } else {
+            $this->yellow->toolbox->log("error", "Telegram webhook: comment button update failed; event retained for retry");
+        }
+    }
+
+    private function removePendingDiscussionUpdate($pendingKey) {
+        $prefix = "<?php http_response_code(404); exit; ?>\\n";
+        $handle = @fopen($this->stateFile, "c+");
+        if (!$handle || !flock($handle, LOCK_EX)) {
+            if ($handle) fclose($handle);
+            return;
+        }
+        rewind($handle);
+        $raw = stream_get_contents($handle);
+        if (strpos($raw, $prefix) === 0) $raw = substr($raw, strlen($prefix));
+        $state = $raw ? json_decode($raw, true) : array();
+        if (is_array($state) && isset($state["__pending_discussion_updates"][$pendingKey])) {
+            unset($state["__pending_discussion_updates"][$pendingKey]);
+            if (!$state["__pending_discussion_updates"]) unset($state["__pending_discussion_updates"]);
+            $this->writeState($handle, $prefix, $state);
+        }
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+
+    private function processPendingDiscussionUpdates($config) {
+        $prefix = "<?php http_response_code(404); exit; ?>\\n";
+        $handle = @fopen($this->stateFile, "c+");
+        if (!$handle || !flock($handle, LOCK_SH)) {
+            if ($handle) fclose($handle);
+            return;
+        }
+        rewind($handle);
+        $raw = stream_get_contents($handle);
+        if (strpos($raw, $prefix) === 0) $raw = substr($raw, strlen($prefix));
+        $state = $raw ? json_decode($raw, true) : array();
+        $pending = is_array($state) && isset($state["__pending_discussion_updates"]) && is_array($state["__pending_discussion_updates"]) ? $state["__pending_discussion_updates"] : array();
+        flock($handle, LOCK_UN);
+        fclose($handle);
+        foreach ($pending as $update) {
+            if (isset($update["message"]["forward_origin"]["type"]) && $update["message"]["forward_origin"]["type"] == "channel") $this->applyDiscussionUpdate($update, $config);
+        }
     }
 
     private function telegramApi($token, $method, $data) {
@@ -206,7 +277,10 @@ class YellowTelegram {
             fclose($handle);
         }
         if (!$sent) $this->yellow->toolbox->log("error", "Telegram: publication failed for ".$location);
-        else $this->yellow->toolbox->log("info", "Telegram: published ".$location);
+        else {
+            $this->yellow->toolbox->log("info", "Telegram: published ".$location);
+            $this->processPendingDiscussionUpdates($config);
+        }
     }
 
     private function buildMessage($content, $url) {
