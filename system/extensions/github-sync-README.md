@@ -40,10 +40,10 @@ The optional scope limits the scan to one directory tree.
 - `Branch`: existing target branch.
 - `Token`: fine-grained personal access token.
 - `AutoSync`: `1` enables automatic synchronization (default); `0` disables it.
-- `MaxFileSizeMB`: maximum file size per upload.
+- `MaxFileSizeMB`: maximum file size per upload (default configuration: 90 MB).
 
 ## State and deletion behavior
 
 The extension stores file fingerprints in `system/extensions/.yellow-github-sync-state.json`. Do not delete this file unless you intend to perform a fresh initial synchronization. Remote files are deleted only when they were previously tracked by this extension and are no longer present locally.
 
-GitHub Contents API creates one commit per changed or deleted file. GitHub API limits and request latency therefore depend on the number of changed files. Large files may exceed GitHub's Contents API limits.
+GitHub Contents API creates one commit per changed/deleted file. GitHub API limits and request latency therefore depend on the number of changed files. The configured size limit is 90 MB; files exceeding it are logged and skipped.
