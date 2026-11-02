@@ -121,8 +121,8 @@ class YellowTelegram {
     }
 
     private function extractFirstImageUrl($content, $postUrl) {
-        if (!preg_match("/<img\\b[^>]*?\\bsrc\\s*=\\s*([\\"'])(.*?)\\1/is", $content, $matches)) return "";
-        $src = html_entity_decode(trim($matches[2]), ENT_QUOTES, "UTF-8");
+        if (!preg_match('/<img\\b[^>]*?\\bsrc\\s*=\\s*"([^"]+)"/is', $content, $matches)) return "";
+        $src = html_entity_decode(trim($matches[1]), ENT_QUOTES, "UTF-8");
         if ($src === "" || preg_match('/^(data:|javascript:|mailto:)/i', $src)) return "";
 
         if (preg_match('/^https?:\\/\\//i', $src)) return $src;
