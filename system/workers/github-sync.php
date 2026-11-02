@@ -9,8 +9,10 @@ class YellowGithubSync {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $file = $yellow->system->get("coreExtensionDirectory")."yellow-github-sync.ini";
-        $this->settings = is_file($file) ? parse_ini_file($file, false, INI_SCANNER_RAW) : array();
-        if (!is_array($this->settings)) $this->settings = array();
+        $this->settings = $this->readSettings($file);
+        if (!$this->isConfigured()) {
+            $this->yellow->toolbox->log("error", "GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini");
+        }
         if ($this->autoSync()) $this->syncChanges();
     }
 
@@ -46,6 +48,21 @@ class YellowGithubSync {
 
     public function onEditMediaFile($file, $action, $email) {
         if ($this->autoSync()) $this->syncChanges("media");
+    }
+
+    private function readSettings($file) {
+        $settings = array();
+        if (!is_file($file) || !is_readable($file)) return $settings;
+        foreach (file($file, FILE_IGNORE_NEW_LINES) as $line) {
+            $line = trim($line);
+            if ($line=="" || $line[0]=="#" || $line[0]==";") continue;
+            $separator = strpos($line, ":");
+            if ($separator===false) continue;
+            $key = trim(substr($line, 0, $separator));
+            $value = trim(substr($line, $separator+1));
+            if ($key!="") $settings[$key] = $value;
+        }
+        return $settings;
     }
 
     private function syncChanges($scope = "all") {
