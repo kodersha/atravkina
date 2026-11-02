@@ -88,7 +88,7 @@ class YellowTelegram {
         $message = $update["message"];
         $origin = $message["forward_origin"];
         $pendingKey = intval($message["chat"]["id"]).":".intval($message["message_id"]);
-        $prefix = "<?php http_response_code(404); exit; ?>\\n";
+        $prefix = "<?php http_response_code(404); exit; ?>\n";
         $handle = @fopen($this->stateFile, "c+");
         if (!$handle || !flock($handle, LOCK_EX)) {
             if ($handle) fclose($handle);
@@ -147,7 +147,7 @@ class YellowTelegram {
     }
 
     private function removePendingDiscussionUpdate($pendingKey) {
-        $prefix = "<?php http_response_code(404); exit; ?>\\n";
+        $prefix = "<?php http_response_code(404); exit; ?>\n";
         $handle = @fopen($this->stateFile, "c+");
         if (!$handle || !flock($handle, LOCK_EX)) {
             if ($handle) fclose($handle);
@@ -167,7 +167,7 @@ class YellowTelegram {
     }
 
     private function processPendingDiscussionUpdates($config) {
-        $prefix = "<?php http_response_code(404); exit; ?>\\n";
+        $prefix = "<?php http_response_code(404); exit; ?>\n";
         $handle = @fopen($this->stateFile, "c+");
         if (!$handle || !flock($handle, LOCK_SH)) {
             if ($handle) fclose($handle);
@@ -377,7 +377,7 @@ class YellowTelegram {
             $options = array(
                 "http" => array(
                     "method" => "POST",
-                    "header" => "Content-Type: application/x-www-form-urlencoded\\r\\n",
+                    "header" => "Content-Type: application/x-www-form-urlencoded\\r\n",
                     "content" => http_build_query($data),
                     "timeout" => 8,
                     "ignore_errors" => true
