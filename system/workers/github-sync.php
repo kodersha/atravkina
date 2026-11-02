@@ -15,6 +15,10 @@ class YellowGithubSync {
 
     public function onCommand($command, $text) {
         if ($command!="github-sync") return 0;
+        if (!preg_match("/^[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+$/", $this->repository()) || is_string_empty($this->token())) {
+            echo "Yellow github-sync: Configure Repository and Token in yellow-github-sync.ini\n";
+            return 400;
+        }
         $args = preg_split("/\\s+/", trim($text));
         $mode = isset($args[0]) ? strtolower($args[0]) : "all";
         if ($mode=="" || $mode=="all") {
@@ -38,7 +42,7 @@ class YellowGithubSync {
 
     public function onEditContentFile($page, $action, $email) {
         if (!$this->autoSync() || !in_array($action, array("create", "edit", "restore")) || $page->isError()) return;
-        $file = $this->yellow->lookup->findFileFromContentLocation($page->location);
+        $file = $this->yellow->lookup->findFileFromContentLocation($page->getLocation());
         if (is_string($file) && is_file($file) && strtolower(pathinfo($file, PATHINFO_EXTENSION))=="md") {
             $this->syncFile($file, "content");
         }
@@ -46,8 +50,8 @@ class YellowGithubSync {
 
     public function onEditMediaFile($file, $action, $email) {
         if (!$this->autoSync() || !in_array($action, array("create", "edit", "restore")) || $file->isError()) return;
-        $path = $this->yellow->lookup->findFileFromMediaLocation($file->location);
-        if (is_string($path) && is_file($path) && in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), $this->mediaExtensions())) {
+        $path = $this->yellow->lookup->findFileFromMediaLocation($file->getLocation());
+        if (is_string($path) && is_file($path) && in_array(".".strtolower(pathinfo($path, PATHINFO_EXTENSION)), $this->mediaExtensions())) {
             $this->syncFile($path, "media");
         }
     }
@@ -145,11 +149,11 @@ class YellowGithubSync {
     }
 
     private function contentDirectory() {
-        return $this->yellow->system->get("coreContentDirectory");
+        return rtrim($this->yellow->system->get("coreServerInstallDirectory"), "/\\").DIRECTORY_SEPARATOR."content".DIRECTORY_SEPARATOR;
     }
 
     private function mediaDirectory() {
-        return $this->yellow->system->get("coreMediaDirectory");
+        return rtrim($this->yellow->system->get("coreServerInstallDirectory"), "/\\").DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR;
     }
 
     private function mediaExtensions() {
