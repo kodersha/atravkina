@@ -71,7 +71,7 @@ class YellowTelegram {
         fclose($handle);
 
         $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
-        $url = $page->getLocation(true);
+        $url = method_exists($page, "getUrl") ? $page->getUrl(true) : "";
         $message = $this->buildMessage($content, $url);
         $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url);
         $handle = @fopen($this->stateFile, "c+");
@@ -150,7 +150,13 @@ class YellowTelegram {
     }
 
     private function sendMessage($token, $channel, $message, $postUrl) {
-        $url = "https://api.telegram.org/bot".rawurlencode($token)."/sendMessage";
+        $apiUrl = "https://api.telegram.org/bot".rawurlencode($token)."/sendMessage";
+        if (!is_string($postUrl) || !filter_var($postUrl, FILTER_VALIDATE_URL) ||
+            !preg_match('/^https?:\\/\\//i', $postUrl)) {
+            $this->yellow->toolbox->log("error", "Telegram: invalid absolute post URL");
+            return false;
+        }
+
         $linkText = "Читать на сайте →";
         $linkOffset = strpos($message, $linkText);
         $entities = array();
@@ -168,8 +174,12 @@ class YellowTelegram {
             "entities" => json_encode($entities, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             "disable_web_page_preview" => false
         );
+
+        $response = false;
+        $status = 0;
+        $transportError = "";
         if (function_exists("curl_init")) {
-            $curl = curl_init($url);
+            $curl = curl_init($apiUrl);
             curl_setopt_array($curl, array(
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => http_build_query($data),
@@ -180,6 +190,7 @@ class YellowTelegram {
             ));
             $response = curl_exec($curl);
             $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            if ($response === false) $transportError = curl_error($curl);
             curl_close($curl);
         } else {
             $options = array(
@@ -191,11 +202,27 @@ class YellowTelegram {
                     "ignore_errors" => true
                 )
             );
-            $response = @file_get_contents($url, false, stream_context_create($options));
+            $response = @file_get_contents($apiUrl, false, stream_context_create($options));
             $status = isset($http_response_header[0]) && preg_match("/\\s(\\d{3})\\s/", $http_response_header[0], $matches) ? intval($matches[1]) : 0;
+            if ($response === false) $transportError = "HTTP request failed (allow_url_fopen or TLS/network configuration)";
         }
-        if ($response === false || $status < 200 || $status >= 300) return false;
-        $result = json_decode($response, true);
-        return is_array($result) && !empty($result["ok"]);
+
+        $result = is_string($response) ? json_decode($response, true) : null;
+        if ($response === false || $status < 200 || $status >= 300 || !is_array($result) || empty($result["ok"])) {
+            $details = "";
+            if (is_array($result)) {
+                $errorCode = isset($result["error_code"]) ? intval($result["error_code"]) : $status;
+                $description = isset($result["description"]) ? $result["description"] : "Telegram API rejected the request";
+                $description = str_replace($token, "[redacted]", $description);
+                $details = " (HTTP ".$status.", API ".$errorCode.": ".$description.")";
+            } elseif ($transportError !== "") {
+                $details = " (HTTP ".$status.", ".$transportError.")";
+            } else {
+                $details = " (HTTP ".$status.", invalid Telegram API response)";
+            }
+            $this->yellow->toolbox->log("error", "Telegram: sendMessage failed".$details);
+            return false;
+        }
+        return true;
     }
 }
