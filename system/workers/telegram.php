@@ -7,12 +7,127 @@ class YellowTelegram {
     private $directory;
     private $configFile;
     private $stateFile;
+    private $webhookPath = "/.well-known/telegram-webhook";
+    private $webhookUrl = "https://atravkina.ru/.well-known/telegram-webhook";
 
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->directory = $yellow->system->get("coreExtensionDirectory")."yellow-telegram/";
         $this->configFile = $this->directory."config.php";
         $this->stateFile = $this->directory."sent.php";
+    }
+
+
+    // Handle Telegram webhook before normal page routing.
+    public function onRequest($scheme, $address, $base, $location, $fileName) {
+        if (rtrim($location, "/") != $this->webhookPath) return 0;
+        if ($_SERVER["REQUEST_METHOD"] != "POST") return $this->webhookResponse(405, array("ok" => false));
+        if (!is_file($this->configFile) || !is_readable($this->configFile)) return $this->webhookResponse(503, array("ok" => false));
+        $config = include $this->configFile;
+        $secret = is_array($config) && isset($config["webhook_secret"]) ? $config["webhook_secret"] : "";
+        $provided = isset($_SERVER["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"]) ? $_SERVER["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"] : "";
+        if (!is_string($secret) || strlen($secret) < 32 || !hash_equals($secret, $provided)) return $this->webhookResponse(403, array("ok" => false));
+        $update = json_decode(file_get_contents("php://input"), true);
+        if (is_array($update)) $this->handleTelegramUpdate($update, $config);
+        return $this->webhookResponse(200, array("ok" => true));
+    }
+
+    public function onCommand($command, $text) {
+        if ($command != "telegram-webhook") return 0;
+        if (!is_file($this->configFile) || !is_readable($this->configFile)) return 400;
+        $config = include $this->configFile;
+        if (!is_array($config) || empty($config["bot_token"]) || empty($config["webhook_secret"]) || strlen($config["webhook_secret"]) < 32) {
+            echo "Telegram: configure bot_token and webhook_secret (at least 32 characters)\n";
+            return 400;
+        }
+        $result = $this->telegramApi($config["bot_token"], "setWebhook", array(
+            "url" => $this->webhookUrl,
+            "secret_token" => $config["webhook_secret"],
+            "allowed_updates" => json_encode(array("message")),
+            "drop_pending_updates" => false
+        ));
+        if (is_array($result) && !empty($result["ok"])) {
+            echo "Telegram webhook registered: ".$this->webhookUrl."\n";
+            return 200;
+        }
+        return 500;
+    }
+
+    public function onCommandHelp() {
+        return "telegram-webhook";
+    }
+
+    private function webhookResponse($status, $data) {
+        if (!headers_sent()) {
+            http_response_code($status);
+            header("Content-Type: application/json; charset=utf-8");
+            header("Cache-Control: no-store");
+        }
+        echo json_encode($data);
+        return $status;
+    }
+
+    private function handleTelegramUpdate($update, $config) {
+        if (empty($update["message"]["is_automatic_forward"])) return;
+        $message = $update["message"];
+        $origin = isset($message["forward_origin"]) ? $message["forward_origin"] : array();
+        if (!isset($origin["type"]) || $origin["type"] != "channel" || empty($origin["message_id"]) || empty($origin["chat"]["username"])) return;
+        if (empty($message["message_id"]) || empty($message["chat"]["id"])) return;
+        $username = isset($config["channel_username"]) ? ltrim($config["channel_username"], "@") : (isset($config["channel"]) && substr($config["channel"], 0, 1) == "@" ? substr($config["channel"], 1) : "");
+        if ($username == "" || strcasecmp($username, $origin["chat"]["username"]) != 0) return;
+
+        $handle = @fopen($this->stateFile, "c+");
+        if (!$handle || !flock($handle, LOCK_EX)) { if ($handle) fclose($handle); return; }
+        $prefix = "<?php http_response_code(404); exit; ?>\n";
+        rewind($handle);
+        $raw = stream_get_contents($handle);
+        if (strpos($raw, $prefix) === 0) $raw = substr($raw, strlen($prefix));
+        $state = $raw ? json_decode($raw, true) : array();
+        if (!is_array($state)) $state = array();
+        $matchedKey = null;
+        foreach ($state as $key => $item) {
+            if (isset($item["status"], $item["channel_message_id"]) && $item["status"] == "sent" && intval($item["channel_message_id"]) == intval($origin["message_id"])) {
+                $matchedKey = $key;
+                break;
+            }
+        }
+        if ($matchedKey === null) { flock($handle, LOCK_UN); fclose($handle); return; }
+        $state[$matchedKey]["discussion_message_id"] = intval($message["message_id"]);
+        $state[$matchedKey]["discussion_chat_id"] = $message["chat"]["id"];
+        $postUrl = isset($state[$matchedKey]["post_url"]) ? $state[$matchedKey]["post_url"] : "";
+        $channelMessageId = intval($state[$matchedKey]["channel_message_id"]);
+        $this->writeState($handle, $prefix, $state);
+        flock($handle, LOCK_UN);
+        fclose($handle);
+
+        $commentUrl = "https://t.me/".$username."/".$channelMessageId."?comment=".intval($message["message_id"]);
+        $keyboard = array("inline_keyboard" => array(array(
+            array("text" => "Читать на сайте →", "url" => $postUrl),
+            array("text" => "Комментировать", "url" => $commentUrl)
+        )));
+        $result = $this->telegramApi($config["bot_token"], "editMessageReplyMarkup", array(
+            "chat_id" => $config["channel"],
+            "message_id" => $channelMessageId,
+            "reply_markup" => json_encode($keyboard, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        ));
+        if (!is_array($result) || empty($result["ok"])) $this->yellow->toolbox->log("error", "Telegram: cannot add discussion button to post ".$channelMessageId);
+    }
+
+    private function telegramApi($token, $method, $data) {
+        $apiUrl = "https://api.telegram.org/bot".rawurlencode($token)."/".$method;
+        $curl = curl_init($apiUrl);
+        curl_setopt_array($curl, array(CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query($data), CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => true));
+        $response = curl_exec($curl);
+        $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = $response === false ? curl_error($curl) : "";
+        curl_close($curl);
+        $result = is_string($response) ? json_decode($response, true) : null;
+        if ($status < 200 || $status >= 300 || !is_array($result) || empty($result["ok"])) {
+            $description = is_array($result) && isset($result["description"]) ? str_replace($token, "[redacted]", $result["description"]) : $error;
+            $this->yellow->toolbox->log("error", "Telegram: ".$method." failed (HTTP ".$status."): ".$description);
+            return false;
+        }
+        return $result;
     }
 
     // Publish immediately after the editor has successfully saved a page.
@@ -81,8 +196,8 @@ class YellowTelegram {
             if (strpos($raw, $prefix) === 0) $raw = substr($raw, strlen($prefix));
             $state = $raw ? json_decode($raw, true) : array();
             if (!is_array($state)) $state = array();
-            if ($sent) {
-                $state[$key] = array("status" => "sent", "time" => time());
+            if ($sent !== false) {
+                $state[$key] = array("status" => "sent", "time" => time(), "channel_message_id" => intval($sent), "post_url" => $url);
             } else {
                 unset($state[$key]);
             }
@@ -109,17 +224,16 @@ class YellowTelegram {
             if ($plain !== "") $paragraphs[] = $plain;
         }
 
-        $link = "Читать на сайте →";
         $body = "";
 
         foreach ($paragraphs as $paragraph) {
 
             $candidate = $body === "" ? $paragraph : $body."\n\n".$paragraph;
-            if ($this->telegramTextLength($candidate."\n\n".$link) > 4096) break;
+            if ($this->telegramTextLength($candidate) > 4096) break;
             $body = $candidate;
         }
 
-        return ($body !== "" ? $body."\n\n" : "").$link;
+        return $body;
     }
 
     private function telegramTextLength($text) {
@@ -157,21 +271,13 @@ class YellowTelegram {
             return false;
         }
 
-        $linkText = "Читать на сайте →";
-        $linkOffset = strpos($message, $linkText);
-        $entities = array();
-        if ($linkOffset !== false) {
-            $entities[] = array(
-                "type" => "text_link",
-                "offset" => $this->telegramUtf16Length(substr($message, 0, $linkOffset)),
-                "length" => $this->telegramUtf16Length($linkText),
-                "url" => $postUrl
-            );
-        }
+        $keyboard = array("inline_keyboard" => array(array(
+            array("text" => "Читать на сайте →", "url" => $postUrl)
+        )));
         $data = array(
             "chat_id" => $channel,
             "text" => $message,
-            "entities" => json_encode($entities, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            "reply_markup" => json_encode($keyboard, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             "disable_web_page_preview" => false
         );
 
@@ -223,6 +329,6 @@ class YellowTelegram {
             $this->yellow->toolbox->log("error", "Telegram: sendMessage failed".$details);
             return false;
         }
-        return true;
+        return isset($result["result"]["message_id"]) ? intval($result["result"]["message_id"]) : false;
     }
 }
