@@ -28,7 +28,8 @@ class YellowTelegram {
         $provided = isset($_SERVER["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"]) ? $_SERVER["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"] : "";
         if (!is_string($secret) || strlen($secret) < 32 || !hash_equals($secret, $provided)) return $this->webhookResponse(403, array("ok" => false));
         $update = json_decode(file_get_contents("php://input"), true);
-        if (is_array($update)) $this->handleTelegramUpdate($update, $config);\n        else $this->yellow->toolbox->log("error", "Telegram webhook: invalid JSON update");
+        if (is_array($update)) $this->handleTelegramUpdate($update, $config);
+        else $this->yellow->toolbox->log("error", "Telegram webhook: invalid JSON update");
         return $this->webhookResponse(200, array("ok" => true));
     }
 
@@ -377,7 +378,7 @@ class YellowTelegram {
             $options = array(
                 "http" => array(
                     "method" => "POST",
-                    "header" => "Content-Type: application/x-www-form-urlencoded\\r\n",
+                    "header" => "Content-Type: application/x-www-form-urlencoded\r\n",
                     "content" => http_build_query($data),
                     "timeout" => 8,
                     "ignore_errors" => true
