@@ -112,17 +112,17 @@ class YellowTelegram {
             if ($plain !== "") $paragraphs[] = $plain;
         }
 
-        $fullText = implode("\\n\\n", $paragraphs);
+        $fullText = implode("\n\n", $paragraphs);
         $hasImages = preg_match("/<img\\b/i", $content) === 1;
         $needsSiteLink = $hasImages || $this->telegramUtf16Length($fullText) > 4096;
         $linkLabel = "Читать на сайте →";
-        $separator = $fullText !== "" ? "\\n\\n" : "";
+        $separator = $fullText !== "" ? "\n\n" : "";
         $bodyLimit = 4096;
         if ($needsSiteLink) $bodyLimit -= $this->telegramUtf16Length($separator.$linkLabel);
 
         $body = "";
         foreach ($paragraphs as $paragraph) {
-            $candidate = $body === "" ? $paragraph : $body."\\n\\n".$paragraph;
+            $candidate = $body === "" ? $paragraph : $body."\n\n".$paragraph;
             if ($this->telegramUtf16Length($candidate) > $bodyLimit) break;
             $body = $candidate;
         }
@@ -135,7 +135,7 @@ class YellowTelegram {
         $message = htmlspecialchars($body, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
         if ($needsSiteLink && is_string($url) && filter_var($url, FILTER_VALIDATE_URL) && preg_match('/^https?:\\/\\//i', $url)) {
             $safeUrl = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-            $message .= ($body !== "" ? "\\n\\n" : "").'<a href="'.$safeUrl.'">'.$linkLabel.'</a>';
+            $message .= ($body !== "" ? "\n\n" : "").'<a href="'.$safeUrl.'">'.$linkLabel.'</a>';
         }
 
         return $message;
