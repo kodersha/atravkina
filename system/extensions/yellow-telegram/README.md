@@ -1,6 +1,6 @@
 # Yellow Telegram
 
-Automatically publishes a blog post to Telegram the first time its public page is viewed.
+Automatically publishes a blog post to Telegram immediately after it is saved in the editor. The first public page view remains a fallback for posts created by other means.
 
 ## Setup
 
@@ -10,6 +10,6 @@ Automatically publishes a blog post to Telegram the first time its public page i
 4. Put the bot token into `config.php`. Do not commit this file.
 5. Ensure PHP can write to this directory so the sent-publication state can be stored.
 
-Only pages with the `blog` layout are considered. Pages with `Status: draft` are skipped. A post is sent once, on its first public page view. Failed sends are not marked as sent and will be retried on a later view.
+Only pages with the `blog` layout are considered. Pages with `Status: draft` are skipped. A post is sent once after a successful editor save. Failed sends are not marked as sent and can be retried on the next save or public page view. The sent-state lock prevents the save hook and the subsequent redirect from sending duplicates.
 
 The extension omits the post title and sends the body as plain text. Paragraphs are included whole, in order, while they fit within Telegram's 4096-character message limit together with the final **Читать на сайте →** link. The footer label is linked to the post URL using Telegram's `text_link` message entity (not HTML parsing). The first paragraph that does not fit, and all following paragraphs, are omitted. Telegram generates the link preview from the post URL. To control the preview image, provide suitable Open Graph metadata (`og:image`) on the post page.
