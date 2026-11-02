@@ -1,6 +1,5 @@
 ---
 Title: @timestamp
 Layout: blog
+Status: draft
 ---
-
-Это новая страница блога.
