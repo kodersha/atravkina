@@ -60,17 +60,9 @@ class YellowTelegram {
         flock($handle, LOCK_UN);
         fclose($handle);
 
-        $title = trim(strip_tags($page->get("title")));
         $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
-        $content = html_entity_decode(strip_tags($content), ENT_QUOTES, "UTF-8");
-        $content = preg_replace("/\\s+/u", " ", trim($content));
-        if (function_exists("mb_substr")) $content = mb_substr($content, 0, 2800, "UTF-8");
-        else $content = substr($content, 0, 2800);
-
         $url = $page->getLocation(true);
-        $message = ($title !== "" ? "<b>".htmlspecialchars($title, ENT_QUOTES, "UTF-8")."</b>\n\n" : "");
-        if ($content !== "") $message .= htmlspecialchars($content, ENT_QUOTES, "UTF-8")."\n\n";
-        $message .= '<a href="'.htmlspecialchars($url, ENT_QUOTES, "UTF-8").'">Читать на сайте</a>';
+        $message = $this->buildMessage($content, $url);
 
         $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message);
         $handle = @fopen($this->stateFile, "c+");
@@ -91,6 +83,42 @@ class YellowTelegram {
         }
         if (!$sent) $this->yellow->toolbox->log("error", "Telegram: publication failed for ".$location);
         else $this->yellow->toolbox->log("info", "Telegram: published ".$location);
+    }
+
+    private function buildMessage($content, $url) {
+        $paragraphs = array();
+        if (preg_match_all("/<p\\b[^>]*>(.*?)<\\/p>/is", $content, $matches)) {
+            foreach ($matches[1] as $paragraphHtml) {
+                $paragraph = html_entity_decode(strip_tags($paragraphHtml), ENT_QUOTES, "UTF-8");
+                $paragraph = preg_replace("/\\s+/u", " ", trim($paragraph));
+                if ($paragraph !== "") $paragraphs[] = $paragraph;
+            }
+        } else {
+            // If the page has no paragraph markup, treat its plain text as one indivisible block.
+            $plain = html_entity_decode(strip_tags($content), ENT_QUOTES, "UTF-8");
+            $plain = preg_replace("/\\s+/u", " ", trim($plain));
+            if ($plain !== "") $paragraphs[] = $plain;
+        }
+
+        $safeUrl = htmlspecialchars($url, ENT_QUOTES, "UTF-8");
+        $link = '<a href="'.$safeUrl.'">Читать на сайте →</a>';
+        $body = "";
+
+        foreach ($paragraphs as $paragraph) {
+            $safeParagraph = htmlspecialchars($paragraph, ENT_QUOTES, "UTF-8");
+            $candidate = $body === "" ? $safeParagraph : $body."\n\n".$safeParagraph;
+            if ($this->telegramTextLength($candidate."\n\n".$link) > 4096) break;
+            $body = $candidate;
+        }
+
+        return ($body !== "" ? $body."\n\n" : "").$link;
+    }
+
+    private function telegramTextLength($html) {
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES, "UTF-8");
+        if (function_exists("mb_strlen")) return mb_strlen($text, "UTF-8");
+        if (preg_match_all("/./us", $text, $matches)) return count($matches[0]);
+        return strlen($text);
     }
 
     private function writeState($handle, $prefix, $state) {
@@ -125,7 +153,7 @@ class YellowTelegram {
             $options = array(
                 "http" => array(
                     "method" => "POST",
-                    "header" => "Content-Type: application/x-www-form-urlencoded\r\n",
+                    "header" => "Content-Type: application/x-www-form-urlencoded\\r\\n",
                     "content" => http_build_query($data),
                     "timeout" => 8,
                     "ignore_errors" => true
