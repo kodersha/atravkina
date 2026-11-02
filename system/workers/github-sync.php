@@ -2,7 +2,7 @@
 // GitHub Sync extension for Datenstrom Yellow.
 
 class YellowGithubSync {
-    const VERSION = "1.0.0";
+    const VERSION = "1.1.0";
     public $yellow;
     public $settings = array();
 
@@ -11,23 +11,21 @@ class YellowGithubSync {
         $file = $yellow->system->get("coreExtensionDirectory")."yellow-github-sync.ini";
         $this->settings = is_file($file) ? parse_ini_file($file, false, INI_SCANNER_RAW) : array();
         if (!is_array($this->settings)) $this->settings = array();
+        if ($this->autoSync()) $this->syncChanges();
     }
 
     public function onCommand($command, $text) {
         if ($command!="github-sync") return 0;
-        if (!preg_match("/^[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+$/", $this->repository()) || is_string_empty($this->token())) {
+        if (!$this->isConfigured()) {
             echo "Yellow github-sync: Configure Repository and Token in yellow-github-sync.ini\n";
             return 400;
         }
         $args = preg_split("/\\s+/", trim($text));
         $mode = isset($args[0]) ? strtolower($args[0]) : "all";
         if ($mode=="" || $mode=="all") {
-            $status = $this->syncDirectory($this->contentDirectory(), "content", array(".md"));
-            if ($status==200) $status = $this->syncDirectory($this->mediaDirectory(), "media", $this->mediaExtensions());
-        } elseif ($mode=="content") {
-            $status = $this->syncDirectory($this->contentDirectory(), "content", array(".md"));
-        } elseif ($mode=="media" || $mode=="images") {
-            $status = $this->syncDirectory($this->mediaDirectory(), "media", $this->mediaExtensions());
+            $status = $this->syncChanges("all");
+        } elseif ($mode=="content" || $mode=="media") {
+            $status = $this->syncChanges($mode);
         } else {
             echo "Yellow github-sync: Use all, content or media\n";
             return 400;
@@ -40,42 +38,71 @@ class YellowGithubSync {
         return "github-sync [all|content|media]";
     }
 
+    // Yellow edit hooks provide an immediate second check after content/media changes.
+    // The filesystem scan in onLoad also catches deletions and changes made outside the editor.
     public function onEditContentFile($page, $action, $email) {
-        if (!$this->autoSync() || !in_array($action, array("create", "edit", "restore")) || $page->isError()) return;
-        $file = $this->yellow->lookup->findFileFromContentLocation($page->getLocation());
-        if (is_string($file) && is_file($file) && strtolower(pathinfo($file, PATHINFO_EXTENSION))=="md") {
-            $this->syncFile($file, "content");
-        }
+        if ($this->autoSync()) $this->syncChanges("content");
     }
 
     public function onEditMediaFile($file, $action, $email) {
-        if (!$this->autoSync() || !in_array($action, array("create", "edit", "restore")) || $file->isError()) return;
-        $path = $this->yellow->lookup->findFileFromMediaLocation($file->getLocation());
-        if (is_string($path) && is_file($path) && in_array(".".strtolower(pathinfo($path, PATHINFO_EXTENSION)), $this->mediaExtensions())) {
-            $this->syncFile($path, "media");
-        }
+        if ($this->autoSync()) $this->syncChanges("media");
     }
 
-    private function syncDirectory($directory, $prefix, $extensions) {
-        if (!is_dir($directory)) {
-            echo "Yellow github-sync: Directory not found: $directory\n";
-            return 500;
+    private function syncChanges($scope = "all") {
+        if (!$this->isConfigured()) return 400;
+        $directories = array();
+        if ($scope=="all" || $scope=="content") $directories["content"] = $this->contentDirectory();
+        if ($scope=="all" || $scope=="media") $directories["media"] = $this->mediaDirectory();
+
+        $files = array();
+        foreach ($directories as $prefix=>$directory) {
+            if (!is_dir($directory)) {
+                $this->yellow->toolbox->log("error", "GitHub Sync: directory not found: $directory");
+                return 500;
+            }
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS));
+            foreach ($iterator as $entry) {
+                if (!$entry->isFile() || $entry->isLink()) continue;
+                $relative = substr($entry->getPathname(), strlen(rtrim($directory, "/\\\\/"))+1);
+                $relative = str_replace(DIRECTORY_SEPARATOR, "/", $relative);
+                if (strpos($relative, ".git/")===0 || $relative==".git") continue;
+                $files[$prefix."/".$relative] = $entry->getPathname();
+            }
         }
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS));
+
+        $state = $this->loadState();
         $status = 200;
-        foreach ($iterator as $entry) {
-            if (!$entry->isFile()) continue;
-            $extension = ".".strtolower($entry->getExtension());
-            if (!in_array($extension, $extensions)) continue;
-            if ($this->syncFile($entry->getPathname(), $prefix)!=200) $status = 500;
+        foreach ($files as $path=>$fileName) {
+            $fingerprint = hash_file("sha256", $fileName);
+            if ($fingerprint===false) {
+                $status = 500;
+                continue;
+            }
+            if (isset($state[$path]) && $state[$path]==$fingerprint) continue;
+            if ($this->uploadFile($fileName, $path)==200) {
+                $state[$path] = $fingerprint;
+            } else {
+                $status = 500;
+            }
         }
+
+        // Remove files from GitHub that were previously synchronized but no longer exist locally.
+        foreach ($state as $path=>$fingerprint) {
+            if (($scope=="content" && strpos($path, "content/")!==0) ||
+                ($scope=="media" && strpos($path, "media/")!==0)) continue;
+            if (isset($files[$path])) continue;
+            if ($this->deleteFile($path)==200) {
+                unset($state[$path]);
+            } else {
+                $status = 500;
+            }
+        }
+
+        if (!$this->saveState($state)) $status = 500;
         return $status;
     }
 
-    private function syncFile($fileName, $prefix) {
-        $root = $prefix=="content" ? $this->contentDirectory() : $this->mediaDirectory();
-        $relative = str_replace(DIRECTORY_SEPARATOR, "/", substr($fileName, strlen(rtrim($root, DIRECTORY_SEPARATOR))+1));
-        $path = $prefix."/".$relative;
+    private function uploadFile($fileName, $path) {
         $size = filesize($fileName);
         if ($size===false || $size>($this->maxFileSize()*1024*1024)) {
             $this->yellow->toolbox->log("error", "GitHub Sync: file size limit exceeded for $path");
@@ -83,7 +110,7 @@ class YellowGithubSync {
         }
         $data = file_get_contents($fileName);
         if ($data===false) return 500;
-        $endpoint = "https://api.github.com/repos/".$this->repository()."/contents/".str_replace("%2F", "/", rawurlencode($path));
+        $endpoint = $this->fileEndpoint($path);
         $existing = $this->request("GET", $endpoint);
         $sha = "";
         if ($existing["status"]==200 && isset($existing["json"]["sha"])) {
@@ -105,6 +132,32 @@ class YellowGithubSync {
         }
         $this->yellow->toolbox->log("info", "GitHub Sync: synchronized $path");
         return 200;
+    }
+
+    private function deleteFile($path) {
+        $endpoint = $this->fileEndpoint($path);
+        $existing = $this->request("GET", $endpoint);
+        if ($existing["status"]==404) return 200;
+        if ($existing["status"]!=200 || !isset($existing["json"]["sha"])) {
+            $this->logFailure($path, $existing);
+            return $existing["status"];
+        }
+        $result = $this->request("DELETE", $endpoint, array(
+            "message" => "Yellow Sync: Delete ".$path,
+            "sha" => $existing["json"]["sha"],
+            "branch" => $this->branch()
+        ));
+        if ($result["status"]!=200) {
+            $this->logFailure($path, $result);
+            return $result["status"];
+        }
+        $this->yellow->toolbox->log("info", "GitHub Sync: deleted $path");
+        return 200;
+    }
+
+    private function fileEndpoint($path) {
+        $encoded = implode("/", array_map("rawurlencode", explode("/", $path)));
+        return "https://api.github.com/repos/".$this->repository()."/contents/".$encoded;
     }
 
     private function request($method, $url, $payload = null) {
@@ -148,17 +201,32 @@ class YellowGithubSync {
         $this->yellow->toolbox->log("error", "GitHub Sync: failed for $path (HTTP ".$result["status"]."): ".$message);
     }
 
+    private function loadState() {
+        $file = $this->stateFile();
+        if (!is_file($file)) return array();
+        $state = json_decode(file_get_contents($file), true);
+        return is_array($state) ? $state : array();
+    }
+
+    private function saveState($state) {
+        $json = json_encode($state);
+        return file_put_contents($this->stateFile(), $json, LOCK_EX)!==false;
+    }
+
+    private function stateFile() {
+        return rtrim($this->yellow->system->get("coreExtensionDirectory"), "/\\\\/").DIRECTORY_SEPARATOR.".yellow-github-sync-state.json";
+    }
+
     private function contentDirectory() {
-        return rtrim($this->yellow->system->get("coreServerInstallDirectory"), "/\\").DIRECTORY_SEPARATOR."content".DIRECTORY_SEPARATOR;
+        return rtrim($this->yellow->system->get("coreServerInstallDirectory"), "/\\\\/").DIRECTORY_SEPARATOR."content".DIRECTORY_SEPARATOR;
     }
 
     private function mediaDirectory() {
-        return rtrim($this->yellow->system->get("coreServerInstallDirectory"), "/\\").DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR;
+        return rtrim($this->yellow->system->get("coreServerInstallDirectory"), "/\\\\/").DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR;
     }
 
-    private function mediaExtensions() {
-        $configured = isset($this->settings["Extensions"]) ? $this->settings["Extensions"] : ".gif, .jpeg, .jpg, .png, .svg, .webp";
-        return array_map("trim", array_map("strtolower", explode(",", $configured)));
+    private function isConfigured() {
+        return preg_match("/^[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+$/", $this->repository()) && !is_string_empty($this->token());
     }
 
     private function repository() {
@@ -178,6 +246,6 @@ class YellowGithubSync {
     }
 
     private function autoSync() {
-        return isset($this->settings["AutoSync"]) && (int)$this->settings["AutoSync"]==1;
+        return !isset($this->settings["AutoSync"]) || (int)$this->settings["AutoSync"]==1;
     }
 }
