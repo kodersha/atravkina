@@ -4,7 +4,7 @@ This extension synchronizes the complete `content/` and `media/` directory trees
 
 ## Install
 
-1. Copy `system/workers/github-sync.php` into your Yellow installation's `system/workers/`.
+1. Copy `system/workers/githubsync.php` into your Yellow installation's `system/workers/`.
 2. Copy `system/extensions/yellow-github-sync.ini` into `system/extensions/`.
 3. Edit the INI file. Set `Repository`, `Branch`, and `Token`.
 4. Create a fine-grained GitHub personal access token restricted to the target repository with **Contents: Read and write** permission.
