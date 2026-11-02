@@ -11,7 +11,7 @@ class YellowLikes {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->dataDirectory = $yellow->system->get("coreExtensionDirectory")."yellow-likes/";
-        $this->dataFile = $this->dataDirectory."votes.json";
+        $this->dataFile = $this->dataDirectory."votes.php";
         if (!is_dir($this->dataDirectory)) {
             @mkdir($this->dataDirectory, 0755, true);
         }
@@ -117,6 +117,8 @@ class YellowLikes {
         }
         rewind($handle);
         $raw = stream_get_contents($handle);
+        $prefix = "<?php http_response_code(404); exit; ?>\\n";
+        if (strpos($raw, $prefix) === 0) $raw = substr($raw, strlen($prefix));
         $data = $raw ? json_decode($raw, true) : array();
         if (!is_array($data)) $data = array();
         if (!isset($data[$page]) || !is_array($data[$page])) $data[$page] = array();
@@ -127,7 +129,7 @@ class YellowLikes {
         }
         $count = count($data[$page]);
         rewind($handle);
-        if (!ftruncate($handle, 0) || fwrite($handle, json_encode($data, JSON_UNESCAPED_SLASHES)) === false) {
+        if (!ftruncate($handle, 0) || fwrite($handle, $prefix.json_encode($data, JSON_UNESCAPED_SLASHES)) === false) {
             flock($handle, LOCK_UN);
             fclose($handle);
             return false;
