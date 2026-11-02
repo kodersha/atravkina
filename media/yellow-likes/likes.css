@@ -1,0 +1,45 @@
+.yellow-likes {
+    margin: 1.5rem 0 0;
+}
+.yellow-likes__button {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .35rem .55rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    opacity: .72;
+    transition: color .18s ease, opacity .18s ease, transform .18s ease;
+}
+.yellow-likes__button:hover,
+.yellow-likes__button:focus-visible {
+    opacity: 1;
+}
+.yellow-likes__button:active {
+    transform: scale(.94);
+}
+.yellow-likes__button svg {
+    width: 1.2em;
+    height: 1.2em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.yellow-likes__button.is-liked {
+    color: #e34b68;
+    opacity: 1;
+}
+.yellow-likes__button.is-liked svg {
+    fill: currentColor;
+}
+.yellow-likes__button:disabled {
+    cursor: default;
+}
+.yellow-likes.is-unavailable {
+    display: none;
+}
