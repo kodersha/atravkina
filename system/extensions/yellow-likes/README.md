@@ -15,7 +15,7 @@ The worker automatically adds a heart and counter to pages with the `blog` layou
 
 ## Storage and visitor recognition
 
-Vote data is stored in `system/extensions/yellow-likes/votes.json`. The directory is protected by an `.htaccess` rule on Apache. The visitor receives a random, HttpOnly, SameSite=Lax cookie valid for one year. Only a SHA-256 hash of the cookie value is stored with each vote. No IP address or user-agent is collected.
+Vote data is stored in `system/extensions/yellow-likes/votes.php`. The directory is protected by an `.htaccess` rule on Apache. The visitor receives a random, HttpOnly, SameSite=Lax cookie valid for one year. Only a SHA-256 hash of the cookie value is stored with each vote. No IP address or user-agent is collected.
 
 The cookie is an anti-duplicate convenience, not strong identity verification. Visitors can vote again after clearing cookies or using another browser/device. The endpoint also checks the request method, JSON content type and Origin when provided.
 
@@ -30,4 +30,4 @@ The response contains `count` and `liked`.
 
 ## Notes
 
-The first request creates the private vote store. Ensure PHP can write to `system/extensions/yellow-likes/`. If the server uses Nginx, configure an equivalent deny rule for that directory because `.htaccess` is Apache-only.
+The first request creates the private vote store. The data file begins with a PHP guard that immediately returns 404 if requested directly. Ensure PHP can write to `system/extensions/yellow-likes/`. Keep the `.htaccess` rule as an additional layer on Apache.
