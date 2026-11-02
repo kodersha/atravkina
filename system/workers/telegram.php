@@ -63,8 +63,9 @@ class YellowTelegram {
         $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
         $url = $page->getLocation(true);
         $message = $this->buildMessage($content, $url);
-
-        $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url);
+        $previewUrl = $this->extractFirstImageUrl($content, $url);
+        
+        $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url, $previewUrl);
         $handle = @fopen($this->stateFile, "c+");
         if ($handle && flock($handle, LOCK_EX)) {
             rewind($handle);
@@ -121,6 +122,34 @@ class YellowTelegram {
         return strlen($text);
     }
 
+    private function extractFirstImageUrl($content, $postUrl) {
+        if (!preg_match('/<img\\b[^>]*?\\bsrc\\s*=\\s*(["\\'])(.*?)\\1/is', $content, $matches)) return "";
+        $src = html_entity_decode(trim($matches[2]), ENT_QUOTES, "UTF-8");
+        if ($src === "" || preg_match('/^(data:|javascript:|mailto:)/i', $src)) return "";
+
+        if (preg_match('/^https?:\\/\\//i', $src)) return $src;
+        $base = parse_url($postUrl);
+        if (!is_array($base) || empty($base["scheme"]) || empty($base["host"])) return "";
+        $origin = $base["scheme"]."://".$base["host"].(isset($base["port"]) ? ":".$base["port"] : "");
+
+        if (strpos($src, "//") === 0) return $base["scheme"].":".$src;
+        if (strpos($src, "/") === 0) return $origin.$src;
+
+        $path = isset($base["path"]) ? $base["path"] : "/";
+        $directory = substr($path, 0, strrpos($path, "/") + 1);
+        $combined = $directory.$src;
+        $segments = array();
+        foreach (explode("/", $combined) as $segment) {
+            if ($segment === "" || $segment === ".") continue;
+            if ($segment === "..") {
+                array_pop($segments);
+            } else {
+                $segments[] = $segment;
+            }
+        }
+        return $origin."/".implode("/", $segments);
+    }
+
     private function writeState($handle, $prefix, $state) {
         rewind($handle);
         ftruncate($handle, 0);
@@ -142,7 +171,7 @@ class YellowTelegram {
         return strlen($text);
     }
 
-    private function sendMessage($token, $channel, $message, $postUrl) {
+    private function sendMessage($token, $channel, $message, $postUrl, $previewUrl = "") {
         $url = "https://api.telegram.org/bot".rawurlencode($token)."/sendMessage";
         $linkText = "Читать на сайте →";
         $linkOffset = strpos($message, $linkText);
@@ -159,7 +188,10 @@ class YellowTelegram {
             "chat_id" => $channel,
             "text" => $message,
             "entities" => json_encode($entities, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            "disable_web_page_preview" => false
+            "link_preview_options" => json_encode(array(
+                "url" => $previewUrl !== "" ? $previewUrl : $postUrl,
+                "prefer_large_media" => true
+            ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
         if (function_exists("curl_init")) {
             $curl = curl_init($url);
