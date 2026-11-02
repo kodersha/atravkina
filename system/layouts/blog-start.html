@@ -1,0 +1,12 @@
+<?php $this->yellow->layout("header") ?>
+
+<?php $pages = $this->yellow->page->getPages("blog")->paginate($this->yellow->system->get("blogPaginationLimit")) ?>
+<?php foreach ($pages as $page): ?>
+  <article>
+    <?php echo $this->yellow->toolbox->createTextDescription($page->getContentHtml(), 0, false, "<!--more-->", "<a href=\"".$page->getLocation(true)."\">".$this->yellow->language->getTextHtml("blogMore")."</a>") ?>
+    <p><a href="<?= $page->getLocation(true) ?>">...</a></p>
+  </article>
+<?php endforeach ?>
+
+<?php $this->yellow->layout("pagination", $pages) ?>
+<?php $this->yellow->layout("footer") ?>
