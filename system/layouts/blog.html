@@ -2,13 +2,4 @@
   <article>
     <?= (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml()); ?>
   </article>
-
-  <?php if ($this->yellow->page->getExtraHtml("blogNavigation")=="available"): ?>
-    <?php if ($this->yellow->page->isPage("blogNavigationPrevious")): ?>
-      <p><?php echo $this->yellow->language->getTextHtml("blogNavigationPrevious") ?> <?php echo "<a class=\"previous\" href=\"".$this->yellow->page->getPage("blogNavigationPrevious")->getLocation(true)."\">".$this->yellow->page->getPage("blogNavigationPrevious")->getHtml("title")."</a>" ?></p>
-    <?php endif ?>
-    <?php if ($this->yellow->page->isPage("blogNavigationNext")): ?>
-      <p><?php echo $this->yellow->language->getTextHtml("blogNavigationNext") ?> <?php echo "<a class=\"next\" href=\"".$this->yellow->page->getPage("blogNavigationNext")->getLocation(true)."\">".$this->yellow->page->getPage("blogNavigationNext")->getHtml("title")."</a>" ?></p>
-    <?php endif ?>
-  <?php endif ?>
 <?php $this->yellow->layout("footer") ?>
