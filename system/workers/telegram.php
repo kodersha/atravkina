@@ -132,27 +132,13 @@ class YellowTelegram {
             $body = $this->truncateTelegramText($paragraphs[0], max(0, $bodyLimit - 1))."…";
         }
 
+        $message = htmlspecialchars($body, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
         if ($needsSiteLink && is_string($url) && filter_var($url, FILTER_VALIDATE_URL) && preg_match('/^https?:\\/\\//i', $url)) {
             $safeUrl = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-            $body .= ($body !== "" ? "\\n\\n" : "").'<a href="'.$safeUrl.'">'.$linkLabel.'</a>';
+            $message .= ($body !== "" ? "\\n\\n" : "").'<a href="'.$safeUrl.'">'.$linkLabel.'</a>';
         }
 
-        return htmlspecialchars($body, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") === $body
-            ? $body
-            : $this->escapeTelegramHtml($body);
-    }
-
-    private function escapeTelegramHtml($text) {
-        // Preserve only the generated site-link anchor; escape all post text.
-        $parts = explode('<a href="', $text, 2);
-        if (count($parts) != 2) return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-        $anchor = explode('</a>', $parts[1], 2);
-        if (count($anchor) != 2) return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-        $urlAndLabel = explode('">', $anchor[0], 2);
-        if (count($urlAndLabel) != 2) return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-        return htmlspecialchars($parts[0], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8")
-            .'<a href="'.$urlAndLabel[0].'">'.htmlspecialchars($urlAndLabel[1], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8").'</a>'
-            .htmlspecialchars($anchor[1], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+        return $message;
     }
 
     private function truncateTelegramText($text, $maxLength) {
