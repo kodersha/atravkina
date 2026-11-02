@@ -128,6 +128,20 @@ class YellowTelegram {
         fflush($handle);
     }
 
+    private function telegramUtf16Length($text) {
+        if (function_exists("mb_convert_encoding")) {
+            return strlen(mb_convert_encoding($text, "UTF-16LE", "UTF-8")) / 2;
+        }
+        if (preg_match_all("/./us", $text, $matches)) {
+            $length = 0;
+            foreach ($matches[0] as $character) {
+                $length += strlen($character) > 3 ? 2 : 1;
+            }
+            return $length;
+        }
+        return strlen($text);
+    }
+
     private function sendMessage($token, $channel, $message, $postUrl) {
         $url = "https://api.telegram.org/bot".rawurlencode($token)."/sendMessage";
         $linkText = "Читать на сайте →";
