@@ -36,7 +36,9 @@ The command registers the endpoint with Telegram and configures the secret-token
 
 1. The worker publishes the post with the website inline button.
 2. Telegram automatically forwards the channel post to the linked discussion group.
-3. The webhook receives the automatic-forward update, matches its source channel message ID to the stored publication, and adds the discussion button to the channel post.
-4. The comment button opens the thread for that specific forwarded message.
+3. The webhook receives the automatic-forward update and stores it in the publication state before trying to match it. This prevents a timing race where Telegram forwards the post before the publishing request has saved its channel message ID.
+4. When the publication ID becomes available, queued updates are matched by the source channel message ID and the worker adds the discussion button to the channel post.
+5. If Telegram rejects the keyboard update, the event remains queued and is retried when another publication is processed.
+6. The comment button opens the thread for that specific forwarded message.
 
-The first post published after deployment should be used to verify the complete flow. Posts already published before this feature was installed are not backfilled automatically.
+The first post published after deployment should be used to verify the complete flow. Posts already published before this feature was installed are not backfilled automatically. Check the Yellow log for `Telegram webhook:` entries if the button is not added. The log records whether an update was received, queued, matched, or rejected by the Telegram API; bot tokens and webhook secrets are not logged.
