@@ -724,6 +724,15 @@ class YellowEdit {
         return $statusCode;
     }
     
+    // Notify extensions after a content file has been written successfully.
+    public function notifyContentSaved($page) {
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onSaveContentFile")) {
+                $value["object"]->onSaveContentFile($page);
+            }
+        }
+    }
+
     // Process request to create page
     public function processRequestCreate($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
@@ -736,6 +745,7 @@ class YellowEdit {
                 $rawData, $this->response->getEndOfLine());
             if (!$page->isError()) {
                 if ($this->yellow->toolbox->writeFile($page->fileName, $page->rawData, true)) {
+                    $this->notifyContentSaved($page);
                     $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
                     $statusCode = $this->yellow->sendStatus(303, $location);
                 } else {
@@ -769,6 +779,7 @@ class YellowEdit {
                         $this->yellow->toolbox->writeFile($page->fileName, $page->rawData);
                 }
                 if ($ok) {
+                    $this->notifyContentSaved($page);
                     $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
                     $statusCode = $this->yellow->sendStatus(303, $location);
                 } else {
