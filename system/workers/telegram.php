@@ -127,7 +127,8 @@ class YellowTelegram {
         flock($handle, LOCK_UN);
         fclose($handle);
 
-        $commentUrl = "https://t.me/".ltrim($config["channel_username"], "@")."/".$channelMessageId."?comment=".intval($message["message_id"]);
+        $username = isset($config["channel_username"]) ? ltrim($config["channel_username"], "@") : substr($config["channel"], 1);
+        $commentUrl = "https://t.me/".$username."/".$channelMessageId."?comment=".intval($message["message_id"]);
         $keyboard = array("inline_keyboard" => array(array(
             array("text" => "Читать на сайте →", "url" => $postUrl),
             array("text" => "Комментировать", "url" => $commentUrl)
