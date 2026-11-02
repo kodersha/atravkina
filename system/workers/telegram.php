@@ -61,7 +61,7 @@ class YellowTelegram {
         fclose($handle);
 
         $title = trim(strip_tags($page->get("title")));
-        $content = method_exists($page, "getContent") ? $page->getContent() : "";
+        $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
         $content = html_entity_decode(strip_tags($content), ENT_QUOTES, "UTF-8");
         $content = preg_replace("/\\s+/u", " ", trim($content));
         if (function_exists("mb_substr")) $content = mb_substr($content, 0, 2800, "UTF-8");
