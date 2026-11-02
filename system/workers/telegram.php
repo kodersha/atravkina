@@ -1,5 +1,5 @@
 <?php
-// Publish each public blog post to a Telegram channel on its first page view.
+// Publish public blog posts to a Telegram channel after saving or on first page view.
 
 class YellowTelegram {
     const VERSION = "1.0.0";
@@ -15,19 +15,29 @@ class YellowTelegram {
         $this->stateFile = $this->directory."sent.php";
     }
 
+    // Publish immediately after the editor has successfully saved a page.
+    public function onSaveContentFile($page) {
+        $this->publishPage($page);
+    }
+
+    // Keep the page-view hook as a fallback for posts created outside the editor.
     public function onParsePageOutput($page, $output) {
-        if ($page->get("layout") != "blog") return null;
-        if (strtolower(trim($page->get("status"))) == "draft") return null;
-        if (!is_file($this->configFile) || !is_readable($this->configFile)) return null;
+        $this->publishPage($page);
+        return null;
+    }
+
+    private function publishPage($page) {
+        if ($page->get("layout") != "blog") return;
+        if (strtolower(trim($page->get("status"))) == "draft") return;
+        if (!is_file($this->configFile) || !is_readable($this->configFile)) return;
 
         $config = include $this->configFile;
-        if (!is_array($config) || empty($config["bot_token"]) || empty($config["channel"])) return null;
+        if (!is_array($config) || empty($config["bot_token"]) || empty($config["channel"])) return;
 
         $location = $page->getLocation();
-        if (!is_string($location) || $location == "") return null;
+        if (!is_string($location) || $location == "") return;
 
         $this->publishOnce($page, $config, $location);
-        return null;
     }
 
     private function publishOnce($page, $config, $location) {
