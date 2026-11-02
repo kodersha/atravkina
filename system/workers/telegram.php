@@ -64,7 +64,7 @@ class YellowTelegram {
         $url = $page->getLocation(true);
         $message = $this->buildMessage($content, $url);
 
-        $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message);
+        $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url);
         $handle = @fopen($this->stateFile, "c+");
         if ($handle && flock($handle, LOCK_EX)) {
             rewind($handle);
@@ -128,7 +128,7 @@ class YellowTelegram {
         fflush($handle);
     }
 
-    private function sendMessage($token, $channel, $message) {
+    private function sendMessage($token, $channel, $message, $postUrl) {
         $url = "https://api.telegram.org/bot".rawurlencode($token)."/sendMessage";
         $data = array(
             "chat_id" => $channel,
