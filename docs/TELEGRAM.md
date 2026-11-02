@@ -1,6 +1,8 @@
 # Telegram publishing
 
-The Telegram worker publishes public blog posts to a channel. Each post gets a **Читать на сайте →** inline button. Once Telegram delivers the channel's automatic forward to its linked discussion group, the worker adds a **Комментировать** button that opens that exact discussion thread.
+The Telegram worker publishes public blog posts to a channel as text messages.
+
+The message includes the first paragraphs that fit within Telegram's 4096-character limit. If any paragraph does not fit, or the post contains images that are not sent to Telegram, a clickable **Читать на сайте →** text link is appended. If all text fits and there are no images, no website link is added.
 
 ## Configuration
 
@@ -10,35 +12,17 @@ Create `system/extensions/yellow-telegram/config.php` on the server. Do not comm
 <?php
 return array(
     "bot_token" => "YOUR_BOT_TOKEN",
-    "channel" => "@YOUR_PUBLIC_CHANNEL",
-    "channel_username" => "YOUR_PUBLIC_CHANNEL",
-    "webhook_secret" => "GENERATE_A_RANDOM_SECRET_AT_LEAST_32_CHARACTERS_LONG"
+    "channel" => "@YOUR_PUBLIC_CHANNEL"
 );
 ```
 
-Use the public channel username without the leading `@` for `channel_username`. The bot must be an administrator in the channel and in its linked discussion group. It must be able to publish/edit channel messages and receive group messages.
-
-## Register the webhook
-
-The webhook endpoint is:
-
-`https://atravkina.ru/.well-known/telegram-webhook`
-
-After uploading the updated worker and creating the configuration file, run this from the Yellow installation directory:
-
-```sh
-php yellow.php telegram-webhook
-```
-
-The command registers the endpoint with Telegram and configures the secret-token header. The endpoint accepts only POST requests with the matching `X-Telegram-Bot-Api-Secret-Token` header.
+The bot must be an administrator in the channel with permission to publish messages. It no longer needs access to the linked discussion group, and no webhook or webhook secret is required.
 
 ## Behaviour
 
-1. The worker publishes the post with the website inline button.
-2. Telegram automatically forwards the channel post to the linked discussion group.
-3. The webhook receives the automatic-forward update and stores it in the publication state before trying to match it. This prevents a timing race where Telegram forwards the post before the publishing request has saved its channel message ID.
-4. When the publication ID becomes available, queued updates are matched by the source channel message ID and the worker adds the discussion button to the channel post.
-5. If Telegram rejects the keyboard update, the event remains queued and is retried when another publication is processed.
-6. The comment button opens the thread for that specific forwarded message.
+1. The worker extracts paragraphs from the blog post.
+2. It checks whether all paragraphs fit in a Telegram message and whether the HTML contains images.
+3. It sends the text that fits. If text was omitted or images are present, it appends the clickable **Читать на сайте →** link.
+4. If the full text fits and there are no images, the post is sent without a website link.
 
-The first post published after deployment should be used to verify the complete flow. Posts already published before this feature was installed are not backfilled automatically. Check the Yellow log for `Telegram webhook:` entries if the button is not added. The log records whether an update was received, queued, matched, or rejected by the Telegram API; bot tokens and webhook secrets are not logged.
+The link is formatted as a regular HTML text link, not an inline keyboard button. Telegram's HTML parser is used, with post text and the destination URL escaped before sending.
