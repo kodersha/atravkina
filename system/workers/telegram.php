@@ -101,8 +101,7 @@ class YellowTelegram {
             if ($plain !== "") $paragraphs[] = $plain;
         }
 
-        $safeUrl = htmlspecialchars($url, ENT_QUOTES, "UTF-8");
-        $link = '<a href="'.$safeUrl.'">Читать на сайте →</a>';
+        $link = "Читать на сайте →";
         $body = "";
 
         foreach ($paragraphs as $paragraph) {
@@ -115,15 +114,14 @@ class YellowTelegram {
         return ($body !== "" ? $body."\n\n" : "").$link;
     }
 
-    private function telegramTextLength($html) {
-        $text = html_entity_decode(strip_tags($html), ENT_QUOTES, "UTF-8");
+    private function telegramTextLength($text) {
         if (function_exists("mb_strlen")) return mb_strlen($text, "UTF-8");
         if (preg_match_all("/./us", $text, $matches)) return count($matches[0]);
         return strlen($text);
     }
 
     private function extractFirstImageUrl($content, $postUrl) {
-        if (!preg_match('/<img\\b[^>]*?\\bsrc\\s*=\\s*(["\\'])(.*?)\\1/is', $content, $matches)) return "";
+        if (!preg_match("/<img\\b[^>]*?\\bsrc\\s*=\\s*([\\"'])(.*?)\\1/is", $content, $matches)) return "";
         $src = html_entity_decode(trim($matches[2]), ENT_QUOTES, "UTF-8");
         if ($src === "" || preg_match('/^(data:|javascript:|mailto:)/i', $src)) return "";
 
