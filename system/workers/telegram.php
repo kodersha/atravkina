@@ -130,10 +130,21 @@ class YellowTelegram {
 
     private function sendMessage($token, $channel, $message, $postUrl) {
         $url = "https://api.telegram.org/bot".rawurlencode($token)."/sendMessage";
+        $linkText = "Читать на сайте →";
+        $linkOffset = strpos($message, $linkText);
+        $entities = array();
+        if ($linkOffset !== false) {
+            $entities[] = array(
+                "type" => "text_link",
+                "offset" => $this->telegramUtf16Length(substr($message, 0, $linkOffset)),
+                "length" => $this->telegramUtf16Length($linkText),
+                "url" => $postUrl
+            );
+        }
         $data = array(
             "chat_id" => $channel,
             "text" => $message,
-            "parse_mode" => "HTML",
+            "entities" => json_encode($entities, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             "disable_web_page_preview" => false
         );
         if (function_exists("curl_init")) {
