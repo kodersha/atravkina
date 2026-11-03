@@ -25,14 +25,4 @@
           <img width="40" height="40" src="<?php echo $this->yellow->page->getBase(true) ?>/system/themes/images/avatar.png" alt="Avatar">
         <?php endif ?>
       </div>
-
-      <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
-          <div class="blog-sort">
-            <button type="button" id="blog-sort-toggle" class="blog-sort-button">
-              <?= $sortAscending
-                  ? "<i class='las la-sort-alpha-down'></i>"
-                  : "<i class='las la-sort-alpha-up'></i>" ?>
-            </button>
-          </div>
-      <?php endif ?>
     </header>

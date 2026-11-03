@@ -71,15 +71,27 @@ article {
     a {
       &.blog-read {
         border-bottom: none;
+        color: rgb(68, 68, 68);
+
+        &:hover {
+          color: rgb(255, 255, 255);
+        }
       }
     }
   }
 }
 
 .blog-sort {
-  display: flex;
-  align-items: center;
   justify-content: end;
+  align-items: center;
+  display: flex;
+
+  position: absolute;
+  right: 0;
+  top: 0;
+  
+  height: 2.5rem;
+  width: 2.5rem;
 
   button {
     position: relative;
@@ -90,10 +102,37 @@ article {
     border: none;
 
     font-size: 1.5rem;
-    color: rgb(250, 198, 112);
+    color: rgb(51, 51, 51);
 
     &:hover {
-      color: rgb(243, 121, 37);
+      color: rgb(255, 255, 255);
+    }
+  }
+}
+
+footer {
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  color: rgb(68, 68, 68);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: auto;
+
+  .contact {
+    display: flex;
+    align-items: center;
+    column-gap: 0.5rem;
+
+    a {
+      color: rgb(68, 68, 68);
+
+      &:hover {
+        color: rgb(255, 255, 255);
+      }
     }
   }
 }

@@ -31,7 +31,7 @@
     stroke-linejoin: round;
 }
 .yellow-likes__button.is-liked {
-    color: #e34b68;
+    color: rgb(255, 100, 64);
     opacity: 1;
 }
 .yellow-likes__button.is-liked svg {
