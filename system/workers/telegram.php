@@ -73,8 +73,17 @@ class YellowTelegram {
 
         $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
         $url = method_exists($page, "getUrl") ? $page->getUrl(true) : "";
+        $imageUrl = $this->getFirstImageUrl($content);
         $message = $this->buildMessage($content, $url);
-        $sent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url);
+        $photoSent = false;
+        if ($imageUrl !== false) {
+            $photoSent = $this->sendPhoto($config["bot_token"], $config["channel"], $imageUrl);
+        }
+        $textSent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url);
+        $sent = $textSent !== false ? $textSent : ($photoSent !== false ? $photoSent : false);
+        if ($photoSent !== false && $textSent === false) {
+            $this->yellow->toolbox->log("error", "Telegram: photo was published but text message failed for ".$location);
+        }
         $handle = @fopen($this->stateFile, "c+");
         if ($handle && flock($handle, LOCK_EX)) {
             rewind($handle);
@@ -113,8 +122,8 @@ class YellowTelegram {
         }
 
         $fullText = implode("\n\n", $paragraphs);
-        $hasImages = preg_match("/<img\\b/i", $content) === 1;
-        $needsSiteLink = $hasImages || $this->telegramUtf16Length($fullText) > 4096;
+        $imageCount = preg_match_all("/<img\\b/i", $content);
+        $needsSiteLink = $imageCount > 1 || $this->telegramUtf16Length($fullText) > 4096;
         $linkLabel = "Читать на сайте →";
         $separator = $fullText !== "" ? "\n\n" : "";
         $bodyLimit = 4096;
@@ -175,6 +184,55 @@ class YellowTelegram {
             return $length;
         }
         return strlen($text);
+    }
+
+    private function getFirstImageUrl($content) {
+        if (!preg_match('/<img\\b[^>]*\\bsrc\\s*=\\s*([\\"\\'])(.*?)\\1/i', $content, $matches)) return false;
+        $url = html_entity_decode(trim($matches[2]), ENT_QUOTES, "UTF-8");
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\\/\\//i', $url)) return false;
+        return $url;
+    }
+
+    private function sendPhoto($token, $channel, $photoUrl) {
+        $apiUrl = "https://api.telegram.org/bot".rawurlencode($token)."/sendPhoto";
+        $data = array("chat_id" => $channel, "photo" => $photoUrl);
+        $response = false;
+        $status = 0;
+        $transportError = "";
+        if (function_exists("curl_init")) {
+            $curl = curl_init($apiUrl);
+            curl_setopt_array($curl, array(
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => http_build_query($data),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 3,
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_SSL_VERIFYPEER => true
+            ));
+            $response = curl_exec($curl);
+            $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            if ($response === false) $transportError = curl_error($curl);
+            curl_close($curl);
+        } else {
+            $options = array("http" => array(
+                "method" => "POST",
+                "header" => "Content-Type: application/x-www-form-urlencoded\\r\\n",
+                "content" => http_build_query($data),
+                "timeout" => 15,
+                "ignore_errors" => true
+            ));
+            $response = @file_get_contents($apiUrl, false, stream_context_create($options));
+            $status = isset($http_response_header[0]) && preg_match("/\\s(\\d{3})\\s/", $http_response_header[0], $matches) ? intval($matches[1]) : 0;
+            if ($response === false) $transportError = "HTTP request failed (allow_url_fopen or TLS/network configuration)";
+        }
+        $result = is_string($response) ? json_decode($response, true) : null;
+        if ($response === false || $status < 200 || $status >= 300 || !is_array($result) || empty($result["ok"])) {
+            $description = is_array($result) && isset($result["description"]) ? $result["description"] : $transportError;
+            $description = str_replace($token, "[redacted]", $description);
+            $this->yellow->toolbox->log("error", "Telegram: sendPhoto failed (HTTP ".$status.": ".$description.")");
+            return false;
+        }
+        return isset($result["result"]["message_id"]) ? intval($result["result"]["message_id"]) : false;
     }
 
     private function sendMessage($token, $channel, $message, $postUrl) {
