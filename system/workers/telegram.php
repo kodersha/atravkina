@@ -187,7 +187,7 @@ class YellowTelegram {
     }
 
     private function getFirstImageUrl($content) {
-        if (!preg_match('/<img\\b[^>]*\\bsrc\\s*=\\s*([\\"\\'])(.*?)\\1/i', $content, $matches)) return false;
+        if (!preg_match("~<img\\b[^>]*\\bsrc\\s*=\\s*([\"'])(.*?)\\1~i", $content, $matches)) return false;
         $url = html_entity_decode(trim($matches[2]), ENT_QUOTES, "UTF-8");
         if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\\/\\//i', $url)) return false;
         return $url;
@@ -216,7 +216,7 @@ class YellowTelegram {
         } else {
             $options = array("http" => array(
                 "method" => "POST",
-                "header" => "Content-Type: application/x-www-form-urlencoded\\r\\n",
+                    "header" => "Content-Type: application/x-www-form-urlencoded\r\n",
                 "content" => http_build_query($data),
                 "timeout" => 15,
                 "ignore_errors" => true
