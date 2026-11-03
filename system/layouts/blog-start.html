@@ -1,13 +1,40 @@
 <?php $this->yellow->layout("header") ?>
 
-<?php $pages = $this->yellow->page->getPages("blog")->sort("title", false)->paginate($this->yellow->system->get("blogPaginationLimit")); ?>
+<?php
+$sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
+$pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
+?>
+
+<div class="blog-sort">
+  <button type="button" id="blog-sort-toggle" class="blog-sort-button">
+    <?= $sortAscending ? "Сначала новые" : "Сначала старые" ?>
+  </button>
+</div>
 
 <?php foreach ($pages as $page): ?>
   <article>
-    <?= (new YellowTypograph())->applyTypograph($page->getContentHtml(), 0, false, "<!--more-->", "<a href=\"".$page->getLocation(true)."\">".$this->yellow->language->getTextHtml("blogMore")."</a>"); ?>
+    <?= (new YellowTypograph())->applyTypograph($page->getContentHtml(), 0, false, "<!--more-->", "<a href=\\"".$page->getLocation(true)."\\">".$this->yellow->language->getTextHtml("blogMore")."</a>"); ?>
     <p><a href="<?= $page->getLocation(true) ?>">...</a></p>
   </article>
 <?php endforeach ?>
 
 <?php $this->yellow->layout("pagination", $pages) ?>
+
+<script>
+(function () {
+  var button = document.getElementById("blog-sort-toggle");
+  if (!button) return;
+
+  button.addEventListener("click", function () {
+    var currentOrder = document.cookie.match(/(?:^|; )blogSortOrder=([^;]*)/);
+    var nextOrder = currentOrder && decodeURIComponent(currentOrder[1]) === "oldest"
+      ? "newest"
+      : "oldest";
+
+    document.cookie = "blogSortOrder=" + nextOrder + "; max-age=31536000; path=/; SameSite=Lax";
+    window.location.reload();
+  });
+})();
+</script>
+
 <?php $this->yellow->layout("footer") ?>
