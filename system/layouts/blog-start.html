@@ -1,6 +1,7 @@
 <?php $this->yellow->layout("header") ?>
 
-<?php $pages = $this->yellow->page->getPages("blog")->reverse()->paginate($this->yellow->system->get("blogPaginationLimit")) ?>
+<?php $pages = $this->yellow->page->getPages("blog")->sort("modified", false)->paginate($this->yellow->system->get("blogPaginationLimit")); ?>
+
 <?php foreach ($pages as $page): ?>
   <article>
     <?= (new YellowTypograph())->applyTypograph($page->getContentHtml(), 0, false, "<!--more-->", "<a href=\"".$page->getLocation(true)."\">".$this->yellow->language->getTextHtml("blogMore")."</a>"); ?>
