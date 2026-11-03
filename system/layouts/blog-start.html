@@ -1,13 +1,13 @@
 <?php $this->yellow->layout("header") ?>
 
 <?php
-$sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
-$pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
+  $sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
+  $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
 ?>
 
 <div class="blog-sort">
   <button type="button" id="blog-sort-toggle" class="blog-sort-button">
-    <?= $sortAscending ? "Сначала новые" : "Сначала старые" ?>
+    <?= $sortAscending ? "Сначала старые" : "Сначала новые" ?>
   </button>
 </div>
 
