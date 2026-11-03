@@ -165,29 +165,28 @@ class YellowTelegram {
         }
 
         $imageCount = preg_match_all("/<img\\b/i", $content);
-        $body = "";
+        $accepted = array();
         $omitted = $imageCount > 1;
         $linkLabel = "Читать на сайте →";
         $linkValid = is_string($url) && filter_var($url, FILTER_VALIDATE_URL) && preg_match('/^https?:\\/\\//i', $url);
         $linkLength = $linkValid ? $this->telegramUtf16Length("\\n\\n".$linkLabel) : 0;
         $limit = 1024;
 
-        foreach ($paragraphs as $index => $paragraph) {
-            $candidate = $body === "" ? $paragraph : $body."\\n\\n".$paragraph;
+        foreach ($paragraphs as $paragraph) {
+            $candidate = implode("\\n\\n", array_merge($accepted, array($paragraph)));
             if ($this->telegramUtf16Length($candidate) > $limit) {
                 $omitted = true;
                 break;
             }
-            $body = $candidate;
+            $accepted[] = $paragraph;
         }
 
-        if ($omitted && $linkValid) {
-            while ($body !== "" && $this->telegramUtf16Length($body) + $linkLength > $limit) {
-                array_pop($paragraphs);
-                $body = implode("\\n\\n", array_slice($paragraphs, 0, count($paragraphs) - 1));
-            }
+        while ($omitted && $linkValid && !empty($accepted) &&
+            $this->telegramUtf16Length(implode("\\n\\n", $accepted)) + $linkLength > $limit) {
+            array_pop($accepted);
         }
 
+        $body = implode("\\n\\n", $accepted);
         $caption = htmlspecialchars($body, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
         if ($omitted && $linkValid) {
             $safeUrl = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
