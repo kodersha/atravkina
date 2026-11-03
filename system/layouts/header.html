@@ -8,44 +8,44 @@
     <meta name="generator" content="Datenstrom Yellow" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <?php
-    $pageUrl = $this->yellow->page->getLocation(true);
-    $pageTitle = $this->yellow->page->getHtml("titleHeader");
-    $pageDescription = $this->yellow->page->getHtml("description");
-    $pageContent = $this->yellow->page->getContentHtml();
-    $previewImage = "";
-    if (preg_match('/<img\\b[^>]*?src\\s*=\\s*["\\']([^"\\']+)["\\']/i', $pageContent, $imageMatch)) {
-        $previewImage = html_entity_decode($imageMatch[1], ENT_QUOTES | ENT_HTML5, "UTF-8");
-        if (!preg_match('/^(https?:)?\\/\\//i', $previewImage)) {
-            $urlParts = parse_url($pageUrl);
-            if (isset($urlParts["scheme"], $urlParts["host"])) {
-                $origin = $urlParts["scheme"]."://".$urlParts["host"];
-                if (isset($urlParts["port"])) $origin .= ":".$urlParts["port"];
-                if (substr($previewImage, 0, 1) == "/") {
-                    $previewImage = $origin.$previewImage;
-                } else {
-                    $pagePath = isset($urlParts["path"]) ? $urlParts["path"] : "/";
-                    $previewImage = $origin.rtrim(dirname($pagePath), "/")."/".$previewImage;
-                }
-            }
-        } elseif (substr($previewImage, 0, 2) == "//") {
-            $urlParts = parse_url($pageUrl);
-            $previewImage = (isset($urlParts["scheme"]) ? $urlParts["scheme"] : "https").":".$previewImage;
-        }
-    }
-    $escapeMeta = function($value) {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-    };
+      $pageUrl = $this->yellow->page->getLocation(true);
+      $pageTitle = $this->yellow->page->getHtml("titleHeader");
+      $pageDescription = $this->yellow->page->getHtml("description");
+      $pageContent = $this->yellow->page->getContentHtml();
+      $previewImage = "";
+      if (preg_match('/<img\\b[^>]*?src\\s*=\\s*["\\']([^"\\']+)["\\']/i', $pageContent, $imageMatch)) {
+          $previewImage = html_entity_decode($imageMatch[1], ENT_QUOTES | ENT_HTML5, "UTF-8");
+          if (!preg_match('/^(https?:)?\\/\\//i', $previewImage)) {
+              $urlParts = parse_url($pageUrl);
+              if (isset($urlParts["scheme"], $urlParts["host"])) {
+                  $origin = $urlParts["scheme"]."://".$urlParts["host"];
+                  if (isset($urlParts["port"])) $origin .= ":".$urlParts["port"];
+                  if (substr($previewImage, 0, 1) == "/") {
+                      $previewImage = $origin.$previewImage;
+                  } else {
+                      $pagePath = isset($urlParts["path"]) ? $urlParts["path"] : "/";
+                      $previewImage = $origin.rtrim(dirname($pagePath), "/")."/".$previewImage;
+                  }
+              }
+          } elseif (substr($previewImage, 0, 2) == "//") {
+              $urlParts = parse_url($pageUrl);
+              $previewImage = (isset($urlParts["scheme"]) ? $urlParts["scheme"] : "https").":".$previewImage;
+          }
+      }
+      $escapeMeta = function($value) {
+          return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+      };
     ?>
     <meta property="og:type" content="article" />
     <meta property="og:title" content="<?= $escapeMeta($pageTitle) ?>" />
     <meta property="og:description" content="<?= $escapeMeta($pageDescription) ?>" />
     <meta property="og:url" content="<?= $escapeMeta($pageUrl) ?>" />
     <?php if ($previewImage): ?>
-    <meta property="og:image" content="<?= $escapeMeta($previewImage) ?>" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="<?= $escapeMeta($previewImage) ?>" />
+      <meta property="og:image" content="<?= $escapeMeta($previewImage) ?>" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content="<?= $escapeMeta($previewImage) ?>" />
     <?php else: ?>
-    <meta name="twitter:card" content="summary" />
+      <meta name="twitter:card" content="summary" />
     <?php endif ?>
     <meta name="twitter:title" content="<?= $escapeMeta($pageTitle) ?>" />
     <meta name="twitter:description" content="<?= $escapeMeta($pageDescription) ?>" />
