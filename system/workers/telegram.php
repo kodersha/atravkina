@@ -74,15 +74,15 @@ class YellowTelegram {
         $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
         $url = method_exists($page, "getUrl") ? $page->getUrl(true) : "";
         $imageUrl = $this->getFirstImageUrl($content);
-        $message = $this->buildMessage($content, $url);
-        $photoSent = false;
         if ($imageUrl !== false) {
-            $photoSent = $this->sendPhoto($config["bot_token"], $config["channel"], $imageUrl);
-        }
-        $textSent = $this->sendMessage($config["bot_token"], $config["channel"], $message, $url);
-        $sent = $textSent !== false ? $textSent : ($photoSent !== false ? $photoSent : false);
-        if ($photoSent !== false && $textSent === false) {
-            $this->yellow->toolbox->log("error", "Telegram: photo was published but text message failed for ".$location);
+            $caption = $this->buildCaption($content, $url);
+            $sent = $this->sendPhoto($config["bot_token"], $config["channel"], $imageUrl, $caption);
+            if ($sent === false) {
+                $this->yellow->toolbox->log("error", "Telegram: photo failed; falling back to text for ".$location);
+                $sent = $this->sendMessage($config["bot_token"], $config["channel"], $this->buildMessage($content, $url), $url);
+            }
+        } else {
+            $sent = $this->sendMessage($config["bot_token"], $config["channel"], $this->buildMessage($content, $url), $url);
         }
         $handle = @fopen($this->stateFile, "c+");
         if ($handle && flock($handle, LOCK_EX)) {
@@ -150,6 +150,52 @@ class YellowTelegram {
         return $message;
     }
 
+    private function buildCaption($content, $url) {
+        $paragraphs = array();
+        if (preg_match_all("/<p\\b[^>]*>(.*?)<\\/p>/is", $content, $matches)) {
+            foreach ($matches[1] as $paragraphHtml) {
+                $paragraph = html_entity_decode(strip_tags($paragraphHtml), ENT_QUOTES, "UTF-8");
+                $paragraph = preg_replace("/\\s+/u", " ", trim($paragraph));
+                if ($paragraph !== "") $paragraphs[] = $paragraph;
+            }
+        } else {
+            $plain = html_entity_decode(strip_tags($content), ENT_QUOTES, "UTF-8");
+            $plain = preg_replace("/\\s+/u", " ", trim($plain));
+            if ($plain !== "") $paragraphs[] = $plain;
+        }
+
+        $imageCount = preg_match_all("/<img\\b/i", $content);
+        $body = "";
+        $omitted = $imageCount > 1;
+        $linkLabel = "Читать на сайте →";
+        $linkValid = is_string($url) && filter_var($url, FILTER_VALIDATE_URL) && preg_match('/^https?:\\/\\//i', $url);
+        $linkLength = $linkValid ? $this->telegramUtf16Length("\\n\\n".$linkLabel) : 0;
+        $limit = 1024;
+
+        foreach ($paragraphs as $index => $paragraph) {
+            $candidate = $body === "" ? $paragraph : $body."\\n\\n".$paragraph;
+            if ($this->telegramUtf16Length($candidate) > $limit) {
+                $omitted = true;
+                break;
+            }
+            $body = $candidate;
+        }
+
+        if ($omitted && $linkValid) {
+            while ($body !== "" && $this->telegramUtf16Length($body) + $linkLength > $limit) {
+                array_pop($paragraphs);
+                $body = implode("\\n\\n", array_slice($paragraphs, 0, count($paragraphs) - 1));
+            }
+        }
+
+        $caption = htmlspecialchars($body, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+        if ($omitted && $linkValid) {
+            $safeUrl = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+            $caption .= ($body !== "" ? "\\n\\n" : "").'<a href="'.$safeUrl.'">'.$linkLabel.'</a>';
+        }
+        return $caption;
+    }
+
     private function truncateTelegramText($text, $maxLength) {
         if ($maxLength <= 0) return "";
         $characters = preg_split("//u", $text, -1, PREG_SPLIT_NO_EMPTY);
@@ -193,9 +239,9 @@ class YellowTelegram {
         return $url;
     }
 
-    private function sendPhoto($token, $channel, $photoUrl) {
+    private function sendPhoto($token, $channel, $photoUrl, $caption = "") {
         $apiUrl = "https://api.telegram.org/bot".rawurlencode($token)."/sendPhoto";
-        $data = array("chat_id" => $channel, "photo" => $photoUrl);
+        $data = array("chat_id" => $channel, "photo" => $photoUrl, "caption" => $caption, "parse_mode" => "HTML");
         $response = false;
         $status = 0;
         $transportError = "";
