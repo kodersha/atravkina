@@ -12,5 +12,27 @@
     <link rel="icon" type="image/png" sizes="16x16" href="<?= '/favicon/favicon-16x16.png'; ?>">
     <link rel="manifest" href="<?= '/favicon/site.webmanifest'; ?>">
     <?php echo $this->yellow->page->getExtraHtml("header") ?>
+    <link rel="stylesheet" href="<?php echo $this->yellow->page->getBase(true) ?>/system/themes/line-awesome/css/line-awesome.min.css">
   </head>
   <body>
+    <header>
+      <div class="logotype">
+        <?php if ($this->yellow->page->getLocation() != "/"): ?>
+          <a href="/">
+            <img width="40" height="40" src="<?php echo $this->yellow->page->getBase(true) ?>/system/themes/images/avatar.png" alt="Home">
+          </a>
+        <?php else: ?>
+          <img width="40" height="40" src="<?php echo $this->yellow->page->getBase(true) ?>/system/themes/images/avatar.png" alt="Avatar">
+        <?php endif ?>
+      </div>
+
+      <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
+          <div class="blog-sort">
+            <button type="button" id="blog-sort-toggle" class="blog-sort-button">
+              <?= $sortAscending
+                  ? "<i class='las la-sort-alpha-down'></i>"
+                  : "<i class='las la-sort-alpha-up'></i>" ?>
+            </button>
+          </div>
+      <?php endif ?>
+    </header>

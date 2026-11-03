@@ -5,16 +5,10 @@
   $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
 ?>
 
-<div class="blog-sort">
-  <button type="button" id="blog-sort-toggle" class="blog-sort-button">
-    <?= $sortAscending ? "Сначала старые" : "Сначала новые" ?>
-  </button>
-</div>
-
 <?php foreach ($pages as $page): ?>
   <article>
     <?= (new YellowTypograph())->applyTypograph($page->getContentHtml(), 0, false, "<!--more-->", "<a href=\"".$page->getLocation(true)."\">".$this->yellow->language->getTextHtml("blogMore")."</a>"); ?>
-    <p><a href="<?= $page->getLocation(true) ?>">...</a></p>
+    <p><a class="blog-read" href="<?= $page->getLocation(true) ?>">...</a></p>
   </article>
 <?php endforeach ?>
 

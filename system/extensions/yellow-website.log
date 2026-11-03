@@ -14,3 +14,68 @@
 2026-11-01 10:22:13 info Install extension 'Blog 1.0.2'
 2026-11-01 10:22:14 info Add user 'travkina'
 2026-11-01 20:39:45 info Install extension 'Draft 1.0.1'
+2026-11-03 23:53:23 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:53:23 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:53:24 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:53:30 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:53:30 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:53:37 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:53:39 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:56:10 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:56:10 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:56:12 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:56:15 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:56:58 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:56:58 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:57:00 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:57:02 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:57:02 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:57:04 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:57:04 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:58:58 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:58:58 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:58:58 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:01 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:01 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:03 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:03 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:04 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:29 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:35 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:35 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:40 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:42 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:46 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:49 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-03 23:59:50 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:04:12 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:04:13 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:04:13 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:04:13 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:04:13 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:06:24 error GitHub Sync: repository or token is missing. Check system/extensions/yellow-github-sync.ini
+2026-11-04 00:10:34 info GitHub Sync: synchronized content/1-blog/1793721681.md
+2026-11-04 00:10:36 info GitHub Sync: synchronized content/1-blog/1793632276.md
+2026-11-04 00:10:40 info GitHub Sync: synchronized media/images/picture.png
+2026-11-04 00:10:41 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:10:41 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:10:42 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:10:43 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:10:46 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:10:58 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:10:59 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:40 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:41 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:42 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:51 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:53 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:53 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:55 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:55 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:56 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:56 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:58 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:12:58 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:13:00 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:13:33 error Process file 'system/layouts/header.html' with fatal error!
+2026-11-04 00:13:34 error Process file 'system/layouts/header.html' with fatal error!
