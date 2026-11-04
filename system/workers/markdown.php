@@ -3966,6 +3966,9 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $alt = $matches[2];
         $title = isset($matches[7]) ? $matches[7] : $matches[2];
         $attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
+        if ($this->page->get("layout") == "blog" && !preg_match("/\\bloading\\s*=/i", $attr)) {
+            $attr .= ' loading="lazy"';
+        }
         $output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
         if (!is_string_empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
         if (!is_string_empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
