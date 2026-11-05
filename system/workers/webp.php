@@ -4,7 +4,7 @@
 
 class YellowWebp
 {
-    const VERSION = "0.9.0";
+    const VERSION = "0.9.1";
     public $yellow;
 
     public function onLoad($yellow)
@@ -40,7 +40,6 @@ class YellowWebp
         );
         libxml_clear_errors();
         libxml_use_internal_errors($previousErrors);
-
         if (!$loaded) {
             return $text;
         }
@@ -49,9 +48,6 @@ class YellowWebp
             $this->serve_node($node, "src");
             $this->serve_node($node, "data-src");
             $this->serve_srcset($node);
-        }
-        foreach ($dom->getElementsByTagName("a") as $node) {
-            $this->serve_node($node, "href");
         }
         foreach ($dom->getElementsByTagName("video") as $node) {
             $this->serve_node($node, "poster");
@@ -70,18 +66,28 @@ class YellowWebp
         if (!isset($_SERVER["HTTP_ACCEPT"])) {
             return false;
         }
-        return (bool)preg_match(
-            "/(?:^|,)\s*image\/webp\s*(?:;q=(?!0(?:\.0*)?)[0-9.]+)?\s*(?:,|$)/i",
-            $_SERVER["HTTP_ACCEPT"]
-        );
+        foreach (explode(",", $_SERVER["HTTP_ACCEPT"]) as $mediaRange) {
+            $parts = array_map("trim", explode(";", $mediaRange));
+            if (strtolower($parts[0]) !== "image/webp") {
+                continue;
+            }
+            $quality = 1.0;
+            foreach (array_slice($parts, 1) as $parameter) {
+                if (preg_match("/^q\s*=\s*([0-9.]+)$/i", $parameter, $matches)) {
+                    $quality = (float)$matches[1];
+                    break;
+                }
+            }
+            return $quality > 0.0 && $quality <= 1.0;
+        }
+        return false;
     }
 
     public function basic_checks()
     {
         return function_exists("imagewebp") &&
             function_exists("imagecreatefromjpeg") &&
-            function_exists("imagecreatefrompng") &&
-            function_exists("imagecreatetruecolor");
+            function_exists("imagecreatefrompng");
     }
 
     public function is_excluded($node)
@@ -104,7 +110,7 @@ class YellowWebp
         }
     }
 
-    // Rewrite each URL candidate independently; keep its width/density descriptor.
+    // Parse srcset candidates without splitting commas that belong to a URL.
     public function serve_srcset($node)
     {
         if ($this->is_excluded($node) || !$node->hasAttribute("srcset")) {
@@ -112,51 +118,92 @@ class YellowWebp
         }
 
         $srcset = trim($node->getAttribute("srcset"));
-        if ($srcset === "" || stripos($srcset, "data:") !== false) {
-            // A data URI contains a comma and makes simple candidate splitting ambiguous.
+        if ($srcset === "") {
             return;
         }
 
-        $candidates = preg_split("/\s*,\s*/", $srcset);
-        foreach ($candidates as &$candidate) {
-            $candidate = trim($candidate);
-            if ($candidate === "") {
-                continue;
+        $length = strlen($srcset);
+        $offset = 0;
+        $candidates = array();
+        while ($offset < $length) {
+            while ($offset < $length && (ctype_space($srcset[$offset]) || $srcset[$offset] === ",")) {
+                ++$offset;
             }
-            $parts = preg_split("/\s+/", $candidate, 2);
-            $parts[0] = $this->convert($parts[0]);
-            $candidate = isset($parts[1]) ? $parts[0]." ".$parts[1] : $parts[0];
+            if ($offset >= $length) {
+                break;
+            }
+
+            $urlStart = $offset;
+            while ($offset < $length && !ctype_space($srcset[$offset])) {
+                ++$offset;
+            }
+            $url = substr($srcset, $urlStart, $offset - $urlStart);
+            $trailingCommas = strlen($url) - strlen(rtrim($url, ","));
+            if ($trailingCommas > 0) {
+                $url = substr($url, 0, -$trailingCommas);
+                $descriptor = "";
+            } else {
+                while ($offset < $length && ctype_space($srcset[$offset])) {
+                    ++$offset;
+                }
+                $descriptorStart = $offset;
+                while ($offset < $length && $srcset[$offset] !== ",") {
+                    ++$offset;
+                }
+                $descriptor = trim(substr($srcset, $descriptorStart, $offset - $descriptorStart));
+            }
+
+            if ($url !== "") {
+                $url = $this->convert($url);
+                $candidates[] = $url.($descriptor !== "" ? " ".$descriptor : "");
+            }
+            if ($offset < $length && $srcset[$offset] === ",") {
+                ++$offset;
+            }
         }
-        unset($candidate);
-        $node->setAttribute("srcset", implode(", ", $candidates));
+
+        if (!empty($candidates)) {
+            $node->setAttribute("srcset", implode(", ", $candidates));
+        }
     }
 
-    // Return the filesystem directory used by Yellow for core images.
+    // Return the absolute filesystem directory used by Yellow for core images.
     public function get_image_directory()
     {
         if (!isset($this->yellow->lookup) ||
             !method_exists($this->yellow->lookup, "findMediaDirectory")) {
             return false;
         }
-        $path = $this->yellow->lookup->findMediaDirectory("coreImageLocation");
-        if (!is_string($path) || $path === "") {
+
+        $mediaDirectory = $this->yellow->lookup->findMediaDirectory("coreImageLocation");
+        if (!is_string($mediaDirectory) || $mediaDirectory === "") {
             return false;
         }
-        $realPath = realpath($path);
+
+        $installDirectory = $this->yellow->system->get("coreServerInstallDirectory");
+        $candidate = rtrim((string)$installDirectory, "/\\").DIRECTORY_SEPARATOR.
+            ltrim($mediaDirectory, "/\\");
+        $realPath = realpath($candidate);
+        if ($realPath === false) {
+            // Some Yellow installations return an already absolute media path.
+            $realPath = realpath($mediaDirectory);
+        }
         return $realPath !== false && is_dir($realPath) ? $realPath : false;
     }
 
-    // Return the URL path corresponding to Yellow's core image directory.
+    // Return the public URL path corresponding to Yellow's configured image directory.
     public function get_image_url_path()
     {
-        $serverBase = (string)$this->yellow->system->get("coreServerBase");
         $imageLocation = (string)$this->yellow->system->get("coreImageLocation");
-        $url = rtrim($serverBase, "/")."/".ltrim($imageLocation, "/");
-        $path = parse_url($url, PHP_URL_PATH);
-        if (!is_string($path) || $path === "") {
-            $path = "/".trim($imageLocation, "/");
+        $base = isset($this->yellow->page->base) ? (string)$this->yellow->page->base : "";
+        $basePath = parse_url($base, PHP_URL_PATH);
+        if (!is_string($basePath)) {
+            $basePath = "";
         }
-        return rtrim("/".trim($path, "/"), "/")."/";
+
+        $path = rtrim($basePath, "/")."/".ltrim($imageLocation, "/");
+        $path = "/".trim($path, "/");
+        return rtrim(rawurldecode($path), "/")."/";
     }
 
     public function get_cache_directory()
@@ -167,53 +214,63 @@ class YellowWebp
         }
 
         $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        if ($cacheName === "" || strpos($cacheName, "..") !== false ||
-            strpos($cacheName, ":") !== false) {
+        if ($cacheName === "" || preg_match("#(^|[\\/])\.\.?([\\/]|$)#", $cacheName) ||
+            strpos($cacheName, ":") !== false || strpos($cacheName, "\0") !== false) {
             return false;
         }
 
-        return $imageDirectory.DIRECTORY_SEPARATOR.str_replace(
+        $cachePath = $imageDirectory.DIRECTORY_SEPARATOR.str_replace(
             array("/", "\\"),
-            DIRECTORY_SEPARATOR,
-            $cacheName
+            DIRECTORY_SEPARATOR, $cacheName
         );
+        return $cachePath;
     }
 
-    // Resolve a local image URL to a file under Yellow's configured image directory.
+    // Resolve a local image URL to a file contained in Yellow's configured image directory.
     public function resolve_source($srcIn)
     {
         $parts = parse_url($srcIn);
         if ($parts === false || !isset($parts["path"]) || $parts["path"] === "") {
             return false;
         }
-
-        // Permit absolute URLs only when they point back to this Yellow site.
-        if (isset($parts["host"])) {
-            $baseParts = parse_url((string)$this->yellow->system->get("coreServerBase"));
-            if ($baseParts === false || empty($baseParts["host"]) ||
-                strtolower($parts["host"]) !== strtolower($baseParts["host"]) ||
-                (isset($parts["port"]) ? $parts["port"] : null) !==
-                (isset($baseParts["port"]) ? $baseParts["port"] : null)) {
-                return false;
-            }
-        }
         if (isset($parts["scheme"]) && !in_array(strtolower($parts["scheme"]), array("http", "https"), true)) {
             return false;
         }
 
-        $urlPath = rawurldecode($parts["path"]);
-        $urlPath = "/".ltrim($urlPath, "/");
-        if (strpos($urlPath, "\0") !== false) {
-            return false;
+        if (isset($parts["host"])) {
+            $base = isset($this->yellow->page->base) ? (string)$this->yellow->page->base : "";
+            $baseParts = parse_url($base);
+            if ($baseParts === false || empty($baseParts["host"]) ||
+                strtolower($parts["host"]) !== strtolower($baseParts["host"]) ||
+                (isset($parts["port"]) ? (int)$parts["port"] : null) !==
+                (isset($baseParts["port"]) ? (int)$baseParts["port"] : null)) {
+                return false;
+            }
         }
 
+        $urlPath = rawurldecode($parts["path"]);
+        if (strpos($urlPath, "\0") !== false || strpos($urlPath, "\\") !== false) {
+            return false;
+        }
+        if (substr($urlPath, 0, 1) !== "/") {
+            $base = isset($this->yellow->page->base) ? (string)$this->yellow->page->base : "";
+            $basePath = parse_url($base, PHP_URL_PATH);
+            if (!is_string($basePath)) {
+                $basePath = "";
+            }
+            $pageLocation = isset($this->yellow->page->location) ? (string)$this->yellow->page->location : "/";
+            $urlPath = rtrim($basePath, "/")."/".trim($pageLocation, "/")."/".$urlPath;
+        }
+        $urlPath = $this->normalise_url_path($urlPath);
+        if ($urlPath === false) {
+            return false;
+        }
         $imageUrlPath = $this->get_image_url_path();
         if (strpos($urlPath, $imageUrlPath) !== 0) {
             return false;
         }
 
         $relative = substr($urlPath, strlen($imageUrlPath));
-        $relative = str_replace("\\", "/", $relative);
         if ($relative === "" || preg_match("#(^|/)\.\.?(/|$)#", $relative)) {
             return false;
         }
@@ -222,11 +279,8 @@ class YellowWebp
         if ($imageDirectory === false) {
             return false;
         }
-
         $source = realpath($imageDirectory.DIRECTORY_SEPARATOR.str_replace(
-            "/",
-            DIRECTORY_SEPARATOR,
-            $relative
+            "/", DIRECTORY_SEPARATOR, $relative
         ));
         $rootPrefix = rtrim($imageDirectory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
         if ($source === false || strpos($source, $rootPrefix) !== 0 || !is_file($source) || !is_readable($source)) {
@@ -237,6 +291,27 @@ class YellowWebp
             "file" => $source,
             "relative" => str_replace("\\", "/", substr($source, strlen($rootPrefix)))
         );
+    }
+
+    // Resolve dot segments in a URL path without allowing traversal above its root.
+    public function normalise_url_path($path)
+    {
+        $segments = explode("/", str_replace("\\", "/", $path));
+        $normalised = array();
+        foreach ($segments as $segment) {
+            if ($segment === "" || $segment === ".") {
+                continue;
+            }
+            if ($segment === "..") {
+                if (empty($normalised)) {
+                    return false;
+                }
+                array_pop($normalised);
+            } else {
+                $normalised[] = $segment;
+            }
+        }
+        return "/".implode("/", $normalised);
     }
 
     public function get_supported_mime_types()
@@ -257,6 +332,17 @@ class YellowWebp
         return array_unique($supported);
     }
 
+    // Encode URL path segments while preserving directory separators.
+    public function encode_url_path($path)
+    {
+        $segments = explode("/", $path);
+        foreach ($segments as &$segment) {
+            $segment = rawurlencode(rawurldecode($segment));
+        }
+        unset($segment);
+        return implode("/", $segments);
+    }
+
     // Convert a local JPEG/PNG only when the WebP file is valid and smaller.
     public function convert($srcIn)
     {
@@ -268,14 +354,20 @@ class YellowWebp
 
         $mime = "";
         if (function_exists("finfo_open")) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
             if ($finfo) {
-                $mime = finfo_file($finfo, $sourceInfo["file"]);
+                $detectedMime = @finfo_file($finfo, $sourceInfo["file"]);
+                if (is_string($detectedMime)) {
+                    $mime = $detectedMime;
+                }
                 finfo_close($finfo);
             }
         }
         if ($mime === "" && function_exists("mime_content_type")) {
-            $mime = mime_content_type($sourceInfo["file"]);
+            $detectedMime = @mime_content_type($sourceInfo["file"]);
+            if (is_string($detectedMime)) {
+                $mime = $detectedMime;
+            }
         }
         if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) {
             return $srcIn;
@@ -289,27 +381,54 @@ class YellowWebp
         $relativeDirectory = dirname($sourceInfo["relative"]);
         $targetDirectory = $cacheDirectory;
         if ($relativeDirectory !== "." && $relativeDirectory !== "") {
-            $targetDirectory .= DIRECTORY_SEPARATOR.str_replace(
-                "/",
-                DIRECTORY_SEPARATOR,
-                $relativeDirectory
-            );
+            $targetDirectory .= DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relativeDirectory);
         }
         $targetName = basename($sourceInfo["relative"]).".webp";
+        if (is_dir($targetDirectory)) {
+            $realTargetDirectory = realpath($targetDirectory);
+            $imageDirectory = $this->get_image_directory();
+            $imageRootPrefix = $imageDirectory !== false ? rtrim($imageDirectory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR : "";
+            if ($realTargetDirectory === false || $imageRootPrefix === "" ||
+                strpos($realTargetDirectory.DIRECTORY_SEPARATOR, $imageRootPrefix) !== 0) {
+                return $srcIn;
+            }
+            $targetDirectory = $realTargetDirectory;
+        }
         $targetFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
+        $metadataFile = $targetFile.".meta";
 
-        $sourceMtime = filemtime($sourceInfo["file"]);
-        $sourceSize = filesize($sourceInfo["file"]);
-        if ($sourceMtime === false || $sourceSize === false) {
+        clearstatcache(true, $sourceInfo["file"]);
+        $sourceMtime = @filemtime($sourceInfo["file"]);
+        $sourceCtime = @filectime($sourceInfo["file"]);
+        $sourceSize = @filesize($sourceInfo["file"]);
+        if ($sourceMtime === false || $sourceCtime === false || $sourceSize === false) {
             return $srcIn;
         }
+        $sourceSignature = $sourceMtime."|".$sourceCtime."|".$sourceSize;
 
-        if (!is_file($targetFile) || filemtime($targetFile) < $sourceMtime || filesize($targetFile) <= 0) {
+        clearstatcache(true, $targetFile);
+        $cacheValid = false;
+        if (is_file($targetFile) && @filesize($targetFile) > 0 && is_file($metadataFile)) {
+            $cachedSignature = @file_get_contents($metadataFile);
+            $cacheValid = is_string($cachedSignature) && trim($cachedSignature) === $sourceSignature;
+        }
+
+        if (!$cacheValid) {
             if (!is_dir($targetDirectory) &&
                 !@mkdir($targetDirectory, 0775, true) &&
                 !is_dir($targetDirectory)) {
                 return $srcIn;
             }
+            $realTargetDirectory = realpath($targetDirectory);
+            $imageDirectory = $this->get_image_directory();
+            $imageRootPrefix = $imageDirectory !== false ? rtrim($imageDirectory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR : "";
+            if ($realTargetDirectory === false || $imageRootPrefix === "" ||
+                strpos($realTargetDirectory.DIRECTORY_SEPARATOR, $imageRootPrefix) !== 0) {
+                return $srcIn;
+            }
+            $targetDirectory = $realTargetDirectory;
+            $targetFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
+            $metadataFile = $targetFile.".meta";
 
             $image = false;
             if ($mime === "image/jpeg") {
@@ -321,17 +440,13 @@ class YellowWebp
                 return $srcIn;
             }
 
-            if (function_exists("imageistruecolor") &&
-                !imageistruecolor($image) &&
-                function_exists("imagepalettetotruecolor")) {
-                if (!@imagepalettetotruecolor($image)) {
-                    imagedestroy($image);
-                    return $srcIn;
-                }
-            }
             if ($mime === "image/png") {
-                imagealphablending($image, false);
-                imagesavealpha($image, true);
+                if (function_exists("imagealphablending")) {
+                    imagealphablending($image, false);
+                }
+                if (function_exists("imagesavealpha")) {
+                    imagesavealpha($image, true);
+                }
             }
 
             $temporaryFile = @tempnam($targetDirectory, "webp_");
@@ -342,15 +457,15 @@ class YellowWebp
 
             $converted = @imagewebp($image, $temporaryFile);
             imagedestroy($image);
-
-            if (!$converted || !is_file($temporaryFile) || filesize($temporaryFile) <= 0) {
+            clearstatcache(true, $temporaryFile);
+            if (!$converted || !is_file($temporaryFile) || @filesize($temporaryFile) <= 0) {
                 @unlink($temporaryFile);
                 return $srcIn;
             }
 
             // Replace the cached file only after a complete successful conversion.
             if (!@rename($temporaryFile, $targetFile)) {
-                // Windows does not replace an existing destination with rename().
+                // Windows cannot rename over an existing destination.
                 if (is_file($targetFile)) {
                     @unlink($targetFile);
                 }
@@ -359,29 +474,21 @@ class YellowWebp
                     return $srcIn;
                 }
             }
+            @file_put_contents($metadataFile, $sourceSignature, LOCK_EX);
             @touch($targetFile, $sourceMtime);
         }
 
         clearstatcache(true, $targetFile);
-        $targetSize = is_file($targetFile) ? filesize($targetFile) : false;
+        $targetSize = is_file($targetFile) ? @filesize($targetFile) : false;
         if ($targetSize === false || $targetSize <= 0 || $targetSize >= $sourceSize) {
             return $srcIn;
         }
 
-        $webpUrl = $this->get_image_url_path().
-            trim((string)$this->yellow->system->get("webpDirectory"), "/\\")."/".
+        $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
+        $webpRelative = $cacheName."/".
             ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
-            rawurlencode($targetName);
-
-        // Encode each path segment while preserving directory separators.
-        $segments = explode("/", $webpUrl);
-        foreach ($segments as &$segment) {
-            if ($segment !== "" && strpos($segment, ":") === false) {
-                $segment = rawurlencode(rawurldecode($segment));
-            }
-        }
-        unset($segment);
-        $webpUrl = implode("/", $segments);
+            $targetName;
+        $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
 
         if (isset($parts["query"])) {
             $webpUrl .= "?".$parts["query"];
