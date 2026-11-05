@@ -6,7 +6,6 @@ class YellowWebp
 {
     const VERSION = "0.9.1";
     public $yellow;
-    public $renamedSources = array();
 
     public function onLoad($yellow)
     {
@@ -122,68 +121,11 @@ class YellowWebp
         if (isset($parts["query"])) $url .= "?".$parts["query"];
         if (isset($parts["fragment"])) $url .= "#".$parts["fragment"];
 
-        $url = $this->rename_source_to_timestamp($url);
         $converted = $this->convert($url);
         if ($relativeToImageDirectory && strpos($converted, $this->get_image_url_path()) === 0) {
             $converted = substr($converted, strlen($this->get_image_url_path()));
         }
         return $converted;
-    }
-
-    // Rename a local image using its filesystem creation timestamp.
-    // On Unix, filemtime is used because filectime is inode-change time there.
-    public function rename_source_to_timestamp($url)
-    {
-        if (isset($this->renamedSources[$url])) {
-            return $this->renamedSources[$url];
-        }
-        $sourceInfo = $this->resolve_source($url);
-        if ($sourceInfo === false) {
-            return $url;
-        }
-
-        $imageDirectory = $this->get_image_directory();
-        if ($imageDirectory === false) {
-            return $url;
-        }
-
-        $extension = strtolower(pathinfo($sourceInfo["file"], PATHINFO_EXTENSION));
-        $basename = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
-        if ($extension === "" || preg_match('/^\\d+(?:-\\d+)?$/', $basename)) {
-            return $url;
-        }
-
-        clearstatcache(true, $sourceInfo["file"]);
-        $timestamp = DIRECTORY_SEPARATOR === "\\"
-            ? @filectime($sourceInfo["file"])
-            : @filemtime($sourceInfo["file"]);
-        if ($timestamp === false || $timestamp <= 0) {
-            $timestamp = @filemtime($sourceInfo["file"]);
-        }
-        if ($timestamp === false || $timestamp <= 0) {
-            return $url;
-        }
-
-        $directory = dirname($sourceInfo["file"]);
-        $targetBase = (string)$timestamp;
-        $targetFile = $directory.DIRECTORY_SEPARATOR.$targetBase.".".$extension;
-        $suffix = 1;
-        while (file_exists($targetFile) && realpath($targetFile) !== realpath($sourceInfo["file"])) {
-            $targetBase = (string)$timestamp."-".$suffix++;
-            $targetFile = $directory.DIRECTORY_SEPARATOR.$targetBase.".".$extension;
-        }
-
-        if (realpath($targetFile) !== realpath($sourceInfo["file"]) && !@rename($sourceInfo["file"], $targetFile)) {
-            return $url;
-        }
-
-        $relative = str_replace("\\", "/", substr($targetFile, strlen(rtrim($imageDirectory, "/\\").DIRECTORY_SEPARATOR)));
-        $renamedUrl = $this->get_image_url_path().$this->encode_url_path($relative);
-        $parts = parse_url($url);
-        if (is_array($parts) && isset($parts["query"])) $renamedUrl .= "?".$parts["query"];
-        if (is_array($parts) && isset($parts["fragment"])) $renamedUrl .= "#".$parts["fragment"];
-        $this->renamedSources[$url] = $renamedUrl;
-        return $renamedUrl;
     }
 
     public function acceptsWebp()
@@ -454,44 +396,71 @@ class YellowWebp
         return implode("/", $segments);
     }
 
-    // Convert a local JPEG/PNG to a timestamp-named WebP in media/images.
+    // Return the best portable approximation of the source file creation time.
+    public function get_source_timestamp($file)
+    {
+        clearstatcache(true, $file);
+        $timestamp = false;
+        if (defined("PHP_OS_FAMILY") && PHP_OS_FAMILY === "Windows") {
+            $timestamp = @filectime($file);
+        }
+        if ($timestamp === false || $timestamp <= 0) {
+            $timestamp = @filemtime($file);
+        }
+        return $timestamp !== false && $timestamp > 0 ? (int)$timestamp : time();
+    }
+
+    // Convert a local JPEG/PNG to a timestamp-named WebP directly in media/images.
     public function convert($srcIn)
     {
         $parts = parse_url($srcIn);
-        if (!function_exists("imagewebp")) return $srcIn;
         $sourceInfo = $this->resolve_source($srcIn);
-        if ($sourceInfo === false) return $srcIn;
+        if ($sourceInfo === false) {
+            return $srcIn;
+        }
 
         $mime = "";
         if (function_exists("finfo_open")) {
             $finfo = @finfo_open(FILEINFO_MIME_TYPE);
             if ($finfo) {
                 $detectedMime = @finfo_file($finfo, $sourceInfo["file"]);
-                if (is_string($detectedMime)) $mime = $detectedMime;
+                if (is_string($detectedMime)) {
+                    $mime = $detectedMime;
+                }
                 finfo_close($finfo);
             }
         }
         if ($mime === "" && function_exists("mime_content_type")) {
             $detectedMime = @mime_content_type($sourceInfo["file"]);
-            if (is_string($detectedMime)) $mime = $detectedMime;
+            if (is_string($detectedMime)) {
+                $mime = $detectedMime;
+            }
         }
-        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) return $srcIn;
+        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) {
+            return $srcIn;
+        }
 
-        $imageDirectory = $this->get_image_directory();
-        if ($imageDirectory === false) return $srcIn;
+        $imageDirectory = $this->get_cache_directory();
+        if ($imageDirectory === false || !is_writable($imageDirectory)) {
+            return $srcIn;
+        }
 
         clearstatcache(true, $sourceInfo["file"]);
         $sourceMtime = @filemtime($sourceInfo["file"]);
         $sourceSize = @filesize($sourceInfo["file"]);
-        if ($sourceMtime === false || $sourceSize === false || $sourceSize <= 0) return $srcIn;
-
-        $sourceBase = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
-        if (preg_match('/^\\d+(?:-\\d+)?$/', $sourceBase)) {
-            $targetBase = $sourceBase;
-        } else {
-            $targetBase = (string)$sourceMtime."-".substr(sha1($sourceInfo["relative"]), 0, 8);
+        if ($sourceMtime === false || $sourceSize === false || $sourceSize <= 0) {
+            return $srcIn;
         }
-        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetBase.".webp";
+
+        $timestamp = $this->get_source_timestamp($sourceInfo["file"]);
+        $targetName = $timestamp.".webp";
+        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetName;
+
+        // Resolve same-second timestamp collisions without overwriting another image.
+        if (is_file($targetFile) && @filemtime($targetFile) < $sourceMtime) {
+            $targetName = $timestamp."-".substr(sha1($sourceInfo["relative"]), 0, 8).".webp";
+            $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetName;
+        }
 
         clearstatcache(true, $targetFile);
         $targetMtime = is_file($targetFile) ? @filemtime($targetFile) : false;
@@ -505,11 +474,17 @@ class YellowWebp
             } elseif ($mime === "image/png" && function_exists("imagecreatefrompng")) {
                 $image = @imagecreatefrompng($sourceInfo["file"]);
             }
-            if ($image === false) return $srcIn;
+            if ($image === false) {
+                return $srcIn;
+            }
 
             if ($mime === "image/png") {
-                if (function_exists("imagealphablending")) @imagealphablending($image, false);
-                if (function_exists("imagesavealpha")) @imagesavealpha($image, true);
+                if (function_exists("imagealphablending")) {
+                    @imagealphablending($image, false);
+                }
+                if (function_exists("imagesavealpha")) {
+                    @imagesavealpha($image, true);
+                }
             }
 
             $temporaryFile = @tempnam($imageDirectory, "webp_");
@@ -517,6 +492,7 @@ class YellowWebp
                 imagedestroy($image);
                 return $srcIn;
             }
+
             $converted = @imagewebp($image, $temporaryFile);
             imagedestroy($image);
             clearstatcache(true, $temporaryFile);
@@ -525,22 +501,31 @@ class YellowWebp
                 return $srcIn;
             }
 
+            // Replace the destination only after a complete successful conversion.
             if (!@rename($temporaryFile, $targetFile)) {
-                if (is_file($targetFile)) @unlink($targetFile);
+                if (is_file($targetFile)) {
+                    @unlink($targetFile);
+                }
                 if (!@rename($temporaryFile, $targetFile)) {
                     @unlink($temporaryFile);
                     return $srcIn;
                 }
             }
-            @touch($targetFile, $sourceMtime);
+            @touch($targetFile, max((int)$sourceMtime, 1));
         }
 
         clearstatcache(true, $targetFile);
-        if (!is_file($targetFile) || @filesize($targetFile) <= 0) return $srcIn;
+        if (!is_file($targetFile) || @filesize($targetFile) <= 0) {
+            return $srcIn;
+        }
 
-        $webpUrl = $this->get_image_url_path().rawurlencode(basename($targetFile));
-        if (isset($parts["query"])) $webpUrl .= "?".$parts["query"];
-        if (isset($parts["fragment"])) $webpUrl .= "#".$parts["fragment"];
+        $webpUrl = $this->get_image_url_path().rawurlencode($targetName);
+        if (isset($parts["query"])) {
+            $webpUrl .= "?".$parts["query"];
+        }
+        if (isset($parts["fragment"])) {
+            $webpUrl .= "#".$parts["fragment"];
+        }
         return $webpUrl;
     }
 
