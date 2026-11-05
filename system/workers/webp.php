@@ -4,14 +4,13 @@
 
 class YellowWebp
 {
-    const VERSION = "0.9.1";
+    const VERSION = "0.9.2";
     public $yellow;
 
     public function onLoad($yellow)
     {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("webpExcludeContentType", "xml");
-        $this->yellow->system->setDefault("webpDirectory", "webp");
         $this->yellow->system->setDefault("webpSupportType", "jpeg,png");
     }
 
