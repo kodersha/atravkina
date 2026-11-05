@@ -321,13 +321,17 @@ class YellowWebp
                 return $srcIn;
             }
 
+            if (function_exists("imageistruecolor") &&
+                !imageistruecolor($image) &&
+                function_exists("imagepalettetotruecolor")) {
+                if (!@imagepalettetotruecolor($image)) {
+                    imagedestroy($image);
+                    return $srcIn;
+                }
+            }
             if ($mime === "image/png") {
                 imagealphablending($image, false);
                 imagesavealpha($image, true);
-            } elseif (function_exists("imageistruecolor") &&
-                !imageistruecolor($image) &&
-                function_exists("imagepalettetotruecolor")) {
-                imagepalettetotruecolor($image);
             }
 
             $temporaryFile = @tempnam($targetDirectory, "webp_");
