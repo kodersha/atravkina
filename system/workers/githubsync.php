@@ -109,7 +109,7 @@ class YellowGithubSync {
 
             // Compare with GitHub's Git blob SHA, not only the local state cache.
             // This repairs files deleted or changed directly in the remote repository.
-            $localBlobSha = sha1("blob ".strlen($data)."\\0".$data);
+            $localBlobSha = sha1("blob ".strlen($data)."\0".$data);
             $remote = $this->request("GET", $this->fileEndpoint($path));
             if ($remote["status"]==200 && isset($remote["json"]["sha"]) &&
                 hash_equals($remote["json"]["sha"], $localBlobSha)) {
