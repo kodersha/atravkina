@@ -281,40 +281,95 @@ class YellowTelegram {
 
     private function sendPhoto($token, $channel, $photoUrl, $caption = "") {
         $apiUrl = "https://api.telegram.org/bot".rawurlencode($token)."/sendPhoto";
-        $data = array("chat_id" => $channel, "photo" => $photoUrl, "caption" => $caption, "parse_mode" => "HTML");
-        $response = false;
-        $status = 0;
-        $transportError = "";
-        if (function_exists("curl_init")) {
+        if (!is_string($photoUrl) || !filter_var($photoUrl, FILTER_VALIDATE_URL) ||
+            !preg_match('/^https?:\/\//i', $photoUrl)) {
+            $this->yellow->toolbox->log("error", "Telegram: invalid photo URL");
+            return false;
+        }
+
+        // Download and upload the actual file. URL-based Telegram photo
+        // fetching is restrictive for PNG; multipart upload supports it.
+        if (function_exists("curl_init") && class_exists("CURLFile")) {
+            $download = curl_init($photoUrl);
+            curl_setopt_array($download, array(
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_MAXREDIRS => 3,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 20,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS
+            ));
+            $bytes = curl_exec($download);
+            $downloadStatus = curl_getinfo($download, CURLINFO_HTTP_CODE);
+            $downloadError = $bytes === false ? curl_error($download) : "";
+            $downloadType = curl_getinfo($download, CURLINFO_CONTENT_TYPE);
+            curl_close($download);
+
+            if ($bytes === false || $downloadStatus < 200 || $downloadStatus >= 300 ||
+                !is_string($bytes) || strlen($bytes) > 10000000) {
+                $this->yellow->toolbox->log("error", "Telegram: cannot download first image (HTTP ".$downloadStatus.": ".$downloadError.")");
+                return false;
+            }
+
+            $info = function_exists("getimagesizefromstring") ? @getimagesizefromstring($bytes) : false;
+            $mime = is_array($info) && !empty($info["mime"]) ? $info["mime"] : $downloadType;
+            $mime = is_string($mime) ? strtolower(trim(explode(";", $mime)[0])) : "";
+            if (!in_array($mime, array("image/jpeg", "image/png", "image/webp"), true)) {
+                $this->yellow->toolbox->log("error", "Telegram: first image has unsupported content type");
+                return false;
+            }
+
+            $tempFile = @tempnam(sys_get_temp_dir(), "yellow-telegram-");
+            if (!$tempFile || @file_put_contents($tempFile, $bytes) === false) {
+                if ($tempFile) @unlink($tempFile);
+                $this->yellow->toolbox->log("error", "Telegram: cannot create temporary image file");
+                return false;
+            }
+            unset($bytes);
+
+            $path = parse_url($photoUrl, PHP_URL_PATH);
+            $filename = is_string($path) && $path !== "" ? basename($path) : "image";
+            $data = array(
+                "chat_id" => $channel,
+                "photo" => new CURLFile($tempFile, $mime, $filename),
+                "caption" => $caption,
+                "parse_mode" => "HTML"
+            );
             $curl = curl_init($apiUrl);
             curl_setopt_array($curl, array(
                 CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => http_build_query($data),
+                CURLOPT_POSTFIELDS => $data,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CONNECTTIMEOUT => 3,
-                CURLOPT_TIMEOUT => 15,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 25,
                 CURLOPT_SSL_VERIFYPEER => true
             ));
             $response = curl_exec($curl);
             $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            if ($response === false) $transportError = curl_error($curl);
+            $transportError = $response === false ? curl_error($curl) : "";
             curl_close($curl);
+            @unlink($tempFile);
         } else {
+            // URL fallback for servers without cURL.
+            $data = array("chat_id" => $channel, "photo" => $photoUrl, "caption" => $caption, "parse_mode" => "HTML");
             $options = array("http" => array(
                 "method" => "POST",
-                    "header" => "Content-Type: application/x-www-form-urlencoded\r\n",
+                "header" => "Content-Type: application/x-www-form-urlencoded\r\n",
                 "content" => http_build_query($data),
-                "timeout" => 15,
+                "timeout" => 25,
                 "ignore_errors" => true
             ));
             $response = @file_get_contents($apiUrl, false, stream_context_create($options));
-            $status = isset($http_response_header[0]) && preg_match("/\\s(\\d{3})\\s/", $http_response_header[0], $matches) ? intval($matches[1]) : 0;
-            if ($response === false) $transportError = "HTTP request failed (allow_url_fopen or TLS/network configuration)";
+            $status = isset($http_response_header[0]) && preg_match("/\s(\d{3})\s/", $http_response_header[0], $matches) ? intval($matches[1]) : 0;
+            $transportError = $response === false ? "HTTP request failed (allow_url_fopen or TLS/network configuration)" : "";
         }
+
         $result = is_string($response) ? json_decode($response, true) : null;
         if ($response === false || $status < 200 || $status >= 300 || !is_array($result) || empty($result["ok"])) {
             $description = is_array($result) && isset($result["description"]) ? $result["description"] : $transportError;
-            $description = str_replace($token, "[redacted]", $description);
+            $description = str_replace($token, "[redacted]", (string)$description);
             $this->yellow->toolbox->log("error", "Telegram: sendPhoto failed (HTTP ".$status.": ".$description.")");
             return false;
         }
