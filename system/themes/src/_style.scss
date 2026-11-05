@@ -1,0 +1,136 @@
+html {
+  background-color: rgb(0, 0, 0);
+}
+body {
+  position: relative;
+
+  margin-bottom: 5vw;
+  margin-right: 5vw;
+  margin-left: 5vw;
+  margin-top: 5vw;
+
+  min-height: calc(100vh - 5vw - 5vw);
+
+  flex-direction: column;
+  display: flex;
+  row-gap: 3rem;
+
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
+
+  font: 1.125rem/1.5 "PT Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: unset;
+  margin-top: unset;
+}
+img {
+  width: 100%;
+  height: auto;
+}
+a {
+  text-decoration: none;
+}
+p {
+  margin-bottom: unset;
+  margin-top: unset;
+
+  a {
+    color: rgb(250, 198, 112);
+    border-bottom: 1px solid rgba(250, 198, 112, 0.2);
+
+    &:hover {
+      color: rgb(243, 121, 37);
+      border-color: rgba(243, 121, 37, 0.2);
+    }
+  }
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .logotype {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+}
+
+article {
+  position: relative;
+  flex-direction: column;
+  display: flex;
+  row-gap: 1rem;
+
+  max-width: 30rem;
+
+  p {
+    a {
+      &.blog-read {
+        border-bottom: none;
+        color: rgb(120, 120, 120);
+
+        &:hover {
+          color: rgb(255, 255, 255);
+        }
+      }
+    }
+  }
+}
+
+.blog-sort {
+  justify-content: end;
+  align-items: center;
+  display: flex;
+
+  position: absolute;
+  right: 0;
+  top: 0;
+  
+  height: 2.5rem;
+  width: 2.5rem;
+
+  button {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+
+    background-color: transparent;
+    border: none;
+
+    font-size: 1.5rem;
+    color: rgb(120, 120, 120);
+
+    &:hover {
+      color: rgb(255, 255, 255);
+    }
+  }
+}
+
+footer {
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  color: rgb(68, 68, 68);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: auto;
+
+  .contact {
+    display: flex;
+    align-items: center;
+    column-gap: 0.5rem;
+
+    a {
+      color: rgb(68, 68, 68);
+
+      &:hover {
+        color: rgb(255, 255, 255);
+      }
+    }
+  }
+}
