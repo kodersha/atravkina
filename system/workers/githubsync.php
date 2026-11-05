@@ -40,9 +40,10 @@ class YellowGithubSync {
         return "github-sync [all|content|media]";
     }
 
-    // Yellow edit hooks provide an immediate second check after content/media changes.
-    // The filesystem scan in onLoad also catches deletions and changes made outside the editor.
-    public function onEditContentFile($page, $action, $email) {
+    // The site's editor explicitly notifies extensions after a content file is written.
+    // Yellow calls onEditMediaFile() for uploaded or changed media files.
+    // The filesystem scan in onLoad() also catches changes made outside the editor.
+    public function onSaveContentFile($page) {
         if ($this->autoSync()) $this->syncChanges("content");
     }
 
