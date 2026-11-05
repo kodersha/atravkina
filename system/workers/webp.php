@@ -320,7 +320,6 @@ class YellowWebp
     }
 
     // WebP files are stored directly in Yellow's configured image directory.
-    // WebP files are stored directly in Yellow's configured image directory.
     public function get_cache_directory()
     {
         return $this->get_image_directory();
@@ -484,7 +483,8 @@ class YellowWebp
                 $mime = $detectedMime;
             }
         }
-        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) {
+        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true) ||
+            !$this->basic_checks()) {
             return $srcIn;
         }
 
