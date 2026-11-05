@@ -73,7 +73,7 @@ class YellowTelegram {
 
         $content = method_exists($page, "getContentHtml") ? $page->getContentHtml() : "";
         $url = method_exists($page, "getUrl") ? $page->getUrl(true) : "";
-        $imageUrl = $this->getFirstImageUrl($content);
+        $imageUrl = $this->getFirstImageUrl($content, $page);
         if ($imageUrl !== false) {
             $caption = $this->buildCaption($content, $url);
             $sent = $this->sendPhoto($config["bot_token"], $config["channel"], $imageUrl, $caption);
@@ -231,10 +231,56 @@ class YellowTelegram {
         return strlen($text);
     }
 
-    private function getFirstImageUrl($content) {
-        if (!preg_match("~<img\\b[^>]*\\bsrc\\s*=\\s*([\"'])(.*?)\\1~i", $content, $matches)) return false;
-        $url = html_entity_decode(trim($matches[2]), ENT_QUOTES, "UTF-8");
-        if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\\/\\//i', $url)) return false;
+    private function getFirstImageUrl($content, $page) {
+        $source = "";
+
+        // Prefer the first image in rendered post content.
+        if (preg_match('~<img\b[^>]*\bsrc\s*=\s*(["\'])(.*?)\1~is', $content, $matches)) {
+            $source = $matches[2];
+        }
+
+        // Fall back to the saved source: some Yellow parser versions do not expose
+        // native [image ...] elements in getContentHtml().
+        if ($source === "" && isset($page->rawData) && is_string($page->rawData)) {
+            if (preg_match('/\[image\s+([^\]\s]+)[^\]]*\]/i', $page->rawData, $matches)) {
+                $source = $matches[1];
+            } elseif (preg_match('/!\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/u', $page->rawData, $matches)) {
+                $source = $matches[1];
+            } elseif (preg_match('~<img\b[^>]*\bsrc\s*=\s*(["\'])(.*?)\1~is', $page->rawData, $matches)) {
+                $source = $matches[2];
+            }
+        }
+
+        $source = html_entity_decode(trim($source), ENT_QUOTES, "UTF-8");
+        if ($source === "" || preg_match('/^(?:data:|javascript:|#)/i', $source)) return false;
+
+        // Telegram's sendPhoto requires an absolute, publicly reachable URL.
+        $pageUrl = method_exists($page, "getUrl") ? $page->getUrl(true) : "";
+        $pageParts = is_string($pageUrl) ? parse_url($pageUrl) : false;
+        if (!is_array($pageParts) || empty($pageParts["scheme"]) || empty($pageParts["host"])) {
+            $this->yellow->toolbox->log("error", "Telegram: cannot resolve image URL without an absolute post URL");
+            return false;
+        }
+        $origin = $pageParts["scheme"]."://".$pageParts["host"];
+        if (isset($pageParts["port"])) $origin .= ":".$pageParts["port"];
+
+        if (preg_match('/^https?:\/\//i', $source)) {
+            $url = $source;
+        } elseif (strpos($source, "//") === 0) {
+            $url = $pageParts["scheme"].":".$source;
+        } else {
+            if (strpos($source, "/") !== 0) {
+                $imageLocation = $this->yellow->system->get("coreImageLocation");
+                if (!is_string($imageLocation) || $imageLocation === "") $imageLocation = "/media/images/";
+                $source = rtrim($imageLocation, "/")."/".ltrim($source, "/");
+            }
+            $url = $origin.$source;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\//i', $url)) {
+            $this->yellow->toolbox->log("error", "Telegram: invalid first image URL for ".$page->getLocation());
+            return false;
+        }
         return $url;
     }
 
