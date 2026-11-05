@@ -1,1 +1,3 @@
+.gitignore
 system/extensions/yellow-github-sync.ini
+system/extensions/.yellow-github-sync-state.json
