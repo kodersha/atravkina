@@ -189,6 +189,7 @@ class YellowWebp
         }
 
         $urlPath = rawurldecode($parts["path"]);
+        $urlPath = "/".ltrim($urlPath, "/");
         if (strpos($urlPath, "\0") !== false) {
             return false;
         }
@@ -263,7 +264,7 @@ class YellowWebp
         if ($mime === "" && function_exists("mime_content_type")) {
             $mime = mime_content_type($sourceInfo["file"]);
         }
-        if (!in_array($mime, $this->get_supported_mime_types(), true)) {
+        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) {
             return $srcIn;
         }
 
@@ -332,8 +333,14 @@ class YellowWebp
 
             // Replace the cached file only after a complete successful conversion.
             if (!@rename($temporaryFile, $targetFile)) {
-                @unlink($temporaryFile);
-                return $srcIn;
+                // Windows does not replace an existing destination with rename().
+                if (is_file($targetFile)) {
+                    @unlink($targetFile);
+                }
+                if (!@rename($temporaryFile, $targetFile)) {
+                    @unlink($temporaryFile);
+                    return $srcIn;
+                }
             }
             @touch($targetFile, $sourceMtime);
         }
