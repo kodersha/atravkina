@@ -1,7 +1,0 @@
-<?php
-// Copy this file to config.php and insert the bot token.
-// Keep config.php private; it is excluded from version control.
-return array(
-    "bot_token" => "8852216660:AAFP7TMPTw8GswT84nVM3aNQbdPuyKgi6xE",
-    "channel" => "@atravkina"
-);
