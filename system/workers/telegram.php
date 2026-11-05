@@ -72,7 +72,7 @@ class YellowTelegram {
             $caption = $this->buildCaption($content, $url);
             $sent = $this->sendPhoto($config["bot_token"], $config["channel"], $imageUrl, $caption);
             // Do not silently publish a text-only post when an image exists.
-            // A failed photo request remains retryable on the next explicit editor save.
+            // A failed or uncertain photo request stays reserved to prevent a duplicate if Telegram accepted it but the response was lost.
         } else {
             $sent = $this->sendMessage($config["bot_token"], $config["channel"], $this->buildMessage($content, $url), $url);
         }
