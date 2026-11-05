@@ -1,0 +1,92 @@
+/* Yellow Pane */
+
+.yellow-bar a {
+  color: rgb(250, 198, 112);
+}
+.yellow-bar a:hover {
+  color: rgb(243, 121, 37);
+}
+.yellow-pane {
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
+  border: 1px solid rgb(17, 17, 17);
+
+  bottom: 0 !important;
+  right: 0 !important;
+  left: 0 !important;
+  top: 2.625rem !important;
+  height: unset !important;
+  width: unset !important;
+  max-width: 40rem !important;
+}
+.yellow-edit-text {
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255); 
+  
+  font: 15px/1.7 system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+.yellow-toolbar a {
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
+  border: none;
+
+  padding: unset;
+  margin: unset;
+}
+.yellow-toolbar a:hover {
+  background-color: rgb(250, 198, 112);
+  border-color: rgba(250, 198, 112, 0.2);
+  color: rgb(0, 0, 0);
+}
+.yellow-toolbar .yellow-toolbar-btn-create,
+.yellow-toolbar .yellow-toolbar-btn-edit {
+  background-color: transparent;
+  border-color: transparent;
+  color: rgb(250, 198, 112);
+}
+.yellow-toolbar li {
+  display: inline-block !important;
+}
+.yellow-toolbar li .yellow-toolbar-btn-separator {
+  display: none !important;
+}
+.yellow-toolbar li a:hover {
+  background-color: transparent;
+  color: rgb(250, 198, 112);
+}
+.yellow-toolbar-right {
+  display: flex;
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+  margin-right: 1rem;
+  margin-left: 1rem;
+}
+.yellow-toolbar .yellow-toolbar-btn {
+  padding: unset;
+}
+.yellow-arrow::before {
+  border-bottom-color: rgb(17, 17, 17);
+}
+.yellow-arrow::after {
+  border-bottom-color: rgb(0, 0, 0);
+}
+.yellow-dropdown a {
+  color: rgb(250, 198, 112);
+}
+.yellow-dropdown a:hover {
+  background-color: transparent;
+  color: rgb(243, 121, 37);
+}
+#yellow-pane-create-toolbar-buttons,
+#yellow-pane-delete-toolbar-buttons,
+#yellow-pane-edit-toolbar-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: -moz-available;
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+  margin-left: 1rem;
+  margin-top: 1rem;
+}
