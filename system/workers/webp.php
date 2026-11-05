@@ -11,7 +11,7 @@ class YellowWebp
     {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("webpExcludeContentType", "xml");
-        $this->yellow->system->setDefault("webpDirectory", "webp");
+        $this->yellow->system->setDefault("webpDirectory", "");
         $this->yellow->system->setDefault("webpSupportType", "jpeg,png");
     }
 
@@ -281,17 +281,20 @@ class YellowWebp
             return false;
         }
 
+        // Empty webpDirectory stores converted files directly in media/images.
         $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        if ($cacheName === "" || preg_match("#(^|[\\/])\.\.?([\\/]|$)#", $cacheName) ||
+        if ($cacheName === "") {
+            return $imageDirectory;
+        }
+        if (preg_match("#(^|[\\\\/])\\.\\.?([\\\\/]|$)#", $cacheName) ||
             strpos($cacheName, ":") !== false || strpos($cacheName, "\0") !== false) {
             return false;
         }
 
-        $cachePath = $imageDirectory.DIRECTORY_SEPARATOR.str_replace(
-            array("/", "\\"),
+        return $imageDirectory.DIRECTORY_SEPARATOR.str_replace(
+            array("/", "\\\\"),
             DIRECTORY_SEPARATOR, $cacheName
         );
-        return $cachePath;
     }
 
     // Resolve a local image URL to a file contained in Yellow's configured image directory.
@@ -431,6 +434,21 @@ class YellowWebp
         return implode("/", $segments);
     }
 
+    // Build a path relative to media/images, optionally preserving a configured cache folder.
+    public function get_webp_relative_path($relativeDirectory, $filename)
+    {
+        $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
+        $parts = array();
+        if ($cacheName !== "") {
+            $parts[] = $cacheName;
+        }
+        if ($relativeDirectory !== "." && $relativeDirectory !== "") {
+            $parts[] = $relativeDirectory;
+        }
+        $parts[] = $filename;
+        return implode("/", $parts);
+    }
+
     // Convert a local JPEG/PNG only when the WebP file is valid and smaller.
     public function convert($srcIn, $removeOriginal = false)
     {
@@ -442,10 +460,10 @@ class YellowWebp
 
         if (!empty($sourceInfo["cached"])) {
             $relativeDirectory = dirname($sourceInfo["relative"]);
-            $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-            $webpRelative = $cacheName."/".
-                ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
-                pathinfo(basename($sourceInfo["relative"]), PATHINFO_FILENAME).".webp";
+            $webpRelative = $this->get_webp_relative_path(
+                $relativeDirectory,
+                pathinfo(basename($sourceInfo["relative"]), PATHINFO_FILENAME).".webp"
+            );
             $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
             if (isset($parts["query"])) $webpUrl .= "?".$parts["query"];
             if (isset($parts["fragment"])) $webpUrl .= "#".$parts["fragment"];
@@ -596,10 +614,7 @@ class YellowWebp
             $this->yellow->toolbox->log("warning", "Unable to remove original image after WebP conversion: ".$sourceInfo["file"]);
         }
 
-        $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        $webpRelative = $cacheName."/".
-            ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
-            $targetName;
+        $webpRelative = $this->get_webp_relative_path($relativeDirectory, $targetName);
         $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
 
         if (isset($parts["query"])) {
