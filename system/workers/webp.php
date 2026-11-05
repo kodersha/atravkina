@@ -61,6 +61,75 @@ class YellowWebp
         return $result !== false ? $result : $text;
     }
 
+    // Convert image references in blog posts immediately after Yellow saves the content file.
+    public function onSaveContentFile($page)
+    {
+        if (!is_object($page) || !method_exists($page, "get") || $page->get("layout") !== "blog" ||
+            !isset($page->rawData) || !is_string($page->rawData) || !$this->basic_checks()) {
+            return;
+        }
+
+        $rawData = $page->rawData;
+        $imagePath = $this->get_image_url_path();
+
+        // Yellow's native [image filename] content element stores paths relative to media/images.
+        $rawData = preg_replace_callback('/(\\[image\\s+)([^\\]\\s]+)(?=[\\s\\]])/i',
+            function ($matches) use ($imagePath) {
+                $converted = $this->convertPostImageReference($matches[2], true);
+                return $matches[1].$converted;
+            }, $rawData);
+
+        // Markdown image syntax and HTML image tags.
+        $rawData = preg_replace_callback('/(!\\[[^\\]]*\\]\\()([^\\s)]+)(\\))/u',
+            function ($matches) {
+                return $matches[1].$this->convertPostImageReference($matches[2]).$matches[3];
+            }, $rawData);
+        $rawData = preg_replace_callback('/(<img\\b[^>]*?\\bsrc\\s*=\\s*)(["\\'])(.*?)\\2/is',
+            function ($matches) {
+                return $matches[1].$matches[2].$this->convertPostImageReference($matches[3]).$matches[2];
+            }, $rawData);
+
+        // Yellow preview metadata is also resolved relative to the image directory.
+        $rawData = preg_replace_callback('/^(Preview:\\s*)([^\\r\\n]+)$/mi',
+            function ($matches) {
+                return $matches[1].$this->convertPostImageReference(trim($matches[2]), true);
+            }, $rawData);
+
+        if ($rawData !== $page->rawData &&
+            $this->yellow->toolbox->writeFile($page->fileName, $rawData)) {
+            $page->rawData = $rawData;
+            $this->yellow->toolbox->log("info", "Convert blog post images to WebP: ".$page->location);
+        }
+    }
+
+    // Resolve a post image reference against Yellow's configured image directory.
+    public function convertPostImageReference($source, $relativeToImageDirectory = false)
+    {
+        $source = trim(html_entity_decode($source, ENT_QUOTES, "UTF-8"));
+        if ($source === "" || preg_match('/^(?:[a-z][a-z0-9+.-]*:|\\/\\/|#)/i', $source) ||
+            stripos($source, "data:") === 0 || preg_match('/\\.webp(?:[?#]|$)/i', $source)) {
+            return $source;
+        }
+
+        $parts = parse_url($source);
+        if ($parts === false || empty($parts["path"])) {
+            return $source;
+        }
+        $path = $parts["path"];
+        if (substr($path, 0, 1) !== "/") {
+            $path = $this->get_image_url_path().ltrim($path, "/");
+        }
+        $url = $path;
+        if (isset($parts["query"])) $url .= "?".$parts["query"];
+        if (isset($parts["fragment"])) $url .= "#".$parts["fragment"];
+
+        $converted = $this->convert($url);
+        if ($relativeToImageDirectory && strpos($converted, $this->get_image_url_path()) === 0) {
+            $converted = substr($converted, strlen($this->get_image_url_path()));
+        }
+        return $converted;
+    }
+
     public function acceptsWebp()
     {
         if (!isset($_SERVER["HTTP_ACCEPT"])) {
@@ -480,7 +549,7 @@ class YellowWebp
 
         clearstatcache(true, $targetFile);
         $targetSize = is_file($targetFile) ? @filesize($targetFile) : false;
-        if ($targetSize === false || $targetSize <= 0 || $targetSize >= $sourceSize) {
+        if ($targetSize === false || $targetSize <= 0) {
             return $srcIn;
         }
 
