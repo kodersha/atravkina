@@ -1,5 +1,5 @@
 ---
 Title: @timestamp
 Layout: blog
-Status: hide
+Status: draft
 ---

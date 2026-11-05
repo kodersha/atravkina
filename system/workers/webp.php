@@ -121,7 +121,8 @@ class YellowWebp
         if (isset($parts["query"])) $url .= "?".$parts["query"];
         if (isset($parts["fragment"])) $url .= "#".$parts["fragment"];
 
-        $converted = $this->convert($url);
+        // Post references are rewritten to the generated WebP URL, so the original can be removed.
+        $converted = $this->convert($url, true);
         if ($relativeToImageDirectory && strpos($converted, $this->get_image_url_path()) === 0) {
             $converted = substr($converted, strlen($this->get_image_url_path()));
         }
@@ -346,11 +347,31 @@ class YellowWebp
         if ($imageDirectory === false) {
             return false;
         }
-        $source = realpath($imageDirectory.DIRECTORY_SEPARATOR.str_replace(
+        $sourcePath = $imageDirectory.DIRECTORY_SEPARATOR.str_replace(
             "/", DIRECTORY_SEPARATOR, $relative
-        ));
+        );
+        $source = realpath($sourcePath);
         $rootPrefix = rtrim($imageDirectory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
         if ($source === false || strpos($source, $rootPrefix) !== 0 || !is_file($source) || !is_readable($source)) {
+            // Originals are removed after conversion; serve the corresponding cached WebP.
+            $cacheDirectory = $this->get_cache_directory();
+            if ($cacheDirectory === false) {
+                return false;
+            }
+            $relativeDirectory = dirname($relative);
+            $targetDirectory = $cacheDirectory;
+            if ($relativeDirectory !== "." && $relativeDirectory !== "") {
+                $targetDirectory .= DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relativeDirectory);
+            }
+            $targetName = pathinfo(basename($relative), PATHINFO_FILENAME).".webp";
+            $cachedFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
+            if (is_file($cachedFile) && @filesize($cachedFile) > 0) {
+                return array(
+                    "file" => false,
+                    "relative" => str_replace("\\", "/", $relative),
+                    "cached" => true
+                );
+            }
             return false;
         }
 
@@ -411,12 +432,24 @@ class YellowWebp
     }
 
     // Convert a local JPEG/PNG only when the WebP file is valid and smaller.
-    public function convert($srcIn)
+    public function convert($srcIn, $removeOriginal = false)
     {
         $parts = parse_url($srcIn);
         $sourceInfo = $this->resolve_source($srcIn);
         if ($sourceInfo === false) {
             return $srcIn;
+        }
+
+        if (!empty($sourceInfo["cached"])) {
+            $relativeDirectory = dirname($sourceInfo["relative"]);
+            $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
+            $webpRelative = $cacheName."/".
+                ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
+                pathinfo(basename($sourceInfo["relative"]), PATHINFO_FILENAME).".webp";
+            $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
+            if (isset($parts["query"])) $webpUrl .= "?".$parts["query"];
+            if (isset($parts["fragment"])) $webpUrl .= "#".$parts["fragment"];
+            return $webpUrl;
         }
 
         $mime = "";
@@ -450,7 +483,20 @@ class YellowWebp
         if ($relativeDirectory !== "." && $relativeDirectory !== "") {
             $targetDirectory .= DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relativeDirectory);
         }
-        $targetName = basename($sourceInfo["relative"]).".webp";
+        clearstatcache(true, $sourceInfo["file"]);
+        $sourceMtime = @filemtime($sourceInfo["file"]);
+        $sourceCtime = @filectime($sourceInfo["file"]);
+        $sourceSize = @filesize($sourceInfo["file"]);
+        if ($sourceMtime === false || $sourceCtime === false || $sourceSize === false) {
+            return $srcIn;
+        }
+
+        // Use the original file modification time as a stable Unix timestamp.
+        // Add a deterministic suffix only when another image already uses that timestamp.
+        $targetName = (string)$sourceMtime.".webp";
+        if (is_file($targetDirectory.DIRECTORY_SEPARATOR.$targetName)) {
+            $targetName = (string)$sourceMtime."-".substr(sha1($sourceInfo["relative"]), 0, 8).".webp";
+        }
         if (is_dir($targetDirectory)) {
             $realTargetDirectory = realpath($targetDirectory);
             $imageDirectory = $this->get_image_directory();
@@ -464,21 +510,11 @@ class YellowWebp
         $targetFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
         $metadataFile = $targetFile.".meta";
 
-        clearstatcache(true, $sourceInfo["file"]);
-        $sourceMtime = @filemtime($sourceInfo["file"]);
-        $sourceCtime = @filectime($sourceInfo["file"]);
-        $sourceSize = @filesize($sourceInfo["file"]);
-        if ($sourceMtime === false || $sourceCtime === false || $sourceSize === false) {
-            return $srcIn;
-        }
-        $sourceSignature = $sourceMtime."|".$sourceCtime."|".$sourceSize;
-
         clearstatcache(true, $targetFile);
-        $cacheValid = false;
-        if (is_file($targetFile) && @filesize($targetFile) > 0 && is_file($metadataFile)) {
-            $cachedSignature = @file_get_contents($metadataFile);
-            $cacheValid = is_string($cachedSignature) && trim($cachedSignature) === $sourceSignature;
-        }
+        $targetMtime = is_file($targetFile) ? @filemtime($targetFile) : false;
+        $targetSize = is_file($targetFile) ? @filesize($targetFile) : false;
+        $cacheValid = $targetMtime !== false && $targetSize !== false &&
+            $targetSize > 0 && $targetSize < $sourceSize && $targetMtime >= $sourceMtime;
 
         if (!$cacheValid) {
             if (!is_dir($targetDirectory) &&
@@ -541,14 +577,23 @@ class YellowWebp
                     return $srcIn;
                 }
             }
-            @file_put_contents($metadataFile, $sourceSignature, LOCK_EX);
             @touch($targetFile, $sourceMtime);
+        }
+
+        // Metadata files from older versions are no longer used.
+        if (is_file($metadataFile)) {
+            @unlink($metadataFile);
         }
 
         clearstatcache(true, $targetFile);
         $targetSize = is_file($targetFile) ? @filesize($targetFile) : false;
-        if ($targetSize === false || $targetSize <= 0) {
+        if ($targetSize === false || $targetSize <= 0 || $targetSize >= $sourceSize) {
             return $srcIn;
+        }
+
+        // Remove originals only when the caller also replaces the stored reference.
+        if ($removeOriginal && is_file($sourceInfo["file"]) && !@unlink($sourceInfo["file"])) {
+            $this->yellow->toolbox->log("warning", "Unable to remove original image after WebP conversion: ".$sourceInfo["file"]);
         }
 
         $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
