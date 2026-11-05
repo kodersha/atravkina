@@ -11,7 +11,7 @@ class YellowWebp
     {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("webpExcludeContentType", "xml");
-        $this->yellow->system->setDefault("webpDirectory", "webp");
+        $this->yellow->system->setDefault("webpDirectory", "");
         $this->yellow->system->setDefault("webpSupportType", "jpeg,png");
     }
 
@@ -282,8 +282,11 @@ class YellowWebp
         }
 
         $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        if ($cacheName === "" || preg_match("#(^|[\\/])\.\.?([\\/]|$)#", $cacheName) ||
-            strpos($cacheName, ":") !== false || strpos($cacheName, "\0") !== false) {
+        if ($cacheName === "") {
+            return $imageDirectory;
+        }
+        if (preg_match("#(^|[\\\\/])\\.\\.?([\\\\/]|$)#", $cacheName) ||
+            strpos($cacheName, ":") !== false || strpos($cacheName, "\\0") !== false) {
             return false;
         }
 
@@ -443,7 +446,7 @@ class YellowWebp
         if (!empty($sourceInfo["cached"])) {
             $relativeDirectory = dirname($sourceInfo["relative"]);
             $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-            $webpRelative = $cacheName."/".
+            $webpRelative = ($cacheName !== "" ? $cacheName."/" : "").
                 ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
                 pathinfo(basename($sourceInfo["relative"]), PATHINFO_FILENAME).".webp";
             $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
@@ -597,7 +600,7 @@ class YellowWebp
         }
 
         $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        $webpRelative = $cacheName."/".
+        $webpRelative = ($cacheName !== "" ? $cacheName."/" : "").
             ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
             $targetName;
         $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
