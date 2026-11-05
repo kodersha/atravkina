@@ -6,6 +6,7 @@ class YellowWebp
 {
     const VERSION = "0.9.1";
     public $yellow;
+    public $renamedSources = array();
 
     public function onLoad($yellow)
     {
@@ -121,11 +122,67 @@ class YellowWebp
         if (isset($parts["query"])) $url .= "?".$parts["query"];
         if (isset($parts["fragment"])) $url .= "#".$parts["fragment"];
 
+        $url = $this->rename_source_to_timestamp($url);
         $converted = $this->convert($url);
         if ($relativeToImageDirectory && strpos($converted, $this->get_image_url_path()) === 0) {
             $converted = substr($converted, strlen($this->get_image_url_path()));
         }
         return $converted;
+    }
+
+    // Rename a local image using its filesystem creation timestamp.
+    // On Unix, filemtime is used because filectime is inode-change time there.
+    public function rename_source_to_timestamp($url)
+    {
+        if (isset($this->renamedSources[$url])) {
+            return $this->renamedSources[$url];
+        }
+        $sourceInfo = $this->resolve_source($url);
+        if ($sourceInfo === false) {
+            return $url;
+        }
+
+        $extension = strtolower(pathinfo($sourceInfo["file"], PATHINFO_EXTENSION));
+        $basename = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
+        if ($extension === "" || preg_match('/^\\d+(?:-\\d+)?$/', $basename)) {
+            return $url;
+        }
+
+        clearstatcache(true, $sourceInfo["file"]);
+        $timestamp = DIRECTORY_SEPARATOR === "\\\\"
+            ? @filectime($sourceInfo["file"])
+            : @filemtime($sourceInfo["file"]);
+        if ($timestamp === false || $timestamp <= 0) {
+            $timestamp = @filemtime($sourceInfo["file"]);
+        }
+        if ($timestamp === false || $timestamp <= 0) {
+            return $url;
+        }
+
+        $directory = dirname($sourceInfo["file"]);
+        $targetBase = (string)$timestamp;
+        $targetFile = $directory.DIRECTORY_SEPARATOR.$targetBase.".".$extension;
+        $suffix = 1;
+        while (file_exists($targetFile) && realpath($targetFile) !== realpath($sourceInfo["file"])) {
+            $targetBase = (string)$timestamp."-".$suffix++;
+            $targetFile = $directory.DIRECTORY_SEPARATOR.$targetBase.".".$extension;
+        }
+
+        if (realpath($targetFile) !== realpath($sourceInfo["file"]) && !@rename($sourceInfo["file"], $targetFile)) {
+            return $url;
+        }
+
+        $imageDirectory = $this->get_image_directory();
+        if ($imageDirectory === false) {
+            return $url;
+        }
+        $relative = str_replace("\\\\", "/", substr($targetFile, strlen(rtrim($imageDirectory, "/\\\\").DIRECTORY_SEPARATOR)));
+        $renamedUrl = $this->get_image_url_path().$this->encode_url_path($relative);
+        $parts = parse_url($url);
+        if (is_array($parts) && isset($parts["query"])) $renamedUrl .= "?".$parts["query"];
+        if (is_array($parts) && isset($parts["fragment"])) $renamedUrl .= "#".$parts["fragment"];
+        $this->renamedSources[$url] = $renamedUrl;
+        return $renamedUrl;
     }
 
     public function acceptsWebp()
@@ -273,24 +330,10 @@ class YellowWebp
         return rtrim(rawurldecode($path), "/")."/";
     }
 
+    // WebP files are stored directly in Yellow's configured image directory.
     public function get_cache_directory()
     {
-        $imageDirectory = $this->get_image_directory();
-        if ($imageDirectory === false) {
-            return false;
-        }
-
-        $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        if ($cacheName === "" || preg_match("#(^|[\\/])\.\.?([\\/]|$)#", $cacheName) ||
-            strpos($cacheName, ":") !== false || strpos($cacheName, "\0") !== false) {
-            return false;
-        }
-
-        $cachePath = $imageDirectory.DIRECTORY_SEPARATOR.str_replace(
-            array("/", "\\"),
-            DIRECTORY_SEPARATOR, $cacheName
-        );
-        return $cachePath;
+        return $this->get_image_directory();
     }
 
     // Resolve a local image URL to a file contained in Yellow's configured image directory.
@@ -410,118 +453,68 @@ class YellowWebp
         return implode("/", $segments);
     }
 
-    // Convert a local JPEG/PNG only when the WebP file is valid and smaller.
+    // Convert a local JPEG/PNG to a timestamp-named WebP in media/images.
     public function convert($srcIn)
     {
         $parts = parse_url($srcIn);
         $sourceInfo = $this->resolve_source($srcIn);
-        if ($sourceInfo === false) {
-            return $srcIn;
-        }
+        if ($sourceInfo === false) return $srcIn;
 
         $mime = "";
         if (function_exists("finfo_open")) {
             $finfo = @finfo_open(FILEINFO_MIME_TYPE);
             if ($finfo) {
                 $detectedMime = @finfo_file($finfo, $sourceInfo["file"]);
-                if (is_string($detectedMime)) {
-                    $mime = $detectedMime;
-                }
+                if (is_string($detectedMime)) $mime = $detectedMime;
                 finfo_close($finfo);
             }
         }
         if ($mime === "" && function_exists("mime_content_type")) {
             $detectedMime = @mime_content_type($sourceInfo["file"]);
-            if (is_string($detectedMime)) {
-                $mime = $detectedMime;
-            }
+            if (is_string($detectedMime)) $mime = $detectedMime;
         }
-        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) {
-            return $srcIn;
-        }
+        if ($mime === "" || !in_array($mime, $this->get_supported_mime_types(), true)) return $srcIn;
 
-        $cacheDirectory = $this->get_cache_directory();
-        if ($cacheDirectory === false) {
-            return $srcIn;
-        }
-
-        $relativeDirectory = dirname($sourceInfo["relative"]);
-        $targetDirectory = $cacheDirectory;
-        if ($relativeDirectory !== "." && $relativeDirectory !== "") {
-            $targetDirectory .= DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relativeDirectory);
-        }
-        $targetName = basename($sourceInfo["relative"]).".webp";
-        if (is_dir($targetDirectory)) {
-            $realTargetDirectory = realpath($targetDirectory);
-            $imageDirectory = $this->get_image_directory();
-            $imageRootPrefix = $imageDirectory !== false ? rtrim($imageDirectory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR : "";
-            if ($realTargetDirectory === false || $imageRootPrefix === "" ||
-                strpos($realTargetDirectory.DIRECTORY_SEPARATOR, $imageRootPrefix) !== 0) {
-                return $srcIn;
-            }
-            $targetDirectory = $realTargetDirectory;
-        }
-        $targetFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
-        $metadataFile = $targetFile.".meta";
+        $imageDirectory = $this->get_image_directory();
+        if ($imageDirectory === false) return $srcIn;
 
         clearstatcache(true, $sourceInfo["file"]);
         $sourceMtime = @filemtime($sourceInfo["file"]);
-        $sourceCtime = @filectime($sourceInfo["file"]);
         $sourceSize = @filesize($sourceInfo["file"]);
-        if ($sourceMtime === false || $sourceCtime === false || $sourceSize === false) {
-            return $srcIn;
+        if ($sourceMtime === false || $sourceSize === false || $sourceSize <= 0) return $srcIn;
+
+        $sourceBase = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
+        if (preg_match('/^\\d+(?:-\\d+)?$/', $sourceBase)) {
+            $targetBase = $sourceBase;
+        } else {
+            $targetBase = (string)$sourceMtime."-".substr(sha1($sourceInfo["relative"]), 0, 8);
         }
-        $sourceSignature = $sourceMtime."|".$sourceCtime."|".$sourceSize;
+        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetBase.".webp";
 
         clearstatcache(true, $targetFile);
-        $cacheValid = false;
-        if (is_file($targetFile) && @filesize($targetFile) > 0 && is_file($metadataFile)) {
-            $cachedSignature = @file_get_contents($metadataFile);
-            $cacheValid = is_string($cachedSignature) && trim($cachedSignature) === $sourceSignature;
-        }
+        $targetMtime = is_file($targetFile) ? @filemtime($targetFile) : false;
+        $cacheValid = is_file($targetFile) && @filesize($targetFile) > 0 &&
+            $targetMtime !== false && $targetMtime >= $sourceMtime;
 
         if (!$cacheValid) {
-            if (!is_dir($targetDirectory) &&
-                !@mkdir($targetDirectory, 0775, true) &&
-                !is_dir($targetDirectory)) {
-                return $srcIn;
-            }
-            $realTargetDirectory = realpath($targetDirectory);
-            $imageDirectory = $this->get_image_directory();
-            $imageRootPrefix = $imageDirectory !== false ? rtrim($imageDirectory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR : "";
-            if ($realTargetDirectory === false || $imageRootPrefix === "" ||
-                strpos($realTargetDirectory.DIRECTORY_SEPARATOR, $imageRootPrefix) !== 0) {
-                return $srcIn;
-            }
-            $targetDirectory = $realTargetDirectory;
-            $targetFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
-            $metadataFile = $targetFile.".meta";
-
             $image = false;
-            if ($mime === "image/jpeg") {
+            if ($mime === "image/jpeg" && function_exists("imagecreatefromjpeg")) {
                 $image = @imagecreatefromjpeg($sourceInfo["file"]);
-            } elseif ($mime === "image/png") {
+            } elseif ($mime === "image/png" && function_exists("imagecreatefrompng")) {
                 $image = @imagecreatefrompng($sourceInfo["file"]);
             }
-            if ($image === false) {
-                return $srcIn;
-            }
+            if ($image === false) return $srcIn;
 
             if ($mime === "image/png") {
-                if (function_exists("imagealphablending")) {
-                    imagealphablending($image, false);
-                }
-                if (function_exists("imagesavealpha")) {
-                    imagesavealpha($image, true);
-                }
+                if (function_exists("imagealphablending")) @imagealphablending($image, false);
+                if (function_exists("imagesavealpha")) @imagesavealpha($image, true);
             }
 
-            $temporaryFile = @tempnam($targetDirectory, "webp_");
+            $temporaryFile = @tempnam($imageDirectory, "webp_");
             if ($temporaryFile === false) {
                 imagedestroy($image);
                 return $srcIn;
             }
-
             $converted = @imagewebp($image, $temporaryFile);
             imagedestroy($image);
             clearstatcache(true, $temporaryFile);
@@ -530,39 +523,23 @@ class YellowWebp
                 return $srcIn;
             }
 
-            // Replace the cached file only after a complete successful conversion.
             if (!@rename($temporaryFile, $targetFile)) {
-                // Windows cannot rename over an existing destination.
-                if (is_file($targetFile)) {
-                    @unlink($targetFile);
-                }
+                if (is_file($targetFile)) @unlink($targetFile);
                 if (!@rename($temporaryFile, $targetFile)) {
                     @unlink($temporaryFile);
                     return $srcIn;
                 }
             }
-            @file_put_contents($metadataFile, $sourceSignature, LOCK_EX);
             @touch($targetFile, $sourceMtime);
         }
 
         clearstatcache(true, $targetFile);
-        $targetSize = is_file($targetFile) ? @filesize($targetFile) : false;
-        if ($targetSize === false || $targetSize <= 0) {
-            return $srcIn;
-        }
+        if (!is_file($targetFile) || @filesize($targetFile) <= 0) return $srcIn;
 
-        $cacheName = trim((string)$this->yellow->system->get("webpDirectory"), "/\\");
-        $webpRelative = $cacheName."/".
-            ($relativeDirectory !== "." && $relativeDirectory !== "" ? $relativeDirectory."/" : "").
-            $targetName;
-        $webpUrl = $this->get_image_url_path().$this->encode_url_path($webpRelative);
-
-        if (isset($parts["query"])) {
-            $webpUrl .= "?".$parts["query"];
-        }
-        if (isset($parts["fragment"])) {
-            $webpUrl .= "#".$parts["fragment"];
-        }
+        $webpUrl = $this->get_image_url_path().rawurlencode(basename($targetFile));
+        if (isset($parts["query"])) $webpUrl .= "?".$parts["query"];
+        if (isset($parts["fragment"])) $webpUrl .= "#".$parts["fragment"];
         return $webpUrl;
     }
+
 }
