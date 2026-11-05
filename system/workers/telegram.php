@@ -53,8 +53,7 @@ class YellowTelegram {
 
         $key = hash("sha256", $location);
         if (isset($state[$key]) && (
-            (isset($state[$key]["status"]) && $state[$key]["status"] == "sent") ||
-            (isset($state[$key]["status"]) && $state[$key]["status"] == "sending" && time() - intval($state[$key]["time"]) < 300)
+            (isset($state[$key]["status"]) && in_array($state[$key]["status"], array("sent", "sending"), true))
         )) {
             flock($handle, LOCK_UN);
             fclose($handle);
@@ -72,10 +71,8 @@ class YellowTelegram {
         if ($imageUrl !== false) {
             $caption = $this->buildCaption($content, $url);
             $sent = $this->sendPhoto($config["bot_token"], $config["channel"], $imageUrl, $caption);
-            if ($sent === false) {
-                $this->yellow->toolbox->log("error", "Telegram: photo failed; falling back to text for ".$location);
-                $sent = $this->sendMessage($config["bot_token"], $config["channel"], $this->buildMessage($content, $url), $url);
-            }
+            // Do not silently publish a text-only post when an image exists.
+            // A failed photo request remains retryable on the next explicit editor save.
         } else {
             $sent = $this->sendMessage($config["bot_token"], $config["channel"], $this->buildMessage($content, $url), $url);
         }
@@ -89,7 +86,10 @@ class YellowTelegram {
             if ($sent !== false) {
                 $state[$key] = array("status" => "sent", "time" => time(), "channel_message_id" => intval($sent), "post_url" => $url);
             } else {
-                unset($state[$key]);
+                // Keep an uncertain/failed attempt reserved: Telegram may have
+                // accepted the request even if the response was lost. This
+                // favors at-most-once delivery over accidental duplicate posts.
+                $state[$key] = array("status" => "sending", "time" => time(), "post_url" => $url);
             }
             $this->writeState($handle, $prefix, $state);
             flock($handle, LOCK_UN);
