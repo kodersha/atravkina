@@ -11,9 +11,13 @@
   color: rgb(255, 255, 255);
   border: 1px solid rgb(17, 17, 17);
 
-  left: 0 !important;
+  bottom: 0 !important;
   right: 0 !important;
+  left: 0 !important;
   top: 2.625rem !important;
+  height: unset !important;
+  width: unset !important;
+  max-width: 40rem !important;
 }
 .yellow-edit-text {
   background-color: rgb(0, 0, 0);
@@ -36,9 +40,9 @@
 }
 .yellow-toolbar .yellow-toolbar-btn-create,
 .yellow-toolbar .yellow-toolbar-btn-edit {
-  background-color: rgb(250, 198, 112);
-  border-color: rgba(250, 198, 112, 0.2);
-  color: rgb(0, 0, 0);
+  background-color: transparent;
+  border-color: transparent;
+  color: rgb(250, 198, 112);
 }
 .yellow-toolbar li {
   display: inline-block !important;
@@ -55,6 +59,11 @@
   align-items: center;
   column-gap: 0.5rem;
   row-gap: 0.5rem;
+  margin-right: 1rem;
+  margin-left: 1rem;
+}
+.yellow-toolbar .yellow-toolbar-btn {
+  padding: unset;
 }
 .yellow-arrow::before {
   border-bottom-color: rgb(17, 17, 17);
