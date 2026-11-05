@@ -492,7 +492,11 @@ class YellowWebp
         }
 
         // Use the original file modification time as a stable Unix timestamp.
+        // Add a deterministic suffix only when another image already uses that timestamp.
         $targetName = (string)$sourceMtime.".webp";
+        if (is_file($targetDirectory.DIRECTORY_SEPARATOR.$targetName)) {
+            $targetName = (string)$sourceMtime."-".substr(sha1($sourceInfo["relative"]), 0, 8).".webp";
+        }
         if (is_dir($targetDirectory)) {
             $realTargetDirectory = realpath($targetDirectory);
             $imageDirectory = $this->get_image_directory();
