@@ -115,7 +115,11 @@ class YellowWebp
 
         $basename = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
         if (preg_match('/^([0-9]+)(?:-[0-9]+)?$/', $basename)) {
-            return $this->get_image_url_path().$this->encode_url_path($sourceInfo["relative"]);
+            $renamedUrl = $this->get_image_url_path().$this->encode_url_path($sourceInfo["relative"]);
+            $parts = parse_url($url);
+            if (isset($parts["query"])) $renamedUrl .= "?".$parts["query"];
+            if (isset($parts["fragment"])) $renamedUrl .= "#".$parts["fragment"];
+            return $renamedUrl;
         }
 
         clearstatcache(true, $sourceInfo["file"]);
@@ -135,7 +139,11 @@ class YellowWebp
         if (realpath($targetFile) !== realpath($sourceInfo["file"]) &&
             !@rename($sourceInfo["file"], $targetFile)) return $url;
 
-        return $this->get_image_url_path().$this->encode_url_path($targetName);
+        $renamedUrl = $this->get_image_url_path().$this->encode_url_path($targetName);
+        $parts = parse_url($url);
+        if (isset($parts["query"])) $renamedUrl .= "?".$parts["query"];
+        if (isset($parts["fragment"])) $renamedUrl .= "#".$parts["fragment"];
+        return $renamedUrl;
     }
 
     // Resolve a post image reference against Yellow's configured image directory.
