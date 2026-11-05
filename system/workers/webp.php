@@ -274,9 +274,25 @@ class YellowWebp
     }
 
     // WebP files are stored directly in Yellow's configured image directory.
+    // WebP files are stored directly in Yellow's configured image directory.
     public function get_cache_directory()
     {
         return $this->get_image_directory();
+    }
+
+    // Use the real creation time on Windows; on Unix filemtime is the portable
+    // approximation because filectime is inode-change time, not birth time.
+    public function get_source_timestamp($file)
+    {
+        clearstatcache(true, $file);
+        $timestamp = false;
+        if (DIRECTORY_SEPARATOR === "\\\\") {
+            $timestamp = @filectime($file);
+        }
+        if ($timestamp === false || $timestamp <= 0) {
+            $timestamp = @filemtime($file);
+        }
+        return $timestamp !== false && $timestamp > 0 ? (int)$timestamp : time();
     }
 
     // Resolve a local image URL to a file contained in Yellow's configured image directory.
@@ -411,6 +427,8 @@ class YellowWebp
     }
 
     // Convert a local JPEG/PNG to a timestamp-named WebP directly in media/images.
+    // Convert a local JPEG/PNG to a timestamp-named WebP in media/images.
+    // The original image is kept as a fallback if conversion fails.
     public function convert($srcIn)
     {
         $parts = parse_url($srcIn);
@@ -445,33 +463,24 @@ class YellowWebp
             return $srcIn;
         }
 
-        clearstatcache(true, $sourceInfo["file"]);
-        $sourceMtime = @filemtime($sourceInfo["file"]);
-        $sourceSize = @filesize($sourceInfo["file"]);
-        if ($sourceMtime === false || $sourceSize === false || $sourceSize <= 0) {
-            return $srcIn;
-        }
-
         $timestamp = $this->get_source_timestamp($sourceInfo["file"]);
-        $targetName = $timestamp.".webp";
-        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetName;
+        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$timestamp.".webp";
 
-        // Resolve same-second timestamp collisions without overwriting another image.
-        if (is_file($targetFile) && @filemtime($targetFile) < $sourceMtime) {
-            $targetName = $timestamp."-".substr(sha1($sourceInfo["relative"]), 0, 8).".webp";
-            $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetName;
-        }
-
+        clearstatcache(true, $sourceInfo["file"]);
         clearstatcache(true, $targetFile);
-        $targetMtime = is_file($targetFile) ? @filemtime($targetFile) : false;
-        $cacheValid = is_file($targetFile) && @filesize($targetFile) > 0 &&
+        $sourceMtime = @filemtime($sourceInfo["file"]);
+        $targetMtime = @filemtime($targetFile);
+        $targetSize = @filesize($targetFile);
+
+        $cacheValid = is_file($targetFile) && $targetSize !== false &&
+            $targetSize > 0 && $sourceMtime !== false &&
             $targetMtime !== false && $targetMtime >= $sourceMtime;
 
         if (!$cacheValid) {
             $image = false;
-            if ($mime === "image/jpeg" && function_exists("imagecreatefromjpeg")) {
+            if ($mime === "image/jpeg") {
                 $image = @imagecreatefromjpeg($sourceInfo["file"]);
-            } elseif ($mime === "image/png" && function_exists("imagecreatefrompng")) {
+            } elseif ($mime === "image/png") {
                 $image = @imagecreatefrompng($sourceInfo["file"]);
             }
             if ($image === false) {
@@ -480,10 +489,10 @@ class YellowWebp
 
             if ($mime === "image/png") {
                 if (function_exists("imagealphablending")) {
-                    @imagealphablending($image, false);
+                    imagealphablending($image, false);
                 }
                 if (function_exists("imagesavealpha")) {
-                    @imagesavealpha($image, true);
+                    imagesavealpha($image, true);
                 }
             }
 
@@ -501,7 +510,6 @@ class YellowWebp
                 return $srcIn;
             }
 
-            // Replace the destination only after a complete successful conversion.
             if (!@rename($temporaryFile, $targetFile)) {
                 if (is_file($targetFile)) {
                     @unlink($targetFile);
@@ -511,7 +519,9 @@ class YellowWebp
                     return $srcIn;
                 }
             }
-            @touch($targetFile, max((int)$sourceMtime, 1));
+            if ($sourceMtime !== false) {
+                @touch($targetFile, $sourceMtime);
+            }
         }
 
         clearstatcache(true, $targetFile);
@@ -519,7 +529,7 @@ class YellowWebp
             return $srcIn;
         }
 
-        $webpUrl = $this->get_image_url_path().rawurlencode($targetName);
+        $webpUrl = $this->get_image_url_path().$timestamp.".webp";
         if (isset($parts["query"])) {
             $webpUrl .= "?".$parts["query"];
         }
@@ -528,5 +538,4 @@ class YellowWebp
         }
         return $webpUrl;
     }
-
 }
