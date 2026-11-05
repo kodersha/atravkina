@@ -426,7 +426,6 @@ class YellowWebp
         return $timestamp !== false && $timestamp > 0 ? (int)$timestamp : time();
     }
 
-    // Convert a local JPEG/PNG to a timestamp-named WebP directly in media/images.
     // Convert a local JPEG/PNG to a timestamp-named WebP in media/images.
     // The original image is kept as a fallback if conversion fails.
     public function convert($srcIn)
