@@ -66,7 +66,7 @@ class YellowWebp
     public function onSaveContentFile($page)
     {
         if (!is_object($page) || !method_exists($page, "get") || $page->get("layout") !== "blog" ||
-            !isset($page->rawData) || !is_string($page->rawData) || !$this->basic_checks()) {
+            !isset($page->rawData) || !is_string($page->rawData)) {
             return;
         }
 
@@ -142,6 +142,11 @@ class YellowWebp
             return $url;
         }
 
+        $imageDirectory = $this->get_image_directory();
+        if ($imageDirectory === false) {
+            return $url;
+        }
+
         $extension = strtolower(pathinfo($sourceInfo["file"], PATHINFO_EXTENSION));
         $basename = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
         if ($extension === "" || preg_match('/^\\d+(?:-\\d+)?$/', $basename)) {
@@ -149,7 +154,7 @@ class YellowWebp
         }
 
         clearstatcache(true, $sourceInfo["file"]);
-        $timestamp = DIRECTORY_SEPARATOR === "\\\\"
+        $timestamp = DIRECTORY_SEPARATOR === "\\"
             ? @filectime($sourceInfo["file"])
             : @filemtime($sourceInfo["file"]);
         if ($timestamp === false || $timestamp <= 0) {
@@ -172,11 +177,7 @@ class YellowWebp
             return $url;
         }
 
-        $imageDirectory = $this->get_image_directory();
-        if ($imageDirectory === false) {
-            return $url;
-        }
-        $relative = str_replace("\\\\", "/", substr($targetFile, strlen(rtrim($imageDirectory, "/\\\\").DIRECTORY_SEPARATOR)));
+        $relative = str_replace("\\", "/", substr($targetFile, strlen(rtrim($imageDirectory, "/\\").DIRECTORY_SEPARATOR)));
         $renamedUrl = $this->get_image_url_path().$this->encode_url_path($relative);
         $parts = parse_url($url);
         if (is_array($parts) && isset($parts["query"])) $renamedUrl .= "?".$parts["query"];
@@ -457,6 +458,7 @@ class YellowWebp
     public function convert($srcIn)
     {
         $parts = parse_url($srcIn);
+        if (!function_exists("imagewebp")) return $srcIn;
         $sourceInfo = $this->resolve_source($srcIn);
         if ($sourceInfo === false) return $srcIn;
 
