@@ -1,15 +1,9 @@
 # Yellow Telegram
 
-Automatically publishes a blog post to Telegram immediately after it is saved in the editor. The first public page view remains a fallback for posts created by other means.
+Publishes a blog post to the configured Telegram channel only after a successful save in the editor.
 
-## Setup
+Only pages with the `blog` layout and without `Status: draft` or `Status: hide` are considered. Each post location is tracked in the private `sent.php` state file. A post marked `sent` is never sent again, including after later edits or page views. A concurrent or interrupted `sending` attempt is also blocked to avoid duplicate delivery.
 
-1. Create a bot with [@BotFather](https://t.me/BotFather).
-2. Add the bot to the `@atravkina` channel as an administrator with permission to post messages.
-3. Copy `config.example.php` to `config.php`.
-4. Put the bot token into `config.php`. Do not commit this file.
-5. Ensure PHP can write to this directory so the sent-publication state can be stored.
+When the post contains an image, the extension sends the first image with `sendPhoto` and places the text in its caption. It does not silently replace a failed photo publication with a text-only message. If delivery fails or its result is uncertain, the state remains reserved; inspect the Telegram log and reset that post's entry in `sent.php` manually only after confirming that Telegram did not receive it.
 
-Only pages with the `blog` layout are considered. Pages with `Status: draft` are skipped. A post is sent once after a successful editor save. Failed sends are not marked as sent and can be retried on the next save or public page view. The sent-state lock prevents the save hook and the subsequent redirect from sending duplicates.
-
-The extension omits the post title and sends the body as plain text. Paragraphs are included whole, in order, while they fit within Telegram's 4096-character message limit together with the final **Читать на сайте →** link. The footer label is linked to the post URL using Telegram's `text_link` message entity (not HTML parsing). The first paragraph that does not fit, and all following paragraphs, are omitted. Telegram generates the link preview from the post URL. To control the preview image, provide suitable Open Graph metadata (`og:image`) on the post page.
+Posts without images are sent with `sendMessage`. The title is omitted. Keep `config.php` and `sent.php` private; both are excluded by this directory's `.gitignore`.
