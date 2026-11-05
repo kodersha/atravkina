@@ -72,9 +72,14 @@ class YellowWebp
         $rawData = $page->rawData;
 
         // Yellow's native [image filename] content element stores paths relative to media/images.
+        // Migrate references from the old converter (webp/name.jpg.webp) via the original image.
         $rawData = preg_replace_callback('/(\[image\s+)([^\]\s]+)(?=[\s\]])/i',
             function ($matches) {
-                return $matches[1].$this->convertPostImageReference($matches[2], true);
+                $reference = $matches[2];
+                if (preg_match('#^webp/(.+\.(?:jpe?g|png))\.webp$#i', $reference, $legacy)) {
+                    $reference = $legacy[1];
+                }
+                return $matches[1].$this->convertPostImageReference($reference, true);
             }, $rawData);
 
         // Markdown image syntax and HTML image tags.
