@@ -6,6 +6,7 @@ class YellowWebp
 {
     const VERSION = "0.9.2";
     public $yellow;
+    public $renamedSources = array();
 
     public function onLoad($yellow)
     {
