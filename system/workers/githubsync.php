@@ -71,42 +71,70 @@ class YellowGithubSync {
         if ($scope=="all" || $scope=="content") $directories["content"] = $this->contentDirectory();
         if ($scope=="all" || $scope=="media") $directories["media"] = $this->mediaDirectory();
 
+        // Build the complete local file list before making remote changes. If a directory
+        // cannot be read, abort rather than interpreting an incomplete scan as deletions.
         $files = array();
-        foreach ($directories as $prefix=>$directory) {
-            if (!is_dir($directory)) {
-                $this->yellow->toolbox->log("error", "GitHub Sync: directory not found: $directory");
-                return 500;
+        try {
+            foreach ($directories as $prefix=>$directory) {
+                if (!is_dir($directory) || !is_readable($directory)) {
+                    $this->yellow->toolbox->log("error", "GitHub Sync: directory not found or unreadable: $directory");
+                    return 500;
+                }
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::LEAVES_ONLY
+                );
+                foreach ($iterator as $entry) {
+                    if (!$entry->isFile() || $entry->isLink()) continue;
+                    $relative = substr($entry->getPathname(), strlen(rtrim($directory, "/\\\\/"))+1);
+                    $relative = str_replace(DIRECTORY_SEPARATOR, "/", $relative);
+                    if (strpos($relative, ".git/")===0 || $relative==".git") continue;
+                    $files[$prefix."/".$relative] = $entry->getPathname();
+                }
             }
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS));
-            foreach ($iterator as $entry) {
-                if (!$entry->isFile() || $entry->isLink()) continue;
-                $relative = substr($entry->getPathname(), strlen(rtrim($directory, "/\\\\/"))+1);
-                $relative = str_replace(DIRECTORY_SEPARATOR, "/", $relative);
-                if (strpos($relative, ".git/")===0 || $relative==".git") continue;
-                $files[$prefix."/".$relative] = $entry->getPathname();
-            }
+        } catch (Exception $exception) {
+            $this->yellow->toolbox->log("error", "GitHub Sync: directory scan failed: ".$exception->getMessage());
+            return 500;
         }
 
         $state = $this->loadState();
         $status = 200;
         foreach ($files as $path=>$fileName) {
-            $fingerprint = hash_file("sha256", $fileName);
-            if ($fingerprint===false) {
+            $data = file_get_contents($fileName);
+            if ($data===false) {
+                $this->yellow->toolbox->log("error", "GitHub Sync: cannot read $path");
                 $status = 500;
                 continue;
             }
-            if (isset($state[$path]) && $state[$path]==$fingerprint) continue;
+
+            // Compare with GitHub's Git blob SHA, not only the local state cache.
+            // This repairs files deleted or changed directly in the remote repository.
+            $localBlobSha = sha1("blob ".strlen($data)."\\0".$data);
+            $remote = $this->request("GET", $this->fileEndpoint($path));
+            if ($remote["status"]==200 && isset($remote["json"]["sha"]) &&
+                hash_equals($remote["json"]["sha"], $localBlobSha)) {
+                $state[$path] = hash("sha256", $data);
+                continue;
+            }
+            if ($remote["status"]!=200 && $remote["status"]!=404) {
+                $this->logFailure($path, $remote);
+                $status = 500;
+                continue;
+            }
+
             if ($this->uploadFile($fileName, $path)==200) {
-                $state[$path] = $fingerprint;
+                $state[$path] = hash("sha256", $data);
             } else {
                 $status = 500;
             }
         }
 
-        // Remove files from GitHub that were previously synchronized but no longer exist locally.
+        // Only paths recorded as previously synchronized may be deleted. Never act on
+        // malformed paths or outside the requested scope.
         foreach ($state as $path=>$fingerprint) {
-            if (($scope=="content" && strpos($path, "content/")!==0) ||
-                ($scope=="media" && strpos($path, "media/")!==0)) continue;
+            if (!is_string($path) ||
+                !preg_match("#^(content|media)/[^\\\\\\\\]+(?:/[^\\\\\\\\]+)*$#", $path) ||
+                (($scope=="content" || $scope=="media") && strpos($path, $scope."/")!==0)) continue;
             if (isset($files[$path])) continue;
             if ($this->deleteFile($path)==200) {
                 unset($state[$path]);
