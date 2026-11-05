@@ -183,8 +183,21 @@ class YellowWebp
     public function resolve_source($srcIn)
     {
         $parts = parse_url($srcIn);
-        if ($parts === false || isset($parts["scheme"]) || isset($parts["host"]) ||
-            !isset($parts["path"]) || $parts["path"] === "") {
+        if ($parts === false || !isset($parts["path"]) || $parts["path"] === "") {
+            return false;
+        }
+
+        // Permit absolute URLs only when they point back to this Yellow site.
+        if (isset($parts["host"])) {
+            $baseParts = parse_url((string)$this->yellow->system->get("coreServerBase"));
+            if ($baseParts === false || empty($baseParts["host"]) ||
+                strtolower($parts["host"]) !== strtolower($baseParts["host"]) ||
+                (isset($parts["port"]) ? $parts["port"] : null) !==
+                (isset($baseParts["port"]) ? $baseParts["port"] : null)) {
+                return false;
+            }
+        }
+        if (isset($parts["scheme"]) && !in_array(strtolower($parts["scheme"]), array("http", "https"), true)) {
             return false;
         }
 
