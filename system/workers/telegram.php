@@ -1,5 +1,5 @@
 <?php
-// Publish public blog posts to a Telegram channel after saving or on first page view.
+// Publish public blog posts to a Telegram channel only after an editor save.
 
 class YellowTelegram {
     const VERSION = "1.0.0";
@@ -21,15 +21,10 @@ class YellowTelegram {
         $this->publishPage($page);
     }
 
-    // Keep the page-view hook as a fallback for posts created outside the editor.
-    public function onParsePageOutput($page, $output) {
-        $this->publishPage($page);
-        return null;
-    }
-
     private function publishPage($page) {
         if ($page->get("layout") != "blog") return;
-        if (strtolower(trim($page->get("status"))) == "draft") return;
+        $status = strtolower(trim((string)$page->get("status")));
+        if ($status == "draft" || $status == "hide") return;
         if (!is_file($this->configFile) || !is_readable($this->configFile)) return;
 
         $config = include $this->configFile;
