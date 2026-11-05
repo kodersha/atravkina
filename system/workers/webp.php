@@ -482,7 +482,16 @@ class YellowWebp
         if ($relativeDirectory !== "." && $relativeDirectory !== "") {
             $targetDirectory .= DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relativeDirectory);
         }
-        $targetName = pathinfo(basename($sourceInfo["relative"]), PATHINFO_FILENAME).".webp";
+        clearstatcache(true, $sourceInfo["file"]);
+        $sourceMtime = @filemtime($sourceInfo["file"]);
+        $sourceCtime = @filectime($sourceInfo["file"]);
+        $sourceSize = @filesize($sourceInfo["file"]);
+        if ($sourceMtime === false || $sourceCtime === false || $sourceSize === false) {
+            return $srcIn;
+        }
+
+        // Use the original file modification time as a stable Unix timestamp.
+        $targetName = (string)$sourceMtime.".webp";
         if (is_dir($targetDirectory)) {
             $realTargetDirectory = realpath($targetDirectory);
             $imageDirectory = $this->get_image_directory();
@@ -496,13 +505,6 @@ class YellowWebp
         $targetFile = $targetDirectory.DIRECTORY_SEPARATOR.$targetName;
         $metadataFile = $targetFile.".meta";
 
-        clearstatcache(true, $sourceInfo["file"]);
-        $sourceMtime = @filemtime($sourceInfo["file"]);
-        $sourceCtime = @filectime($sourceInfo["file"]);
-        $sourceSize = @filesize($sourceInfo["file"]);
-        if ($sourceMtime === false || $sourceCtime === false || $sourceSize === false) {
-            return $srcIn;
-        }
         clearstatcache(true, $targetFile);
         $targetMtime = is_file($targetFile) ? @filemtime($targetFile) : false;
         $targetSize = is_file($targetFile) ? @filesize($targetFile) : false;
