@@ -4,10 +4,15 @@ html {
 body {
   position: relative;
 
-  margin-bottom: 5vw;
-  margin-right: 5vw;
-  margin-left: 5vw;
-  margin-top: 5vw;
+  padding-bottom: 5vw;
+  padding-right: 5vw;
+  padding-left: 5vw;
+  padding-top: 5vw;
+
+  margin-bottom: unset;
+  margin-right: unset;
+  margin-left: unset;
+  margin-top: unset;
 
   min-height: calc(100vh - 5vw - 5vw);
 
@@ -18,7 +23,9 @@ body {
   background-color: rgb(0, 0, 0);
   color: rgb(255, 255, 255);
 
-  font: 1.125rem/1.5 "PT Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  cursor: default;
+
+  font: 1rem/1.5 "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
 h1, h2, h3, h4, h5, h6 {
   margin-bottom: unset;
@@ -69,7 +76,7 @@ article {
     a {
       &.blog-read {
         border-bottom: none;
-        color: rgb(120, 120, 120);
+        color: rgb(68, 68, 68);
 
         &:hover {
           color: rgb(255, 255, 255);
@@ -100,7 +107,7 @@ article {
     border: none;
 
     font-size: 1.5rem;
-    color: rgb(120, 120, 120);
+    color: rgb(51, 51, 51);
 
     &:hover {
       color: rgb(255, 255, 255);

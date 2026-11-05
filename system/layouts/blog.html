@@ -1,5 +1,5 @@
 <?php $this->yellow->layout("header") ?>
-  <article>
+  <article loading="lazy">
     <?= (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml()); ?>
   </article>
 <?php $this->yellow->layout("footer") ?>
