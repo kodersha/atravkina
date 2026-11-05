@@ -246,6 +246,7 @@ class YellowWebp
     // Convert a local JPEG/PNG only when the WebP file is valid and smaller.
     public function convert($srcIn)
     {
+        $parts = parse_url($srcIn);
         $sourceInfo = $this->resolve_source($srcIn);
         if ($sourceInfo === false) {
             return $srcIn;
