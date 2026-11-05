@@ -286,7 +286,7 @@ class YellowWebp
     {
         clearstatcache(true, $file);
         $timestamp = false;
-        if (DIRECTORY_SEPARATOR === "\\\\") {
+        if (DIRECTORY_SEPARATOR === "\\") {
             $timestamp = @filectime($file);
         }
         if ($timestamp === false || $timestamp <= 0) {
