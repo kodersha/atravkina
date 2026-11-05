@@ -121,7 +121,8 @@ class YellowWebp
         if (isset($parts["query"])) $url .= "?".$parts["query"];
         if (isset($parts["fragment"])) $url .= "#".$parts["fragment"];
 
-        $converted = $this->convert($url);
+        // Post references are rewritten to the generated WebP URL, so the original can be removed.
+        $converted = $this->convert($url, true);
         if ($relativeToImageDirectory && strpos($converted, $this->get_image_url_path()) === 0) {
             $converted = substr($converted, strlen($this->get_image_url_path()));
         }
@@ -431,7 +432,7 @@ class YellowWebp
     }
 
     // Convert a local JPEG/PNG only when the WebP file is valid and smaller.
-    public function convert($srcIn)
+    public function convert($srcIn, $removeOriginal = false)
     {
         $parts = parse_url($srcIn);
         $sourceInfo = $this->resolve_source($srcIn);
@@ -586,8 +587,8 @@ class YellowWebp
             return $srcIn;
         }
 
-        // Remove the original only after a valid, smaller WebP file exists.
-        if (is_file($sourceInfo["file"]) && !@unlink($sourceInfo["file"])) {
+        // Remove originals only when the caller also replaces the stored reference.
+        if ($removeOriginal && is_file($sourceInfo["file"]) && !@unlink($sourceInfo["file"])) {
             $this->yellow->toolbox->log("warning", "Unable to remove original image after WebP conversion: ".$sourceInfo["file"]);
         }
 
