@@ -18,11 +18,9 @@
     <header>
       <div class="logotype">
         <?php if ($this->yellow->page->getLocation() != "/"): ?>
-          <a href="/">
-            <img width="40" height="40" src="<?php echo $this->yellow->page->getBase(true) ?>/system/themes/images/avatar.png" alt="Home">
-          </a>
+            <a href="/"><img width="40" height="40" src="/system/themes/images/avatar.png" alt="Avatar"></a>
         <?php else: ?>
-          <img width="40" height="40" src="<?php echo $this->yellow->page->getBase(true) ?>/system/themes/images/avatar.png" alt="Avatar">
+            <img width="40" height="40" src="/system/themes/images/avatar.png" alt="Avatar">
         <?php endif ?>
       </div>
     </header>
