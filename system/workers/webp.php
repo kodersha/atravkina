@@ -120,11 +120,57 @@ class YellowWebp
         if (isset($parts["query"])) $url .= "?".$parts["query"];
         if (isset($parts["fragment"])) $url .= "#".$parts["fragment"];
 
+        // Keep the timestamp-named original if WebP conversion is unavailable or fails.
+        $url = $this->rename_source_to_timestamp($url);
         $converted = $this->convert($url);
         if ($relativeToImageDirectory && strpos($converted, $this->get_image_url_path()) === 0) {
             $converted = substr($converted, strlen($this->get_image_url_path()));
         }
         return $converted;
+    }
+
+
+    // Rename a local source image to its creation timestamp. Add a suffix on collisions.
+    public function rename_source_to_timestamp($url)
+    {
+        $parts = parse_url($url);
+        if ($parts === false || empty($parts["path"])) return $url;
+        $pathKey = $parts["path"];
+        if (isset($this->renamedSources[$pathKey])) {
+            $result = $this->renamedSources[$pathKey];
+            if (isset($parts["query"])) $result .= "?".$parts["query"];
+            if (isset($parts["fragment"])) $result .= "#".$parts["fragment"];
+            return $result;
+        }
+
+        $sourceInfo = $this->resolve_source($url);
+        if ($sourceInfo === false) return $url;
+        $extension = strtolower(pathinfo($sourceInfo["file"], PATHINFO_EXTENSION));
+        $basename = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
+        if ($extension === "" || preg_match('/^\d+(?:-\d+)?$/', $basename)) return $url;
+
+        $timestamp = $this->get_source_timestamp($sourceInfo["file"]);
+        $directory = dirname($sourceInfo["file"]);
+        $targetBase = (string)$timestamp;
+        $targetFile = $directory.DIRECTORY_SEPARATOR.$targetBase.".".$extension;
+        $suffix = 1;
+        while (file_exists($targetFile) && realpath($targetFile) !== realpath($sourceInfo["file"])) {
+            $targetBase = (string)$timestamp."-".$suffix++;
+            $targetFile = $directory.DIRECTORY_SEPARATOR.$targetBase.".".$extension;
+        }
+
+        if (realpath($targetFile) !== realpath($sourceInfo["file"]) &&
+            !@rename($sourceInfo["file"], $targetFile)) return $url;
+
+        $imageDirectory = $this->get_image_directory();
+        if ($imageDirectory === false) return $url;
+        $rootPrefix = rtrim($imageDirectory, "/\\").DIRECTORY_SEPARATOR;
+        $relative = str_replace("\\", "/", substr($targetFile, strlen($rootPrefix)));
+        $renamedPath = $this->get_image_url_path().$this->encode_url_path($relative);
+        $this->renamedSources[$pathKey] = $renamedPath;
+        if (isset($parts["query"])) $renamedPath .= "?".$parts["query"];
+        if (isset($parts["fragment"])) $renamedPath .= "#".$parts["fragment"];
+        return $renamedPath;
     }
 
     public function acceptsWebp()
@@ -277,21 +323,6 @@ class YellowWebp
     public function get_cache_directory()
     {
         return $this->get_image_directory();
-    }
-
-    // Use the real creation time on Windows; on Unix filemtime is the portable
-    // approximation because filectime is inode-change time, not birth time.
-    public function get_source_timestamp($file)
-    {
-        clearstatcache(true, $file);
-        $timestamp = false;
-        if (DIRECTORY_SEPARATOR === "\\") {
-            $timestamp = @filectime($file);
-        }
-        if ($timestamp === false || $timestamp <= 0) {
-            $timestamp = @filemtime($file);
-        }
-        return $timestamp !== false && $timestamp > 0 ? (int)$timestamp : time();
     }
 
     // Resolve a local image URL to a file contained in Yellow's configured image directory.
@@ -462,7 +493,11 @@ class YellowWebp
         }
 
         $timestamp = $this->get_source_timestamp($sourceInfo["file"]);
-        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$timestamp.".webp";
+        $sourceBase = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
+        $targetBase = preg_match('/^\d+(?:-\d+)?$/', $sourceBase)
+            ? $sourceBase
+            : $timestamp."-".substr(sha1($sourceInfo["relative"]), 0, 8);
+        $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetBase.".webp";
 
         clearstatcache(true, $sourceInfo["file"]);
         clearstatcache(true, $targetFile);
@@ -527,7 +562,7 @@ class YellowWebp
             return $srcIn;
         }
 
-        $webpUrl = $this->get_image_url_path().$timestamp.".webp";
+        $webpUrl = $this->get_image_url_path().rawurlencode($targetBase).".webp";
         if (isset($parts["query"])) {
             $webpUrl .= "?".$parts["query"];
         }
