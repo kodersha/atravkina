@@ -52,6 +52,9 @@ p {
     }
   }
 }
+.emerge { 
+  opacity: 0; 
+}
 
 header {
   display: flex;
@@ -92,11 +95,16 @@ article {
   display: flex;
 
   position: absolute;
-  right: 0;
-  top: 0;
-  
+  right: 5vw;
+  top: 5vw;
+
   height: 2.5rem;
   width: 2.5rem;
+
+  z-index: 1000;
+
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 0.5rem;
 
   button {
     position: relative;

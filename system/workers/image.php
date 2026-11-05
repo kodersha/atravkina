@@ -43,7 +43,7 @@ class YellowImage {
                 $src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
                 $width = $height = 0;
             }
-            $output = "<img src=\"".htmlspecialchars($src)."\"";
+            $output = "<img loading=\"lazy\" src=\"".htmlspecialchars($src)."\"";
             if ($width && $height) $output .= " width=\"".htmlspecialchars($width)."\" height=\"".htmlspecialchars($height)."\"";
             if (!is_string_empty($alt)) $output .= " alt=\"".htmlspecialchars($alt)."\" title=\"".htmlspecialchars($alt)."\"";
             if (!is_string_empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
