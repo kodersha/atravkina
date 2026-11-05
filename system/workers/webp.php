@@ -70,27 +70,25 @@ class YellowWebp
         }
 
         $rawData = $page->rawData;
-        $imagePath = $this->get_image_url_path();
 
         // Yellow's native [image filename] content element stores paths relative to media/images.
-        $rawData = preg_replace_callback('/(\\[image\\s+)([^\\]\\s]+)(?=[\\s\\]])/i',
-            function ($matches) use ($imagePath) {
-                $converted = $this->convertPostImageReference($matches[2], true);
-                return $matches[1].$converted;
+        $rawData = preg_replace_callback('/(\[image\s+)([^\]\s]+)(?=[\s\]])/i',
+            function ($matches) {
+                return $matches[1].$this->convertPostImageReference($matches[2], true);
             }, $rawData);
 
         // Markdown image syntax and HTML image tags.
-        $rawData = preg_replace_callback('/(!\\[[^\\]]*\\]\\()([^\\s)]+)(\\))/u',
+        $rawData = preg_replace_callback('/(!\[[^\]]*\]\()([^\s)]+)(\))/u',
             function ($matches) {
                 return $matches[1].$this->convertPostImageReference($matches[2]).$matches[3];
             }, $rawData);
-        $rawData = preg_replace_callback('/(<img\\b[^>]*?\\bsrc\\s*=\\s*)(["\\'])(.*?)\\2/is',
+        $rawData = preg_replace_callback('/(<img\b[^>]*?\bsrc\s*=\s*)(["\'])(.*?)\2/is',
             function ($matches) {
                 return $matches[1].$matches[2].$this->convertPostImageReference($matches[3]).$matches[2];
             }, $rawData);
 
         // Yellow preview metadata is also resolved relative to the image directory.
-        $rawData = preg_replace_callback('/^(Preview:\\s*)([^\\r\\n]+)$/mi',
+        $rawData = preg_replace_callback('/^(Preview:\s*)([^\r\n]+)$/mi',
             function ($matches) {
                 return $matches[1].$this->convertPostImageReference(trim($matches[2]), true);
             }, $rawData);
@@ -106,8 +104,8 @@ class YellowWebp
     public function convertPostImageReference($source, $relativeToImageDirectory = false)
     {
         $source = trim(html_entity_decode($source, ENT_QUOTES, "UTF-8"));
-        if ($source === "" || preg_match('/^(?:[a-z][a-z0-9+.-]*:|\\/\\/|#)/i', $source) ||
-            stripos($source, "data:") === 0 || preg_match('/\\.webp(?:[?#]|$)/i', $source)) {
+        if ($source === "" || preg_match('/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i', $source) ||
+            stripos($source, "data:") === 0 || preg_match('/\.webp(?:[?#]|$)/i', $source)) {
             return $source;
         }
 
