@@ -123,8 +123,16 @@ class YellowWebp
         }
 
         clearstatcache(true, $sourceInfo["file"]);
-        $timestamp = @filectime($sourceInfo["file"]);
-        if ($timestamp === false || $timestamp <= 0) $timestamp = @filemtime($sourceInfo["file"]);
+        // Windows reports the actual creation time via filectime().
+        // On Unix, filectime() is inode-change time, so use filemtime() as the upload-time approximation.
+        if (defined("PHP_OS_FAMILY") && PHP_OS_FAMILY === "Windows") {
+            $timestamp = @filectime($sourceInfo["file"]);
+        } else {
+            $timestamp = @filemtime($sourceInfo["file"]);
+        }
+        if ($timestamp === false || $timestamp <= 0) {
+            $timestamp = @filemtime($sourceInfo["file"]);
+        }
         if ($timestamp === false || $timestamp <= 0) return $url;
 
         $targetName = (string)$timestamp.".".$extension;
