@@ -15,7 +15,7 @@ class YellowPoem {
 
         $pattern = '/<pre\\b[^>]*>\\s*<code\\b([^>]*)>(.*?)<\\/code>\\s*<\\/pre>/is';
         return preg_replace_callback($pattern, function ($matches) {
-            if (!preg_match('/class=["\\\']([^"\\\']*)["\\\']/', $matches[1], $classMatch)) return $matches[0];
+            if (!preg_match('/class="([^"]*)"/', $matches[1], $classMatch)) return $matches[0];
             $classes = preg_split('/\\s+/', trim($classMatch[1]));
             if (!in_array("language-poem", $classes, true) &&
                 !in_array("poem", $classes, true) &&
