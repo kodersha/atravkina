@@ -3891,7 +3891,8 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     // Handle shortcuts, block style
     public function _doAutoLinks_shortcutBlock_callback($matches) {
         $output = $this->page->parseContentElement($matches[1], trim($matches[2]), "", "block");
-        return is_null($output) ? $matches[0] : $this->hashBlock($output);
+        // Keep block shortcuts outside paragraph parsing.
+        return is_null($output) ? $matches[0] : "\n\n".$this->hashBlock($output)."\n\n";
     }
     
     // Handle shortcuts, inline style
