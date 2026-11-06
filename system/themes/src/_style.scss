@@ -90,21 +90,23 @@ article {
 }
 
 .blog-sort {
-  justify-content: end;
+  justify-content: center;
   align-items: center;
   display: flex;
-
+  
   position: absolute;
+  z-index: 1000;
   right: 5vw;
   top: 5vw;
+  
+  height: 2rem;
+  width: 2rem;
+  
+  border-radius: .5rem;
 
-  height: 2.5rem;
-  width: 2.5rem;
-
-  z-index: 1000;
-
-  background-color: rgba(0, 0, 0, 0.6);
-  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   button {
     position: relative;
@@ -115,7 +117,7 @@ article {
     border: none;
 
     font-size: 1.5rem;
-    color: rgb(51, 51, 51);
+    color: rgb(0, 0, 0);
 
     &:hover {
       color: rgb(255, 255, 255);
@@ -148,4 +150,10 @@ footer {
       }
     }
   }
+}
+
+.goo {
+  -webkit-filter: url(./image/goo.svg#goo);
+  -moz-filter: url(./image/goo.svg#goo);
+  filter: url(./image/goo.svg#goo);
 }
