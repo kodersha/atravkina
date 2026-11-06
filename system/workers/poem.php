@@ -2,27 +2,30 @@
 // Preserve intentional line breaks in poetry blocks.
 
 class YellowPoem {
-    const VERSION = "1.0.0";
+    const VERSION = "1.0.1";
     public $yellow;
 
     public function onLoad($yellow) {
         $this->yellow = $yellow;
     }
 
-    // Render fenced Markdown blocks marked as "poem".
-    public function onParseContentElement($page, $name, $text, $attributes, $type) {
-        if ($name !== "poem" || $type !== "code") return null;
+    // Convert fenced Markdown code blocks marked with the "poem" language.
+    public function onParseContentHtml($page, $output) {
+        if (!is_string($output) || stripos($output, "poem") === false) return null;
 
-        $text = str_replace(array("\r\n", "\r"), "\n", $text);
-        $text = preg_replace("/\n+$/", "", $text);
-        $lines = explode("\n", $text);
-        $output = '<div class="yellow-poem" role="figure">';
-        foreach ($lines as $index => $line) {
-            if ($index > 0) $output .= "<br>";
-            $output .= htmlspecialchars($line, ENT_QUOTES, "UTF-8");
-        }
-        $output .= "</div>";
-        return $output;
+        $pattern = '/<pre\\b[^>]*>\\s*<code\\b([^>]*)>(.*?)<\\/code>\\s*<\\/pre>/is';
+        return preg_replace_callback($pattern, function ($matches) {
+            if (!preg_match('/class=["\\\']([^"\\\']*)["\\\']/', $matches[1], $classMatch)) return $matches[0];
+            $classes = preg_split('/\\s+/', trim($classMatch[1]));
+            if (!in_array("language-poem", $classes, true) &&
+                !in_array("poem", $classes, true) &&
+                !in_array("code-poem", $classes, true)) return $matches[0];
+
+            $text = html_entity_decode($matches[2], ENT_QUOTES | ENT_HTML5, "UTF-8");
+            $text = str_replace(array("\\r\\n", "\\r"), "\\n", $text);
+            $text = preg_replace("/\\n+$/", "", $text);
+            return '<div class="yellow-poem">'.nl2br(htmlspecialchars($text, ENT_QUOTES, "UTF-8"), false).'</div>';
+        }, $output);
     }
 
     // Load poem styling only on pages that contain a poem.
