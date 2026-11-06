@@ -2,4 +2,62 @@
   <article class="emerge" data-continue="true">
     <?= (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml()); ?>
   </article>
+
+<?php
+  // Find neighboring blog posts that share at least one tag with the current post.
+  $currentPage = $this->yellow->page;
+  $currentTags = preg_split('/[,;]+/', (string)$currentPage->get("tag"), -1, PREG_SPLIT_NO_EMPTY);
+  $currentTags = array_map(function ($tag) {
+      return mb_strtolower(trim($tag), "UTF-8");
+  }, $currentTags);
+  $taggedPages = [];
+
+  foreach ($this->yellow->page->getPages("blog") as $page) {
+      if ($page->getLocation(true) === $currentPage->getLocation(true)) continue;
+      if ($page->get("status") === "draft") continue;
+
+      $pageTags = preg_split('/[,;]+/', (string)$page->get("tag"), -1, PREG_SPLIT_NO_EMPTY);
+      $pageTags = array_map(function ($tag) {
+          return mb_strtolower(trim($tag), "UTF-8");
+      }, $pageTags);
+
+      if (count(array_intersect($currentTags, $pageTags)) > 0) {
+          $taggedPages[] = $page;
+      }
+  }
+
+  // Sort by timestamp-like title: older posts first.
+  usort($taggedPages, function ($a, $b) {
+      return strcmp((string)$a->get("title"), (string)$b->get("title"));
+  });
+
+  $currentIndex = -1;
+  foreach ($taggedPages as $index => $page) {
+      if (strcmp((string)$page->get("title"), (string)$currentPage->get("title")) === 0) {
+          $currentIndex = $index;
+          break;
+      }
+  }
+
+  $previousPage = $currentIndex > 0 ? $taggedPages[$currentIndex - 1] : null;
+  $nextPage = $currentIndex >= 0 && $currentIndex < count($taggedPages) - 1
+      ? $taggedPages[$currentIndex + 1]
+      : null;
+?>
+
+<?php if ($previousPage || $nextPage): ?>
+  <nav class="blog-post-navigation" aria-label="Навигация по постам с общим тегом">
+    <?php if ($previousPage): ?>
+      <a class="blog-post-previous" href="<?= $previousPage->getLocation(true) ?>">
+        ← Предыдущий пост
+      </a>
+    <?php endif ?>
+    <?php if ($nextPage): ?>
+      <a class="blog-post-next" href="<?= $nextPage->getLocation(true) ?>">
+        Следующий пост →
+      </a>
+    <?php endif ?>
+  </nav>
+<?php endif ?>
+
 <?php $this->yellow->layout("footer") ?>
