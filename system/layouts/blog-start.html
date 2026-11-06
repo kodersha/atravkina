@@ -47,6 +47,13 @@
           $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
       }
 
+      // Convert standalone image paragraphs into semantic figure elements.
+      $contentHtml = preg_replace(
+          '~<p\\b[^>]*>\\s*((?:<a\\b[^>]*>\\s*)?<img\\b[^>]*>(?:\\s*</a>)?)\\s*</p>~i',
+          '<figure>$1</figure>',
+          $contentHtml
+      );
+
       echo $contentHtml;
     ?>
   </article>
