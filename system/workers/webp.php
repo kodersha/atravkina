@@ -668,20 +668,35 @@ class YellowWebp
     public function is_valid_webp($file)
     {
         clearstatcache(true, $file);
-        if (!is_file($file) || @filesize($file) <= 0) {
+        if (!is_file($file) || @filesize($file) < 12) {
             return false;
         }
+
+        // RIFF/WEBP signature works even on PHP/GD builds without WebP getimagesize support.
+        $handle = @fopen($file, "rb");
+        if (!$handle) {
+            return false;
+        }
+        $header = @fread($handle, 12);
+        @fclose($handle);
+        if (!is_string($header) || strlen($header) !== 12 ||
+            substr($header, 0, 4) !== "RIFF" || substr($header, 8, 4) !== "WEBP") {
+            return false;
+        }
+
         if (function_exists("getimagesize")) {
             $imageInfo = @getimagesize($file);
-            if ($imageInfo === false) {
-                return false;
+            if (is_array($imageInfo)) {
+                if (isset($imageInfo["mime"]) &&
+                    strtolower($imageInfo["mime"]) !== "image/webp") {
+                    return false;
+                }
+                if (!isset($imageInfo["mime"]) && defined("IMAGETYPE_WEBP") &&
+                    isset($imageInfo[2]) && $imageInfo[2] !== IMAGETYPE_WEBP) {
+                    return false;
+                }
             }
-            if (isset($imageInfo["mime"])) {
-                return strtolower($imageInfo["mime"]) === "image/webp";
-            }
-            if (defined("IMAGETYPE_WEBP") && isset($imageInfo[2])) {
-                return $imageInfo[2] === IMAGETYPE_WEBP;
-            }
+            // Older PHP builds may not recognize WebP in getimagesize despite a valid RIFF header.
         }
         return true;
     }
