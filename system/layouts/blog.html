@@ -2,6 +2,8 @@
 <?php
   // Convert standalone image paragraphs into semantic figure elements.
   $contentHtml = (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml());
+  // Remove empty paragraphs after typography and other HTML transformations.
+  $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
   $contentHtml = preg_replace(
       '~<p\\b[^>]*>\\s*((?:<a\\b[^>]*>\\s*)?<img\\b[^>]*>(?:\\s*</a>)?)\\s*</p>~i',
       '<figure>$1</figure>',
