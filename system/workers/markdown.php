@@ -14,6 +14,8 @@ class YellowMarkdown {
     public function onParseContentRaw($page, $text) {
         $markdown = new YellowMarkdownParser($this->yellow, $page);
         $text = $markdown->transform($text);
+        // Remove empty paragraphs left around standalone block elements.
+        $text = preg_replace('~<p>\\s*</p>~i', "", $text);
         $text = $this->yellow->lookup->normaliseData($text, "html");
         return $text;
     }
