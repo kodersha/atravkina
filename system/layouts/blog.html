@@ -4,7 +4,7 @@
   </article>
 
 <?php
-  // Find neighboring posts with at least one shared tag.
+  // Find neighboring blog posts that share at least one tag.
   $currentPage = $this->yellow->page;
   $normalizeTags = function ($value) {
       $tags = preg_split('/[,;]+/', (string)$value, -1, PREG_SPLIT_NO_EMPTY);
@@ -16,9 +16,8 @@
   $currentTags = $normalizeTags($currentPage->get("tag"));
   $taggedPages = [];
 
-  // Read blog posts directly from the blog directory, including hidden pages.
-  $blogLocation = "root/1-blog/";
-  foreach ($this->yellow->content->getChildrenRecursive($blogLocation, true) as $page) {
+  // Scan the complete content tree, including invisible pages.
+  foreach ($this->yellow->content->index(true) as $page) {
       if ($page->get("layout") !== "blog") continue;
       if ($page->get("status") === "draft") continue;
 
@@ -28,24 +27,15 @@
       }
   }
 
-  // Ensure the current post is present even if the collection omitted it.
-  $currentFound = false;
-  foreach ($taggedPages as $page) {
-      if ($page->getLocation() === $currentPage->getLocation()) {
-          $currentFound = true;
-          break;
-      }
-  }
-  if ($currentTags && !$currentFound) $taggedPages[] = $currentPage;
-
-  // Titles are Unix timestamps, so numeric sorting gives chronological order.
+  // Sort posts chronologically by their timestamp titles.
   usort($taggedPages, function ($a, $b) {
       return (int)$a->get("title") <=> (int)$b->get("title");
   });
 
+  // Identify the current post by its source file path.
   $currentIndex = -1;
   foreach ($taggedPages as $index => $page) {
-      if ($page->getLocation() === $currentPage->getLocation()) {
+      if ($page->fileName === $currentPage->fileName) {
           $currentIndex = $index;
           break;
       }
