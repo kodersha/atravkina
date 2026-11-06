@@ -12,7 +12,9 @@
   }, $currentTags);
   $taggedPages = [];
 
-  foreach ($this->yellow->page->getPages("blog") as $page) {
+  // Include invisible pages so posts with Status: hide can participate.
+  foreach ($this->yellow->content->index(true) as $page) {
+      if ($page->get("layout") !== "blog") continue;
       if ($page->get("status") === "draft") continue;
 
       $pageTags = preg_split('/[,;]+/', (string)$page->get("tag"), -1, PREG_SPLIT_NO_EMPTY);
