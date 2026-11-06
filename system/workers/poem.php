@@ -2,7 +2,7 @@
 // Preserve intentional line breaks in poetry blocks.
 
 class YellowPoem {
-    const VERSION = "1.0.2";
+    const VERSION = "1.0.3";
     public $yellow;
 
     public function onLoad($yellow) {
@@ -22,7 +22,7 @@ class YellowPoem {
             $text = html_entity_decode($matches[2], ENT_QUOTES | ENT_HTML5, "UTF-8");
             $text = str_replace(array("\\r\\n", "\\r"), "\\n", $text);
             $text = preg_replace("/\\n+$/", "", $text);
-            return '<pre class="poem">'.htmlspecialchars($text, ENT_QUOTES, "UTF-8").'</pre>';
+            return '<pre class="poem" lang="ru">'.htmlspecialchars($text, ENT_QUOTES, "UTF-8").'</pre>';
         }, $output);
     }
 
