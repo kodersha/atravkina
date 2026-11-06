@@ -53,6 +53,8 @@
           '<figure>$1</figure>',
           $contentHtml
       );
+      // Remove empty paragraphs after all content transformations.
+      $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
 
       echo $contentHtml;
     ?>
