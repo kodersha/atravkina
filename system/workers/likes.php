@@ -66,7 +66,7 @@ class YellowLikes {
     // Add a compact heart counter to individual blog posts only.
     public function onParsePageOutput($page, $output) {
         if ($page->get("layout") != "blog" || !is_string($output) || strpos($output, 'class="yellow-likes"') !== false) return null;
-        $widget = '<div class="yellow-likes" data-yellow-likes><button class="yellow-likes__button" type="button" aria-label="Поставить лайк" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg><span class="yellow-likes__count">0</span></button></div>';
+        $widget = '<div class="yellow-likes" data-yellow-likes><button class="yellow-likes__button" type="button" aria-label="Поставить лайк" aria-pressed="false"><i class="las la-heart-broken"></i><span class="yellow-likes__count">0</span></button></div>';
         if (strpos($output, "<!--yellow-likes-slot-->") !== false) {
             $output = str_replace("<!--yellow-likes-slot-->", $widget, $output);
         } elseif (stripos($output, "</article>") !== false) {
