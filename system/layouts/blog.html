@@ -16,7 +16,7 @@
       is_file($telegramStateFile) && is_readable($telegramStateFile)) {
       $telegramConfig = include $telegramConfigFile;
       $telegramRaw = file_get_contents($telegramStateFile);
-      $telegramPrefix = "<?php http_response_code(404); exit; ?>\\n";
+      $telegramPrefix = "<?php http_response_code(404); exit; ?>\n";
       if (strpos($telegramRaw, $telegramPrefix) === 0) {
           $telegramRaw = substr($telegramRaw, strlen($telegramPrefix));
       }
