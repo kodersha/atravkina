@@ -22,22 +22,23 @@
       $contentText = trim(html_entity_decode(strip_tags($contentHtml), ENT_QUOTES | ENT_HTML5, "UTF-8"));
 
       if ($contentText !== "") {
-          $readMore = " <a class=\"blog-read\" href=\"" . $page->getLocation(true) . "\"><i class='las la-link'></i></a>";
+          $readMore = "<a class=\"blog-read\" href=\"" . $page->getLocation(true) . "\"><i class='las la-link'></i></a>";
 
           if (strpos($contentHtml, "<!--more-->") !== false) {
+              // Keep the read-more link outside paragraph markup at the more marker.
               $contentHtml = (new YellowTypograph())->applyTypograph(
                   $contentHtml,
                   0,
                   false,
                   "<!--more-->",
-                  $readMore
+                  "</p>" . $readMore
               );
           } else {
               $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
 
-              // Place the read-more link at the end of the last paragraph, inline with its text.
+              // Place the read-more link after the closing tag of the last paragraph.
               if (preg_match("~</p>(?!.*</p>)~s", $contentHtml)) {
-                  $contentHtml = preg_replace("~</p>(?!.*</p>)~s", $readMore . "</p>", $contentHtml, 1);
+                  $contentHtml = preg_replace("~</p>(?!.*</p>)~s", "</p>" . $readMore, $contentHtml, 1);
               } else {
                   $contentHtml .= $readMore;
               }
