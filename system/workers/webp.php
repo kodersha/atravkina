@@ -523,8 +523,8 @@ class YellowWebp
     // Check whether a resolved filesystem path is inside a resolved root directory.
     public function is_path_inside($path, $root)
     {
-        $path = str_replace("\\\\", "/", rtrim($path, "/\\\\"));
-        $root = str_replace("\\\\", "/", rtrim($root, "/\\\\"));
+        $path = str_replace("\\", "/", rtrim($path, "/\\"));
+        $root = str_replace("\\", "/", rtrim($root, "/\\"));
         if ($root === "") {
             $root = "/";
         }
@@ -541,13 +541,13 @@ class YellowWebp
     public function get_cache_manifest_directory()
     {
         $installDirectory = (string)$this->yellow->system->get("coreServerInstallDirectory");
-        $cacheLocation = str_replace("\\\\", "/", trim(
-            (string)$this->yellow->system->get("coreCacheDirectory"), "/\\\\"
+        $cacheLocation = str_replace("\\", "/", trim(
+            (string)$this->yellow->system->get("coreCacheDirectory"), "/\\"
         ));
         if ($installDirectory === "" || $cacheLocation === "" ||
             $this->is_absolute_path($cacheLocation) ||
             preg_match("#(^|/)\\.\\.?(/|$)#", $cacheLocation) ||
-            strpos($cacheLocation, ":") !== false || strpos($cacheLocation, "\\0") !== false) {
+            strpos($cacheLocation, ":") !== false || strpos($cacheLocation, "\0") !== false) {
             return false;
         }
 
@@ -581,7 +581,7 @@ class YellowWebp
 
     public function get_cache_manifest_file($directory, $relative)
     {
-        return $directory.DIRECTORY_SEPARATOR.sha1(str_replace("\\\\", "/", $relative)).".cache";
+        return $directory.DIRECTORY_SEPARATOR.sha1(str_replace("\\", "/", $relative)).".cache";
     }
 
     // Prefer a content hash; use stat signature only if hashing is unavailable.
@@ -718,7 +718,6 @@ class YellowWebp
             !function_exists("imagewebp")) {
             return $srcIn;
         }
-
         if (($mime === "image/jpeg" && !function_exists("imagecreatefromjpeg")) ||
             ($mime === "image/png" && !function_exists("imagecreatefrompng"))) {
             return $srcIn;
@@ -742,10 +741,15 @@ class YellowWebp
         }
 
         $sourceBase = pathinfo($sourceInfo["file"], PATHINFO_FILENAME);
-        $targetBase = preg_match('/^\\d+(?:-\\d+)?$/', $sourceBase)
-            ? $sourceBase
-            : (string)$this->get_source_timestamp($sourceInfo["file"])."-".
+        $relativeDirectory = dirname($sourceInfo["relative"]);
+        $hasSubdirectory = $relativeDirectory !== "." && $relativeDirectory !== "";
+        if (preg_match('/^\\d+(?:-\\d+)?$/', $sourceBase)) {
+            $targetBase = $hasSubdirectory ?
+                $sourceBase."-".substr(sha1($sourceInfo["relative"]), 0, 8) : $sourceBase;
+        } else {
+            $targetBase = (string)$this->get_source_timestamp($sourceInfo["file"])."-".
                 substr(sha1($sourceInfo["relative"]), 0, 8);
+        }
 
         $manifestDirectory = $this->get_cache_manifest_directory();
         $manifestFile = $manifestDirectory !== false ?
@@ -762,8 +766,8 @@ class YellowWebp
         $targetFile = $imageDirectory.DIRECTORY_SEPARATOR.$targetBase.".webp";
         clearstatcache(true, $targetFile);
         $targetSize = @filesize($targetFile);
-
         $cacheValid = is_file($targetFile) && $targetSize !== false && $targetSize > 0 &&
+            $this->is_valid_webp($targetFile) &&
             is_array($manifest) && isset($manifest["fingerprint"], $manifest["targetBase"]) &&
             $manifest["fingerprint"] === $fingerprint && $manifest["targetBase"] === $targetBase;
 
@@ -779,6 +783,9 @@ class YellowWebp
             }
 
             if ($mime === "image/png") {
+                if (function_exists("imagepalettetotruecolor")) {
+                    @imagepalettetotruecolor($image);
+                }
                 if (function_exists("imagealphablending")) {
                     @imagealphablending($image, false);
                 }
@@ -802,7 +809,6 @@ class YellowWebp
                 return $srcIn;
             }
 
-            // Do not publish an output if the source changed while GD was encoding it.
             $fingerprintAfterEncode = $this->get_source_fingerprint($sourceInfo["file"]);
             if ($fingerprintAfterEncode === false || $fingerprintAfterEncode !== $fingerprint) {
                 @unlink($temporaryFile);
