@@ -4,37 +4,48 @@
   </article>
 
 <?php
-  // Find neighboring blog posts that share at least one tag with the current post.
+  // Find neighboring posts with at least one shared tag.
   $currentPage = $this->yellow->page;
-  $currentTags = preg_split('/[,;]+/', (string)$currentPage->get("tag"), -1, PREG_SPLIT_NO_EMPTY);
-  $currentTags = array_map(function ($tag) {
-      return mb_strtolower(trim($tag), "UTF-8");
-  }, $currentTags);
+  $normalizeTags = function ($value) {
+      $tags = preg_split('/[,;]+/', (string)$value, -1, PREG_SPLIT_NO_EMPTY);
+      return array_values(array_unique(array_map(function ($tag) {
+          return mb_strtolower(trim($tag), "UTF-8");
+      }, $tags)));
+  };
+
+  $currentTags = $normalizeTags($currentPage->get("tag"));
   $taggedPages = [];
 
-  // Include invisible pages so posts with Status: hide can participate.
-  foreach ($this->yellow->content->index(true) as $page) {
+  // Read blog posts directly from the blog directory, including hidden pages.
+  $blogLocation = "root/1-blog/";
+  foreach ($this->yellow->content->getChildrenRecursive($blogLocation, true) as $page) {
       if ($page->get("layout") !== "blog") continue;
       if ($page->get("status") === "draft") continue;
 
-      $pageTags = preg_split('/[,;]+/', (string)$page->get("tag"), -1, PREG_SPLIT_NO_EMPTY);
-      $pageTags = array_map(function ($tag) {
-          return mb_strtolower(trim($tag), "UTF-8");
-      }, $pageTags);
-
-      if (count(array_intersect($currentTags, $pageTags)) > 0) {
+      $pageTags = $normalizeTags($page->get("tag"));
+      if ($currentTags && count(array_intersect($currentTags, $pageTags)) > 0) {
           $taggedPages[] = $page;
       }
   }
 
-  // Sort by timestamp-like title: older posts first.
+  // Ensure the current post is present even if the collection omitted it.
+  $currentFound = false;
+  foreach ($taggedPages as $page) {
+      if ($page->getLocation() === $currentPage->getLocation()) {
+          $currentFound = true;
+          break;
+      }
+  }
+  if ($currentTags && !$currentFound) $taggedPages[] = $currentPage;
+
+  // Titles are Unix timestamps, so numeric sorting gives chronological order.
   usort($taggedPages, function ($a, $b) {
-      return strcmp((string)$a->get("title"), (string)$b->get("title"));
+      return (int)$a->get("title") <=> (int)$b->get("title");
   });
 
   $currentIndex = -1;
   foreach ($taggedPages as $index => $page) {
-      if (strcmp((string)$page->get("title"), (string)$currentPage->get("title")) === 0) {
+      if ($page->getLocation() === $currentPage->getLocation()) {
           $currentIndex = $index;
           break;
       }
@@ -49,14 +60,10 @@
 <?php if ($previousPage || $nextPage): ?>
   <nav class="blog-post-navigation" aria-label="Навигация по постам с общим тегом">
     <?php if ($previousPage): ?>
-      <a class="blog-post-previous" href="<?= $previousPage->getLocation(true) ?>">
-        ← Предыдущий пост
-      </a>
+      <a class="blog-post-previous" href="<?= $previousPage->getLocation(true) ?>">← Предыдущий пост</a>
     <?php endif ?>
     <?php if ($nextPage): ?>
-      <a class="blog-post-next" href="<?= $nextPage->getLocation(true) ?>">
-        Следующий пост →
-      </a>
+      <a class="blog-post-next" href="<?= $nextPage->getLocation(true) ?>">Следующий пост →</a>
     <?php endif ?>
   </nav>
 <?php endif ?>
