@@ -13,7 +13,6 @@
   $taggedPages = [];
 
   foreach ($this->yellow->page->getPages("blog") as $page) {
-      if ($page->getLocation(true) === $currentPage->getLocation(true)) continue;
       if ($page->get("status") === "draft") continue;
 
       $pageTags = preg_split('/[,;]+/', (string)$page->get("tag"), -1, PREG_SPLIT_NO_EMPTY);
