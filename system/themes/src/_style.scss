@@ -157,7 +157,7 @@ article {
   }
 }
 
-.blog-sort {
+.blog-sort-button {
   justify-content: center;
   align-items: center;
   display: flex;
@@ -171,25 +171,19 @@ article {
   width: 2rem;
   
   border-radius: .5rem;
+  border: unset;
 
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
-  button {
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
+  cursor: pointer;
 
-    background-color: transparent;
-    border: none;
+  font-size: 1.5rem;
+  color: rgb(0, 0, 0);
 
-    font-size: 1.5rem;
-    color: rgb(0, 0, 0);
-
-    &:hover {
-      color: rgb(255, 255, 255);
-    }
+  &:hover {
+    color: rgb(255, 255, 255);
   }
 }
 
