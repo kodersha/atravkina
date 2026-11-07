@@ -568,7 +568,8 @@ class YellowWebp
             return $srcIn;
         }
 
-        $webpUrl = $this->get_image_url_path().rawurlencode($targetBase).".webp";
+        $webpPath = $this->get_image_url_path().rawurlencode($targetBase).".webp";
+        $webpUrl = $webpPath;
         if (isset($parts["query"])) {
             $webpUrl .= "?".$parts["query"];
         }
@@ -583,11 +584,11 @@ class YellowWebp
             $sourcePath = isset($parts["path"]) ? $parts["path"] : "";
             foreach ($this->renamedSources as $originalPath => $renamedPath) {
                 if ($renamedPath === $sourcePath) {
-                    $this->renamedSources[$originalPath] = $webpUrl;
+                    $this->renamedSources[$originalPath] = $webpPath;
                 }
             }
             if ($sourcePath !== "") {
-                $this->renamedSources[$sourcePath] = $webpUrl;
+                $this->renamedSources[$sourcePath] = $webpPath;
             }
         } else {
             $this->yellow->toolbox->log(
