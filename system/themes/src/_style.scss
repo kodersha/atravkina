@@ -93,6 +93,13 @@ article {
 
   p {
     text-indent: 1.5em;
+
+    &:last-of-type {
+      text-indent: 0;
+    }
+  }
+  * + p {
+    text-indent: 1.5em !important;
   }
 
   .flexible {
@@ -127,10 +134,6 @@ article {
     align-items: center;
     text-align: center;
     display: flex;
-
-    i {
-      margin-left: -1.5em;
-    }
 
     &:hover {
       color: rgb(255, 255, 255);

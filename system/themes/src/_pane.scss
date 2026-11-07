@@ -2,6 +2,8 @@
 
 .yellow-bar {
   font-size: 0.875rem;
+  max-width: 31.25rem;
+  width: -webkit-fill-available;
 }
 .yellow-bar a {
   color: rgb(250, 198, 112);
@@ -9,15 +11,10 @@
 .yellow-bar a:hover {
   color: rgb(243, 121, 37);
 }
-.yellow-bar-right {
-  margin-right: 3rem;
-}
 .yellow-pane {
   background-color: rgb(0, 0, 0);
   color: rgb(255, 255, 255);
   border: 1px solid rgb(17, 17, 17);
-
-  max-width: 40rem !important;
 }
 .yellow-edit-text {
   background-color: rgb(0, 0, 0);
