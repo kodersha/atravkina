@@ -6,13 +6,11 @@
 ?>
 
 <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
-    <div class="blog-sort">
-      <button type="button" id="blog-sort-toggle" class="blog-sort-button">
-        <?= $sortAscending
-            ? "<i class='las la-sort-alpha-up'></i>"
-            : "<i class='las la-sort-alpha-down'></i>" ?>
-      </button>
-    </div>
+<button type="button" id="blog-sort-toggle" class="blog-sort-button">
+  <?= $sortAscending
+      ? "<i class='las la-sort-alpha-up'></i>"
+      : "<i class='las la-sort-alpha-down'></i>" ?>
+</button>
 <?php endif ?>
 
 <?php foreach ($pages as $page): ?>
