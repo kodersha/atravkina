@@ -15,3 +15,10 @@
     <?php echo $this->yellow->page->getExtraHtml("header") ?>
   </head>
   <body>
+    <form class="site-search" action="/search/" method="post" role="search">
+      <label class="visually-hidden" for="site-search-query">Поиск по блогу</label>
+      <input id="site-search-query" type="search" name="query" placeholder="Поиск по блогу" />
+      <input type="hidden" name="folder" value="blog" />
+      <input type="hidden" name="clean-url" />
+      <button type="submit" aria-label="Найти"><i class="las la-search" aria-hidden="true"></i></button>
+    </form>
