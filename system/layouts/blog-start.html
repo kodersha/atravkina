@@ -16,7 +16,7 @@
 <?php endif ?>
 
 <?php foreach ($pages as $page): ?>
-  <article class="emerge" data-continue="true" data-id="<?= htmlspecialchars($page->get("title")) ?>">
+  <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>">
     <?php
       $contentHtml = $page->getContentHtml();
       $contentText = trim(html_entity_decode(strip_tags($contentHtml), ENT_QUOTES | ENT_HTML5, "UTF-8"));

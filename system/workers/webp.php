@@ -461,8 +461,8 @@ class YellowWebp
         return $timestamp !== false && $timestamp > 0 ? (int)$timestamp : time();
     }
 
-    // Convert a local JPEG/PNG to a timestamp-named WebP in media/images.
-    // The original image is kept as a fallback if conversion fails.
+    // Convert a supported local image to a timestamp-named WebP in media/images.
+    // The original is deleted only after a valid WebP has been confirmed.
     public function convert($srcIn)
     {
         $parts = parse_url($srcIn);
@@ -568,13 +568,35 @@ class YellowWebp
             return $srcIn;
         }
 
-        $webpUrl = $this->get_image_url_path().rawurlencode($targetBase).".webp";
+        $webpPath = $this->get_image_url_path().rawurlencode($targetBase).".webp";
+        $webpUrl = $webpPath;
         if (isset($parts["query"])) {
             $webpUrl .= "?".$parts["query"];
         }
         if (isset($parts["fragment"])) {
             $webpUrl .= "#".$parts["fragment"];
         }
+
+        // The WebP is now present and non-empty. Remove the source only after
+        // successful conversion (or validation of an existing up-to-date cache).
+        if (@unlink($sourceInfo["file"])) {
+            // Keep every cached reference to this renamed source pointing at WebP.
+            $sourcePath = isset($parts["path"]) ? $parts["path"] : "";
+            foreach ($this->renamedSources as $originalPath => $renamedPath) {
+                if ($renamedPath === $sourcePath) {
+                    $this->renamedSources[$originalPath] = $webpPath;
+                }
+            }
+            if ($sourcePath !== "") {
+                $this->renamedSources[$sourcePath] = $webpPath;
+            }
+        } else {
+            $this->yellow->toolbox->log(
+                "warning",
+                "WebP created but source image could not be deleted: ".$sourceInfo["file"]
+            );
+        }
+
         return $webpUrl;
     }
 }
