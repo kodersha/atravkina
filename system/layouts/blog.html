@@ -102,10 +102,11 @@
 <?php if ($previousPage || $nextPage): ?>
   <nav class="blog-post-navigation" aria-label="Навигация по постам с общим тегом">
     <?php if ($previousPage): ?>
-      <a class="blog-post-previous" href="<?= $previousPage->getLocation(true) ?>">← Предыдущий пост</a>
+      <a class="blog-post-previous" href="<?= $previousPage->getLocation(true) ?>">← предыдущий</a>
     <?php endif ?>
+      <span>пост</span>
     <?php if ($nextPage): ?>
-      <a class="blog-post-next" href="<?= $nextPage->getLocation(true) ?>">Следующий пост →</a>
+      <a class="blog-post-next" href="<?= $nextPage->getLocation(true) ?>">cледующий →</a>
     <?php endif ?>
   </nav>
 <?php endif ?>

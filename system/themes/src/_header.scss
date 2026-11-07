@@ -1,0 +1,16 @@
+.site-search {
+  position: relative;
+  overflow: hidden;
+
+  max-width: 31.25rem;
+  width: 100%;
+
+  input:first-of-type {
+    width: 100%;
+
+    padding-bottom: 0.5rem;
+    padding-right: 0.85rem;
+    padding-left: 0.85rem;
+    padding-top: 0.5rem;
+  }
+}

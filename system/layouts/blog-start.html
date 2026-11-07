@@ -1,9 +1,9 @@
 <?php $this->yellow->layout("header") ?>
 
-<?php
-  $sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
-  $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
-?>
+<form class="site-search" action="/search/" method="post" role="search">
+  <input id="site-search-query" type="search" name="query" placeholder="Поиск по блогу" />
+  <input type="hidden" name="clean-url" />
+</form>
 
 <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
 <button type="button" id="blog-sort-toggle" class="blog-sort-button">
@@ -12,6 +12,11 @@
       : "<i class='las la-sort-alpha-down'></i>" ?>
 </button>
 <?php endif ?>
+
+<?php
+  $sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
+  $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
+?>
 
 <?php foreach ($pages as $page): ?>
   <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>">

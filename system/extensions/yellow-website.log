@@ -5092,3 +5092,6 @@
 2026-11-07 23:02:46 info Convert blog post images to WebP: /1793632449
 2026-11-07 23:03:01 info Convert blog post images to WebP: /1793632449
 2026-11-07 23:10:12 info Convert blog post images to WebP: /1793632500
+2026-11-08 00:19:44 error Process file 'system/workers/search.php' with fatal error!
+2026-11-08 00:19:46 error Process file 'system/workers/search.php' with fatal error!
+2026-11-08 00:21:28 error Process file 'system/workers/search.php' with fatal error!
