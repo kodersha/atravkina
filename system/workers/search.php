@@ -35,6 +35,7 @@ class YellowSearch {
                 $showInvisible = $this->yellow->lookup->getRequestHandler()=="edit" && isset($filters["status"]);
                 $showShared = $showInvisible && ($filters["status"]=="shared" || $filters["status"]=="all");
                 $pagesContent = $this->yellow->content->index($showInvisible);
+                $pagesContent->match("#/[\\d\\-\\_\\.]+blog#i", false);
                 if ($showShared) $pagesContent->merge($this->yellow->content->getShared($page->location));
                 if (!is_array_empty($filters)) {
                     if (isset($filters["tag"]) && $filters["tag"]!="all") $pagesContent->filter("tag", $filters["tag"]);
