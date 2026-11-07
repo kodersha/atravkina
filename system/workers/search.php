@@ -165,4 +165,3 @@ class YellowSearch {
     }
 }
 
-$yellow->plugins->register("search", "YellowSearch", YellowSearch::VERSION);
