@@ -7,7 +7,6 @@ class YellowSearch {
 
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("searchPaginationLimit", "5");
         $this->yellow->system->setDefault("searchPageLength", "360");
     }
 
