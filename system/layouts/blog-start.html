@@ -5,41 +5,26 @@
   $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
 ?>
 
-
 <form class="site-search" action="/search/" method="post" role="search">
   <input id="site-search-query" type="search" name="query" placeholder="Поиск по блогу" />
   <input type="hidden" name="clean-url" />
   <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
   <button type="button" id="blog-sort-toggle" class="blog-sort-button">
-    <?= $sortAscending
-        ? "<i class='las la-sort-alpha-up'></i>"
-        : "<i class='las la-sort-alpha-down'></i>" ?>
+    <?= $sortAscending ? "<i class='las la-sort-alpha-up'></i>" : "<i class='las la-sort-alpha-down'></i>" ?>
   </button>
   <?php endif ?>
 </form>
-
-
 
 <?php foreach ($pages as $page): ?>
   <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>">
     <?php
       $contentHtml = $page->getContentHtml();
-      $readMore = "<a class=\\"blog-read\\" href=\\"".htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8")."\\"><i class='las la-link'></i></a>";
+      $readMore = '<a class="blog-read" href="' . htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") . '"><i class="las la-link"></i></a>';
 
       if (strpos($contentHtml, "<!--more-->") !== false) {
-          // Keep the read-more link outside paragraph markup at the more marker.
-          $contentHtml = (new YellowTypograph())->applyTypograph(
-              $contentHtml,
-              0,
-              false,
-              "<!--more-->",
-              "</p>" . $readMore
-          );
+          $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false, "<!--more-->", "</p>" . $readMore);
       } else {
           $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
-
-          // Place the read-more link after the closing tag of the last paragraph.
-          // If the post contains only images (or no paragraph), append it after the content.
           if (preg_match("~</p>(?!.*</p>)~s", $contentHtml)) {
               $contentHtml = preg_replace("~</p>(?!.*</p>)~s", "</p>" . $readMore, $contentHtml, 1);
           } else {
@@ -47,15 +32,12 @@
           }
       }
 
-      // Convert standalone image paragraphs into semantic figure elements.
       $contentHtml = preg_replace(
           '~<p\\b[^>]*>\\s*((?:<a\\b[^>]*>\\s*)?<img\\b[^>]*>(?:\\s*</a>)?)\\s*</p>~i',
           '<figure>$1</figure>',
           $contentHtml
       );
-      // Remove empty paragraphs after all content transformations.
       $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
-
       echo $contentHtml;
     ?>
   </article>
@@ -67,13 +49,9 @@
 (function () {
   var button = document.getElementById("blog-sort-toggle");
   if (!button) return;
-
   button.addEventListener("click", function () {
     var currentOrder = document.cookie.match(/(?:^|; )blogSortOrder=([^;]*)/);
-    var nextOrder = currentOrder && decodeURIComponent(currentOrder[1]) === "oldest"
-      ? "newest"
-      : "oldest";
-
+    var nextOrder = currentOrder && decodeURIComponent(currentOrder[1]) === "oldest" ? "newest" : "oldest";
     document.cookie = "blogSortOrder=" + nextOrder + "; max-age=31536000; path=/; SameSite=Lax";
     window.location.reload();
   });
