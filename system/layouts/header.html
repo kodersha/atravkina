@@ -1,7 +1,20 @@
 <!DOCTYPE html>
 <html lang="<?php echo $this->yellow->page->getHtml("language") ?>">
   <head>
-    <title><?php echo $this->yellow->page->getHtml("titleHeader") ?></title>
+    <?php
+      $titleHeader = $this->yellow->page->get("titleHeader");
+      if ($this->yellow->page->get("layout")=="blog") {
+          $contentText = html_entity_decode(strip_tags($this->yellow->page->getContentHtml()), ENT_QUOTES | ENT_HTML5, "UTF-8");
+          $contentText = trim(preg_replace("/\\s+/u", " ", $contentText));
+          if (preg_match("/^(.+?[.!?…])(?=\\s|$)/u", $contentText, $matches)) {
+              $firstSentence = trim($matches[1]);
+              if (!is_string_empty($firstSentence)) {
+                  $titleHeader = $firstSentence." — ".$this->yellow->page->get("sitename");
+              }
+          }
+      }
+    ?>
+    <title><?php echo htmlspecialchars($titleHeader, ENT_QUOTES | ENT_HTML5, "UTF-8") ?></title>
     <meta charset="utf-8" />
     <meta name="description" content="<?php echo $this->yellow->page->getHtml("description") ?>" />
     <meta name="author" content="<?php echo $this->yellow->page->getHtml("author") ?>" />
