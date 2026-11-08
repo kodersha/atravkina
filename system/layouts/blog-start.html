@@ -9,15 +9,14 @@
 <form class="site-search" action="/search/" method="post" role="search">
   <input id="site-search-query" type="search" name="query" placeholder="Поиск по блогу" />
   <input type="hidden" name="clean-url" />
+  <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
+  <button type="button" id="blog-sort-toggle" class="blog-sort-button">
+    <?= $sortAscending
+        ? "<i class='las la-sort-alpha-up'></i>"
+        : "<i class='las la-sort-alpha-down'></i>" ?>
+  </button>
+  <?php endif ?>
 </form>
-
-<?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
-<button type="button" id="blog-sort-toggle" class="blog-sort-button">
-  <?= $sortAscending
-      ? "<i class='las la-sort-alpha-up'></i>"
-      : "<i class='las la-sort-alpha-down'></i>" ?>
-</button>
-<?php endif ?>
 
 
 

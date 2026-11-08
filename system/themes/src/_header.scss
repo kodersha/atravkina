@@ -2,15 +2,52 @@
   position: relative;
   overflow: hidden;
 
+  display: flex;
+  align-items: center;
+
   max-width: 31.25rem;
   width: 100%;
+
+  background-color: rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 
   input:first-of-type {
     width: 100%;
 
     padding-bottom: 0.5rem;
-    padding-right: 0.85rem;
+    padding-right: 2.85rem;
     padding-left: 0.85rem;
     padding-top: 0.5rem;
+  }
+
+  .blog-sort-button {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+
+    position: absolute;
+    z-index: 100;
+    bottom: 0;
+    right: 0;
+    top: 0;
+
+    height: 2.25rem;
+    width: 2.25rem;
+
+    background-color: transparent;
+    border: unset;
+
+    cursor: pointer;
+
+    font-size: 1.5rem;
+    color: rgb(0, 0, 0);
+
+    padding-right: unset;
+    padding-left: unset;
+
+    &:hover {
+      color: rgb(46, 46, 46);
+    }
   }
 }
