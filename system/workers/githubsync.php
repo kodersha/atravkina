@@ -46,19 +46,19 @@ class YellowGithubSync {
         return "github-sync [all|content|media]";
     }
 
-    // Yellow Edit calls this after a content file has been successfully saved.
+    // Yellow Edit custom save notification: called only after the content file is written.
     public function onSaveContentFile($page) {
         $this->scheduleSync("content");
     }
 
-    // Covers content edit/delete/restore operations. The scan runs after the
-    // request, so it sees the final filesystem state rather than an intermediate one.
+    // Yellow Edit lifecycle event. Some actions are announced before the filesystem
+    // operation; synchronization is deferred until shutdown to scan the final state.
     public function onEditContentFile($page, $action, $email) {
         $this->scheduleSync("content");
     }
 
-    // Yellow Edit invokes this before completing some media operations.
-    // Deferring the scan until shutdown lets the upload/move/delete finish first.
+    // Yellow Edit invokes this before completing uploads. Deferring the scan until
+    // shutdown ensures that the final uploaded file, not its temporary source, is scanned.
     public function onEditMediaFile($file, $action, $email) {
         $this->scheduleSync("media");
     }
@@ -66,6 +66,7 @@ class YellowGithubSync {
     private function scheduleSync($scope) {
         if (!$this->autoSync() || !$this->isConfigured()) return;
         $this->scheduledScopes[$scope] = true;
+        $this->yellow->toolbox->log("info", "GitHub Sync: scheduled ".$scope." synchronization");
         if (!$this->shutdownRegistered) {
             register_shutdown_function(array($this, "runScheduledSync"));
             $this->shutdownRegistered = true;
@@ -76,6 +77,7 @@ class YellowGithubSync {
         if (empty($this->scheduledScopes)) return;
         $scope = count($this->scheduledScopes)>1 ? "all" : key($this->scheduledScopes);
         $this->scheduledScopes = array();
+        $this->yellow->toolbox->log("info", "GitHub Sync: starting automatic ".$scope." synchronization");
         $status = $this->syncChanges($scope);
         if ($status!=200) {
             $this->yellow->toolbox->log("error", "GitHub Sync: automatic ".($scope)." synchronization failed");
@@ -84,7 +86,10 @@ class YellowGithubSync {
 
     private function readSettings($file) {
         $settings = array();
-        if (!is_file($file) || !is_readable($file)) return $settings;
+        if (!is_file($file) || !is_readable($file)) {
+            if (isset($this->yellow)) $this->yellow->toolbox->log("error", "GitHub Sync: configuration file is missing or unreadable: ".$file);
+            return $settings;
+        }
         foreach (file($file, FILE_IGNORE_NEW_LINES) as $line) {
             $line = trim($line);
             if ($line=="" || $line[0]=="#" || $line[0]==";") continue;
@@ -127,6 +132,7 @@ class YellowGithubSync {
             }
         }
 
+        $this->yellow->toolbox->log("info", "GitHub Sync: scanned ".count($files)." files in ".$scope);
         $state = $this->loadState();
         $status = 200;
         foreach ($files as $path=>$fileName) {
@@ -146,6 +152,9 @@ class YellowGithubSync {
 
         // Only delete paths inside the requested scope; never touch other directories.
         foreach ($state as $path=>$fingerprint) {
+            // State files are local metadata. Never allow a stale/corrupt state entry
+            // to delete anything outside the two explicitly synchronized folders.
+            if (strpos($path, "content/")!==0 && strpos($path, "media/")!==0) continue;
             if (($scope=="content" && strpos($path, "content/")!==0) ||
                 ($scope=="media" && strpos($path, "media/")!==0)) continue;
             if (isset($files[$path])) continue;
@@ -157,9 +166,10 @@ class YellowGithubSync {
         }
 
         if (!$this->saveState($state)) {
-            $this->yellow->toolbox->log("error", "GitHub Sync: cannot save synchronization state");
+            $this->yellow->toolbox->log("error", "GitHub Sync: cannot save synchronization state to ".$this->stateFile());
             $status = 500;
         }
+        $this->yellow->toolbox->log($status==200 ? "info" : "error", "GitHub Sync: ".$scope." synchronization finished with status ".$status);
         return $status;
     }
 
