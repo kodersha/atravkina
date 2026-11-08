@@ -53,6 +53,12 @@
           $telegramCommentUrl = "https://t.me/".$telegramChannel."/".(int)$telegramEntry["channel_message_id"];
       }
   }
+
+  // Fallback for the Telegram post whose sent-state entry is missing or mismatched.
+  $telegramPostId = trim((string)$this->yellow->page->getLocation(), "/");
+  if (!$telegramCommentUrl && $telegramPostId === "1794137098") {
+      $telegramCommentUrl = "https://t.me/atravkina/78";
+  }
 ?>
 
 <?php if ($telegramCommentUrl): ?>
