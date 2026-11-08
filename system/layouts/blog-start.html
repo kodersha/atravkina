@@ -24,32 +24,27 @@
   <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>">
     <?php
       $contentHtml = $page->getContentHtml();
-      $contentText = trim(html_entity_decode(strip_tags($contentHtml), ENT_QUOTES | ENT_HTML5, "UTF-8"));
+      $readMore = "<a class=\\"blog-read\\" href=\\"".htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8")."\\"><i class='las la-link'></i></a>";
 
-      if ($contentText !== "") {
-          $readMore = "<a class=\"blog-read\" href=\"" . $page->getLocation(true) . "\"><i class='las la-link'></i></a>";
-
-          if (strpos($contentHtml, "<!--more-->") !== false) {
-              // Keep the read-more link outside paragraph markup at the more marker.
-              $contentHtml = (new YellowTypograph())->applyTypograph(
-                  $contentHtml,
-                  0,
-                  false,
-                  "<!--more-->",
-                  "</p>" . $readMore
-              );
-          } else {
-              $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
-
-              // Place the read-more link after the closing tag of the last paragraph.
-              if (preg_match("~</p>(?!.*</p>)~s", $contentHtml)) {
-                  $contentHtml = preg_replace("~</p>(?!.*</p>)~s", "</p>" . $readMore, $contentHtml, 1);
-              } else {
-                  $contentHtml .= $readMore;
-              }
-          }
+      if (strpos($contentHtml, "<!--more-->") !== false) {
+          // Keep the read-more link outside paragraph markup at the more marker.
+          $contentHtml = (new YellowTypograph())->applyTypograph(
+              $contentHtml,
+              0,
+              false,
+              "<!--more-->",
+              "</p>" . $readMore
+          );
       } else {
           $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
+
+          // Place the read-more link after the closing tag of the last paragraph.
+          // If the post contains only images (or no paragraph), append it after the content.
+          if (preg_match("~</p>(?!.*</p>)~s", $contentHtml)) {
+              $contentHtml = preg_replace("~</p>(?!.*</p>)~s", "</p>" . $readMore, $contentHtml, 1);
+          } else {
+              $contentHtml .= $readMore;
+          }
       }
 
       // Convert standalone image paragraphs into semantic figure elements.
