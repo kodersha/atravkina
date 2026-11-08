@@ -55,6 +55,14 @@
   }
 ?>
 
+<?php if ($telegramCommentUrl): ?>
+  <div class="blog-post-actions">
+    <div class="blog-telegram-comment">
+      <a href="<?= htmlspecialchars($telegramCommentUrl, ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" target="_blank" rel="noopener noreferrer">комментировать</a>
+    </div>
+  </div>
+<?php endif ?>
+
 <?php
   // Find neighboring blog posts that share at least one tag.
   $currentPage = $this->yellow->page;
