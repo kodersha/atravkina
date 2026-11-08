@@ -50,14 +50,14 @@
           $telegramEntry["status"] === "sent" &&
           ctype_digit((string)$telegramEntry["channel_message_id"]) &&
           preg_match('/^[A-Za-z][A-Za-z0-9_]{4,31}$/', $telegramChannel)) {
-          $telegramCommentUrl = "https://t.me/".$telegramChannel."/".(int)$telegramEntry["channel_message_id"];
+          $telegramCommentUrl = "tg://resolve?domain=".$telegramChannel."&post=".(int)$telegramEntry["channel_message_id"];
       }
   }
 
   // Fallback for the Telegram post whose sent-state entry is missing or mismatched.
   $telegramPostId = trim((string)$this->yellow->page->getLocation(), "/");
   if (!$telegramCommentUrl && $telegramPostId === "1794137098") {
-      $telegramCommentUrl = "https://t.me/atravkina/78";
+      $telegramCommentUrl = "tg://resolve?domain=atravkina&post=78";
   }
 ?>
 
