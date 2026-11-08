@@ -11,6 +11,7 @@
   background-color: rgba(255, 255, 255, 0.2);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
+  border-radius: 0.25rem;
 
   input:first-of-type {
     width: 100%;
@@ -19,6 +20,8 @@
     padding-right: 2.85rem;
     padding-left: 0.85rem;
     padding-top: 0.5rem;
+
+    border: none;
   }
 
   .blog-sort-button {
