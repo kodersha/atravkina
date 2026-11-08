@@ -3,18 +3,16 @@
   // Convert standalone image paragraphs into semantic figure elements.
   $contentHtml = (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml());
   // Remove empty paragraphs after typography and other HTML transformations.
-      // Convert Telegram web post links in authored content to Telegram's native URI scheme.
-      $contentHtml = preg_replace_callback('~<a\\b([^>]*?)href=(["\\'])(https?://t\\.me/atravkina/([0-9]+)),?\\2([^>]*)>(.*?)</a>~is', function ($matches) {
-          $telegramUri = "tg://resolve?domain=atravkina&post=" . $matches[4];
-          $attributes = preg_replace('~\\bhref=(["\\']).*?\\1~i', 'href="' . $telegramUri . '"', $matches[1] . 'href=' . $matches[2] . $matches[3] . $matches[2] . $matches[5], 1);
-          $label = trim(strip_tags($matches[6]));
-          $originalUrl = $matches[3] . (substr($matches[0], -5, 1) === ',' ? ',' : '');
+      // Convert authored Telegram post links to Telegram's native URI scheme.
+      $contentHtml = preg_replace_callback('~<a\\b([^>]*?)href="https?://t\\.me/atravkina/([0-9]+),?"([^>]*)>(.*?)</a>~is', function ($matches) {
+          $telegramUri = "tg://resolve?domain=atravkina&post=" . $matches[2];
+          $label = trim(strip_tags($matches[4]));
           if (preg_match('~^https?://t\\.me/atravkina/[0-9]+,?$~i', $label)) {
               $label = $telegramUri;
           } else {
-              $label = $matches[6];
+              $label = $matches[4];
           }
-          return '<a' . $attributes . '>' . $label . '</a>';
+          return '<a' . $matches[1] . 'href="' . $telegramUri . '"' . $matches[3] . '>' . $label . '</a>';
       }, $contentHtml);
   $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
   $contentHtml = preg_replace(
