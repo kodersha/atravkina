@@ -1,3 +1,4 @@
+
 name: Deploy site
 
 on:
@@ -44,4 +45,14 @@ jobs:
           test -n "$SSH_HOST"
           test -n "$SSH_USER"
           test -n "$DEPLOY_PATH"
-          rsync -az             --no-owner             --no-group             --omit-dir-times             --exclude='.git/'             --exclude='.github/'             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+
+          rsync -az \
+            --no-owner \
+            --no-group \
+            --omit-dir-times \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='content/' \
+            --exclude='media/images/' \
+            -e "ssh -p $SSH_PORT" \
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"            --exclude='.github/'             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
