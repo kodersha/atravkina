@@ -332,7 +332,7 @@ class YellowEdit {
             if (!$postFile->isFile() || strtolower($postFile->getExtension())!="md") continue;
             $data = file_get_contents($postFile->getPathname());
             if (preg_match('/^Status\\s*:\\s*draft\\s*$/mi', $data)) continue;
-            if (preg_match_all('/(?:\\[image\\s+([^\\]]+)\\]|\\[[^\\]]*\\]\\(([^)]+)\\)|(?:src|href)=["\\']([^"\\']+)["\\'])/i', $data, $matches, PREG_SET_ORDER)) {
+            if (preg_match_all("/(?:\\[image\\s+([^\\]]+)\\]|\\[[^\\]]*\\]\\(([^)]+)\\)|(?:src|href)=[\"']([^\"']+)[\"'])/i", $data, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $match) {
                     $ref = trim($match[1] ?: ($match[2] ?: $match[3]));
                     $ref = rawurldecode(parse_url($ref, PHP_URL_PATH) ?: $ref);
