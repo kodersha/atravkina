@@ -864,6 +864,9 @@ yellow.edit = {
                 formData.append("action", "upload");
                 formData.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
                 formData.append("file", file);
+                if (extension==".webp" && file.lastModified>0) {
+                    formData.append("sourceLastModified", Math.floor(file.lastModified/1000).toString());
+                }
                 var request = new XMLHttpRequest();
                 request.open("POST", window.location.pathname, true);
                 request.onload = function() { if (this.status==200) { thisObject.uploadFileDone.call(thisObject, elementText, this.responseText); } else { thisObject.uploadFileError.call(thisObject, elementText, this.responseText); } };

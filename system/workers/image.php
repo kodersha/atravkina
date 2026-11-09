@@ -56,8 +56,17 @@ class YellowImage {
     public function onEditMediaFile($file, $action, $email) {
         if ($action=="upload") {
             $fileName = $file->get("fileNameTemp");
-            list($widthInput, $heightInput, $orientation, $type) =
-                $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
+            if ($file->get("type")=="webp") {
+                // Keep the original WebP bytes and use the source file modification time.
+                $type = "webp";
+                $timestamp = isset($_POST["sourceLastModified"]) ? (int)$_POST["sourceLastModified"] : 0;
+                if ($timestamp <= 0) $timestamp = time();
+                $file->fileName = dirname($file->fileName)."/".$timestamp.".webp";
+                $file->set("type", "webp");
+            } else {
+                list($widthInput, $heightInput, $orientation, $type) =
+                    $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
+            }
             $widthMax = $this->yellow->system->get("imageUploadWidthMax");
             $heightMax = $this->yellow->system->get("imageUploadHeightMax");
             if ($type=="gif" || $type=="jpeg" || $type=="png") {
