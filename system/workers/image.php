@@ -66,6 +66,13 @@ class YellowImage {
             } else {
                 list($widthInput, $heightInput, $orientation, $type) =
                     $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
+                if ($type=="gif") {
+                    // Keep the original animated GIF and rename it using the source modification timestamp.
+                    $timestamp = isset($_POST["sourceLastModified"]) ? (int)$_POST["sourceLastModified"] : 0;
+                    if ($timestamp <= 0) $timestamp = time();
+                    $file->fileName = dirname($file->fileName)."/".$timestamp.".gif";
+                    $file->set("type", "gif");
+                }
             }
             $widthMax = $this->yellow->system->get("imageUploadWidthMax");
             $heightMax = $this->yellow->system->get("imageUploadHeightMax");
