@@ -11,62 +11,11 @@
   );
 ?>
 
-<?php
-  // Find neighboring blog posts that share at least one tag.
-  $currentPage = $this->yellow->page;
-  $normalizeTags = function ($value) {
-      $tags = preg_split('/[,;]+/', (string)$value, -1, PREG_SPLIT_NO_EMPTY);
-      return array_values(array_unique(array_map(function ($tag) {
-          return mb_strtolower(trim($tag), "UTF-8");
-      }, $tags)));
-  };
-
-  $currentTags = $normalizeTags($currentPage->get("tag"));
-  $taggedPages = [];
-
-  // Scan the complete content tree, including invisible pages.
-  foreach ($this->yellow->content->index(true) as $page) {
-      if ($page->get("layout") !== "blog") continue;
-      if ($page->get("status") === "draft") continue;
-
-      $pageTags = $normalizeTags($page->get("tag"));
-      if ($currentTags && count(array_intersect($currentTags, $pageTags)) > 0) {
-          $taggedPages[] = $page;
-      }
-  }
-
-  // Sort posts chronologically by their timestamp titles.
-  usort($taggedPages, function ($a, $b) {
-      return (int)$a->get("title") <=> (int)$b->get("title");
-  });
-
-  // Identify the current post by its source file path.
-  $currentIndex = -1;
-  foreach ($taggedPages as $index => $page) {
-      if ($page->fileName === $currentPage->fileName) {
-          $currentIndex = $index;
-          break;
-      }
-  }
-
-  $previousPage = $currentIndex > 0 ? $taggedPages[$currentIndex - 1] : null;
-  $nextPage = $currentIndex >= 0 && $currentIndex < count($taggedPages) - 1
-      ? $taggedPages[$currentIndex + 1]
-      : null;
-?>
-
-
 
   <article class="emerge">
     <?= $contentHtml ?>
     <div class="blog-post-actions">
       <!--yellow-likes-slot-->
-      <?php if ($previousPage): ?>
-        <a class="blog-post-previous" href="<?= htmlspecialchars($previousPage->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" aria-label="Предыдущая статья" title="Предыдущая статья"><i class="las la-arrow-left" aria-hidden="true"></i></a>
-      <?php endif ?>
-      <?php if ($nextPage): ?>
-        <a class="blog-post-next" href="<?= htmlspecialchars($nextPage->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" aria-label="Следующая статья" title="Следующая статья"><i class="las la-arrow-right" aria-hidden="true"></i></a>
-      <?php endif ?>
     </div>
   </article>
 
