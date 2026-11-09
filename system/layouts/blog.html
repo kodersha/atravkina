@@ -70,6 +70,28 @@
   </div>
 <?php endif ?>
 
-<?php $this->yellow->layout("pagination", $pages) ?>
+<?php
+  // Navigate through blog posts in the same newest-first order as the blog archive.
+  $blogPages = $this->yellow->page->getPages("blog")->sort("title", false);
+  $previousPost = $blogPages->getPageNext($this->yellow->page);
+  $nextPost = $blogPages->getPagePrevious($this->yellow->page);
+?>
+
+<?php if ($previousPost || $nextPost): ?>
+  <nav class="blog-post-navigation" aria-label="Навигация между публикациями">
+    <?php if ($previousPost): ?>
+      <a class="blog-post-previous" href="<?= htmlspecialchars($previousPost->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>">
+        <span>Предыдущая запись</span>
+        <span><?= $previousPost->getHtml("title") ?></span>
+      </a>
+    <?php endif ?>
+    <?php if ($nextPost): ?>
+      <a class="blog-post-next" href="<?= htmlspecialchars($nextPost->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>">
+        <span>Следующая запись</span>
+        <span><?= $nextPost->getHtml("title") ?></span>
+      </a>
+    <?php endif ?>
+  </nav>
+<?php endif ?>
 
 <?php $this->yellow->layout("footer") ?>
