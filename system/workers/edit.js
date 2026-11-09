@@ -336,7 +336,7 @@ yellow.edit = {
                 "</ul>";
                 break;
             case "yellow-pane-media-cleanup":
-                elementDiv.innerHTML = "<div class=\"yellow-title\"><h1>Неиспользуемые media</h1></div><p>Сканируются опубликованные Markdown-посты. Черновики не учитываются.</p><p><button class=\"yellow-btn\" data-action=\"media-cleanup-scan\">Сканировать</button></p><div id=\"yellow-pane-media-cleanup-results\"></div>";
+                elementDiv.innerHTML = "<div class=\"yellow-title\"><h1>Неиспользуемые media</h1></div><p>Сканируются опубликованные Markdown-посты. Черновики не учитываются.</p><p><a href=\"#\" class=\"yellow-btn\" data-action=\"media-cleanup-scan\">Сканировать</a></p><div id=\"yellow-pane-media-cleanup-results\"></div>";
                 break;
             case "yellow-pane-information":
                 elementDiv.innerHTML =
@@ -606,7 +606,7 @@ yellow.edit = {
         if (mode=="delete") { var checked=box.querySelectorAll("input[name=media-file]:checked"); for(var i=0;i<checked.length;i++) data.append("files[]",checked[i].value); }
         box.innerHTML = "Сканирование…";
         fetch(window.location.href,{method:"POST",body:data,credentials:"same-origin"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}).then(function(result){
-            var html="<p>Удалено: "+result.removed.length+"</p>"; if(!result.files.length) html+="<p>Неиспользуемых файлов нет.</p>"; else {html+="<ul>";result.files.forEach(function(f){html+="<li><label><input type=\"checkbox\" name=\"media-file\" value=\""+yellow.toolbox.encodeHtml(f.path)+"\"> "+yellow.toolbox.encodeHtml(f.path)+" ("+Math.round(f.size/1024)+" KB)</label></li>";});html+="</ul><button type=\"button\" class=\"yellow-btn\" data-action=\"media-cleanup-delete\">Удалить выбранные</button>";} box.innerHTML=html;
+            var html="<p>Удалено: "+result.removed.length+"</p>"; if(!result.files.length) html+="<p>Неиспользуемых файлов нет.</p>"; else {html+="<ul>";result.files.forEach(function(f){html+="<li><label><input type=\"checkbox\" name=\"media-file\" value=\""+yellow.toolbox.encodeHtml(f.path)+"\"> "+yellow.toolbox.encodeHtml(f.path)+" ("+Math.round(f.size/1024)+" KB)</label></li>";});html+="</ul><a href=\"#\" class=\"yellow-btn\" data-action=\"media-cleanup-delete\">Удалить выбранные</a>";} box.innerHTML=html; yellow.edit.bindActions(box);
         }).catch(function(e){box.textContent="Ошибка: "+e.message;});
     },
     // Process toolbar
