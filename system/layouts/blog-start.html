@@ -3,6 +3,28 @@
 <?php
   $sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
   $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
+
+  // Fade older posts progressively, starting with the post timestamp 1537522657.
+  // Calculate against the complete archive so pagination and sort toggling do not reset opacity.
+  $fadeStart = "1537522657";
+  $fadePosts = [];
+  $fadeActive = false;
+  foreach ($this->yellow->page->getPages("blog")->sort("title", false) as $fadePage) {
+      $fadeTimestamp = (string)$fadePage->get("title");
+      if (!$fadeActive && ctype_digit($fadeTimestamp) && $fadeTimestamp <= $fadeStart) {
+          $fadeActive = true;
+      }
+      if ($fadeActive) {
+          $fadePosts[] = $fadeTimestamp;
+      }
+  }
+  $fadeCount = count($fadePosts);
+  $fadeOpacity = [];
+  foreach ($fadePosts as $fadeIndex => $fadeTimestamp) {
+      $fadeOpacity[$fadeTimestamp] = $fadeCount > 1
+          ? 1 - ($fadeIndex * 0.9 / ($fadeCount - 1))
+          : 0.1;
+  }
 ?>
 
 <form class="site-search" action="/search/" method="post" role="search">
@@ -16,7 +38,7 @@
 </form>
 
 <?php foreach ($pages as $page): ?>
-  <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>">
+  <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> style="opacity: <?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
     <?php
       $contentHtml = $page->getContentHtml();
       $readMore = '<a class="blog-read" href="' . htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") . '"><i class="las la-link"></i></a>';
