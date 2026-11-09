@@ -12,7 +12,7 @@ class YellowPoem {
     // Serve extension assets from the extension directory.
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         if (trim($location, "/") !== "yellow-poem/poem.css") return 0;
-        $file = __DIR__ . "/../extensions/yellow-poem/poem.css";
+        $file = __DIR__ . "/poem.css";
         if (!is_file($file) || !is_readable($file)) {
             http_response_code(404);
             return 404;
