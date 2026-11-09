@@ -46,6 +46,7 @@ body {
     -webkit-backdrop-filter: blur(10px);
   }
   &::before {
+    content: 'Бездарность';
     position: absolute;
     text-transform: uppercase;
     font-weight: 800;
