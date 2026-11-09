@@ -96,6 +96,7 @@ yellow.edit = {
             elementDiv.innerHTML =
                 "<div class=\"yellow-bar-left\">"+
                 this.getRawDataPaneAction("edit")+
+                (yellow.page.layout=="blog" ? "<a href=\\"#\\" id=\\"yellow-pin-toggle\\" class=\\"yellow-action yellow-pin-action\\">"+(yellow.page.pinned ? "Открепить" : "Закрепить")+"</a>" : "")+
                 "</div>"+
                 "<div class=\"yellow-bar-right\">"+
                 this.getRawDataPaneAction("create")+
@@ -109,6 +110,38 @@ yellow.edit = {
         elementBar.appendChild(elementDiv);
         yellow.toolbox.insertBefore(elementBar, document.getElementsByTagName("body")[0].firstChild);
         this.bindActions(elementBar);
+        var pinButton = document.getElementById("yellow-pin-toggle");
+        if (pinButton) {
+            yellow.toolbox.addEvent(pinButton, "click", function(e) {
+                e.preventDefault();
+                yellow.edit.togglePinned();
+            });
+        }
+    },
+
+    // Toggle the pinned state of the current blog post.
+    togglePinned: function() {
+        var button = document.getElementById("yellow-pin-toggle");
+        if (!button || !yellow.page.location || !yellow.system.editLocation) return;
+        button.setAttribute("aria-disabled", "true");
+        var editLocation = yellow.system.editLocation.replace(/\\/$/, "");
+        var url = yellow.system.coreServerBase + editLocation + yellow.page.location;
+        var data = new URLSearchParams();
+        data.append("action", "pin");
+        data.append("pinned", yellow.page.pinned ? "0" : "1");
+        data.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
+        fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"},
+            body: data.toString()
+        }).then(function(response) {
+            if (!response.ok) throw new Error("HTTP " + response.status);
+            window.location.reload();
+        }).catch(function(error) {
+            button.removeAttribute("aria-disabled");
+            alert("Не удалось изменить закрепление публикации: " + error.message);
+        });
     },
     
     // Update bar
