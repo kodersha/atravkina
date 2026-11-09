@@ -110,7 +110,7 @@ class YellowWebp
     {
         $source = trim(html_entity_decode($source, ENT_QUOTES, "UTF-8"));
         if ($source === "" || preg_match('/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i', $source) ||
-            stripos($source, "data:") === 0 || preg_match('/\.webp(?:[?#]|$)/i', $source)) {
+            stripos($source, "data:") === 0 {
             return $source;
         }
 
