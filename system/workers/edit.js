@@ -96,7 +96,7 @@ yellow.edit = {
             elementDiv.innerHTML =
                 "<div class=\"yellow-bar-left\">"+
                 this.getRawDataPaneAction("edit")+
-                (yellow.page.layout=="blog" ? "<a href=\\"#\\" id=\\"yellow-pin-toggle\\" class=\\"yellow-action yellow-pin-action\\">"+(yellow.page.pinned ? "Открепить" : "Закрепить")+"</a>" : "")+
+                (yellow.page.layout=="blog" ? "<a href=\"#\" id=\"yellow-pin-toggle\" class=\"yellow-action yellow-pin-action\">"+(yellow.page.pinned ? "Открепить" : "Закрепить")+"</a>" : "")+
                 "</div>"+
                 "<div class=\"yellow-bar-right\">"+
                 this.getRawDataPaneAction("create")+
@@ -124,7 +124,7 @@ yellow.edit = {
         var button = document.getElementById("yellow-pin-toggle");
         if (!button || !yellow.page.location || !yellow.system.editLocation) return;
         button.setAttribute("aria-disabled", "true");
-        var editLocation = yellow.system.editLocation.replace(/\\/$/, "");
+        var editLocation = yellow.system.editLocation.replace(/\/$/, "");
         var url = yellow.system.coreServerBase + editLocation + yellow.page.location;
         var data = new URLSearchParams();
         data.append("action", "pin");
