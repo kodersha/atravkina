@@ -7,6 +7,9 @@ class YellowLikes {
   if(!is_dir($this->dataDirectory)) @mkdir($this->dataDirectory,0755,true);
  }
  public function onRequest($scheme,$address,$base,$location,$fileName) {
+  $asset=trim($location,"/");
+  if($asset==="yellow-likes/likes.css")return $this->sendAsset("likes.css","text/css; charset=utf-8");
+  if($asset==="yellow-likes/likes.js")return $this->sendAsset("likes.js","application/javascript; charset=utf-8");
   if(rtrim($location,"/")."/"!=$this->endpoint)return 0; $this->sendJsonHeaders();
   if(!isset($_SERVER["REQUEST_METHOD"])||$_SERVER["REQUEST_METHOD"]!="POST")return $this->sendError("method_not_allowed",405);
   $type=isset($_SERVER["CONTENT_TYPE"])?strtolower(trim(explode(";",$_SERVER["CONTENT_TYPE"])[0])):"";
@@ -28,9 +31,15 @@ class YellowLikes {
   $widget='<div class="yellow-likes" data-yellow-likes><button class="yellow-likes__button" type="button" aria-label="Поставить лайк" aria-pressed="false"><i class="las la-heart-broken"></i><span class="yellow-likes__count">0</span></button></div>';
   if(strpos($output,"<!--yellow-likes-slot-->")!==false)$output=str_replace("<!--yellow-likes-slot-->",$widget,$output);
   elseif(stripos($output,"</article>")!==false)$output=preg_replace("/<\\/article>/i",$widget."</article>",$output,1);else $output.=$widget;
-  $assets='<link rel="stylesheet" href="/media/yellow-likes/likes.css"><script src="/media/yellow-likes/likes.js" defer></script>';
+  $assets='<link rel="stylesheet" href="/yellow-likes/likes.css"><script src="/yellow-likes/likes.js" defer></script>';
   if(stripos($output,"</head>")!==false)$output=preg_replace("/<\\/head>/i",$assets."</head>",$output,1);else $output=$assets.$output;
   return $output;
+ }
+ private function sendAsset($name,$type){
+  $file=__DIR__."/yellow-likes/".$name;
+  if(!is_file($file)||!is_readable($file)){http_response_code(404);return 404;}
+  header("Content-Type: ".$type);header("Cache-Control: public, max-age=3600");header("X-Content-Type-Options: nosniff");
+  readfile($file);return 200;
  }
  private function isEditPath($path){return is_string($path)&&preg_match("#^/e(?:/|$)#",$path)===1;}
  private function normalisePage($page){
