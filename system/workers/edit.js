@@ -330,6 +330,7 @@ yellow.edit = {
                 "<ul class=\"yellow-dropdown\">"+
                 "<li><span>"+yellow.toolbox.encodeHtml(yellow.user.email)+"</span></li>"+
                 "<li><a href=\"#\" data-action=\"settings\">"+this.getText("MenuSettings")+"</a></li>" +
+                (this.isUserAccess("edit") ? "<li><a href=\"#\" data-action=\"media-cleanup\">Неиспользуемые media</a></li>" : "") +
                 "<li><a href=\"#\" data-action=\"help\">"+this.getText("MenuHelp")+"</a></li>" +
                 "<li><a href=\"#\" data-action=\"submit\" data-arguments=\"action:logout\">"+this.getText("MenuLogout")+"</a></li>"+
                 "</ul>";
