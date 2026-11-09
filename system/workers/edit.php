@@ -273,6 +273,7 @@ class YellowEdit {
                 case "restore":     $statusCode = $this->processRequestRestore($scheme, $address, $base, $location, $fileName); break;
                 case "preview":     $statusCode = $this->processRequestPreview($scheme, $address, $base, $location, $fileName); break;
                 case "upload":      $statusCode = $this->processRequestUpload($scheme, $address, $base, $location, $fileName); break;
+                case "media-cleanup": $statusCode = $this->processRequestMediaCleanup(); break;
             }
         } elseif ($this->checkUserUnauth($scheme, $address, $base, $location, $fileName)) {
             $this->yellow->lookup->requestHandler = "core";
@@ -318,6 +319,48 @@ class YellowEdit {
         return $statusCode;
     }
 
+
+    // Scan/delete media files not referenced by published Markdown posts
+    public function processRequestMediaCleanup() {
+        if (!$this->response->isUserAccess("edit")) { $this->yellow->sendStatus(403); return 403; }
+        $token = $this->yellow->page->getRequest("yellowcsrftoken");
+        if (is_string_empty($token) || $token!=$this->yellow->toolbox->getCookie("yellowcsrftoken")) { $this->yellow->sendStatus(403); return 403; }
+        $contentDir = $this->yellow->system->get("coreContentDirectory");
+        $mediaDir = $this->yellow->system->get("coreMediaDirectory");
+        $used = array();
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($contentDir, FilesystemIterator::SKIP_DOTS)) as $postFile) {
+            if (!$postFile->isFile() || strtolower($postFile->getExtension())!="md") continue;
+            $data = file_get_contents($postFile->getPathname());
+            if (preg_match('/^Status\\s*:\\s*draft\\s*$/mi', $data)) continue;
+            if (preg_match_all('/(?:\\[image\\s+([^\\]]+)\\]|\\[[^\\]]*\\]\\(([^)]+)\\)|(?:src|href)=["\\']([^"\\']+)["\\'])/i', $data, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $match) {
+                    $ref = trim($match[1] ?: ($match[2] ?: $match[3]));
+                    $ref = rawurldecode(parse_url($ref, PHP_URL_PATH) ?: $ref);
+                    $ref = basename($ref);
+                    if ($ref!="" && $ref!=".") $used[$ref] = true;
+                }
+            }
+        }
+        $unused = array(); $root = realpath($mediaDir);
+        if ($root) foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $mediaFile) {
+            if (!$mediaFile->isFile() || $mediaFile->isLink()) continue;
+            $path = $mediaFile->getPathname(); $name = $mediaFile->getFilename();
+            if (!isset($used[$name])) $unused[] = array("path"=>substr($path, strlen($root)+1), "name"=>$name, "size"=>$mediaFile->getSize());
+        }
+        $removed = array();
+        if ($this->yellow->page->getRequest("mode")=="delete") {
+            $selected = $this->yellow->page->getRequest("files");
+            if (!is_array($selected)) $selected = array();
+            foreach ($unused as $item) if (in_array($item["path"], $selected, true)) {
+                $target = realpath($root.DIRECTORY_SEPARATOR.$item["path"]);
+                if ($target && strpos($target, $root.DIRECTORY_SEPARATOR)===0 && is_file($target) && unlink($target)) $removed[] = $item["path"];
+            }
+            $unused = array_values(array_filter($unused, function($item) use ($removed) { return !in_array($item["path"], $removed, true); }));
+        }
+        header("Content-Type: application/json; charset=utf-8");
+        echo json_encode(array("files"=>$unused, "removed"=>$removed), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     // Process request for user login
     public function processRequestLogin($scheme, $address, $base, $location, $fileName) {
         $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
