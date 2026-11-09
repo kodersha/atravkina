@@ -94,13 +94,28 @@ class YellowFotorama {
         return $html;
     }
 
-    // Add local Fotorama assets only to pages that contain the shortcut.
+    // Add local Fotorama assets to pages that contain the shortcut,
+    // including blog listings where shortcuts are inside individual posts.
     public function onParsePageExtra($page, $name) {
         if ($name!="header") return null;
 
+        // Check the current page first.
         if (!$this->assetsRequired && method_exists($page, "getContentRaw")) {
-            $this->assetsRequired = preg_match('/\\[fotorama(?:\\s+[^\\]]*)?\\]/i', $page->getContentRaw())==1;
+            $this->assetsRequired = preg_match('/\[fotorama(?:\s+[^\]]*)?\]/i', $page->getContentRaw())==1;
         }
+
+        // Blog posts are rendered after the listing page header, so their
+        // shortcuts must be detected before the header assets are generated.
+        if (!$this->assetsRequired && $page->get("layout")=="blog-start") {
+            foreach ($this->yellow->page->getPages("blog") as $blogPage) {
+                if (method_exists($blogPage, "getContentRaw") &&
+                    preg_match('/\[fotorama(?:\s+[^\]]*)?\]/i', $blogPage->getContentRaw())) {
+                    $this->assetsRequired = true;
+                    break;
+                }
+            }
+        }
+
         if (!$this->assetsRequired) return null;
 
         $base = rtrim($this->yellow->system->get("coreServerBase"), "/");
