@@ -887,7 +887,10 @@ class YellowEdit {
             "Cache-Control"=>"no-cache, no-store",
             "Content-Type"=>$this->yellow->toolbox->getMimeContentType("a.json"),
             "Last-Modified"=>$this->yellow->toolbox->getHttpDateFormatted(time()));
-        return $this->yellow->sendData(isset($data["error"]) ? 500 : 200, $headerData, json_encode($data));
+        $statusCode = $this->yellow->sendData(isset($data["error"]) ? 500 : 200, $headerData, json_encode($data));
+        // Send the upload response before shutdown handlers (including GitHub Sync) run.
+        if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();
+        return $statusCode;
     }
     
     // Check user authentication
@@ -1571,7 +1574,7 @@ class YellowEditResponse {
         $fileType = $this->yellow->toolbox->getFileType($fileNameShort);
         $locationMedia = $this->yellow->system->get("coreMediaLocation");
         $locationGroup = $this->yellow->system->get("coreDownloadLocation");
-        if (preg_match("/(gif|jpeg|jpg|png|svg)$/", $fileType)) {
+        if (preg_match("/(gif|jpeg|jpg|png|svg|webp)$/", $fileType)) {
             $locationGroup = $this->yellow->system->get("coreImageLocation");
         }
         if (preg_match("#^$locationMedia(.+?)\/#", $locationGroup, $matches)) {
