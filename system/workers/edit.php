@@ -1400,7 +1400,7 @@ class YellowEditResponse {
             $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
             if ($this->yellow->extension->isExisting("emoji")) $toolbarButtons .= ", emoji";
             if ($this->yellow->extension->isExisting("icon")) $toolbarButtons .= ", icon";
-            $toolbarButtons .= ", status, preview";
+            $toolbarButtons .= ", pin, status, preview";
         }
         return $toolbarButtons;
     }
