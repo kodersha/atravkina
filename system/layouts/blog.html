@@ -80,10 +80,11 @@
 <?php if ($previousPost || $nextPost): ?>
   <nav class="blog-post-navigation" aria-label="Навигация между публикациями">
     <?php if ($previousPost): ?>
-      <a class="blog-post-previous" href="<?= htmlspecialchars($previousPost->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>">Предыдущий пост</a>
+      <a class="blog-post-previous" href="<?= htmlspecialchars($previousPost->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>">предыдущий</a>
     <?php endif ?>
+    <span>пост</span>
     <?php if ($nextPost): ?>
-      <a class="blog-post-next" href="<?= htmlspecialchars($nextPost->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>">Следующий пост</a>
+      <a class="blog-post-next" href="<?= htmlspecialchars($nextPost->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>">следующий</a>
     <?php endif ?>
   </nav>
 <?php endif ?>
