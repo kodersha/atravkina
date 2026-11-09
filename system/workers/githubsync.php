@@ -333,7 +333,10 @@ class YellowGithubSync {
         return isset($this->settings["MaxFileSizeMB"]) ? max(1, (int)$this->settings["MaxFileSizeMB"]) : 20;
     }
 
+    // Never contact GitHub during a web request. Synchronization is intended
+    // to run from the CLI command (for example, through a nightly server cron).
+    // This prevents slow GitHub API calls from blocking post saves and uploads.
     private function autoSync() {
-        return !isset($this->settings["AutoSync"]) || (int)$this->settings["AutoSync"]==1;
+        return false;
     }
 }
