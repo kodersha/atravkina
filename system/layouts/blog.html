@@ -72,7 +72,7 @@
 
 <?php
   // Navigate through blog posts in the same newest-first order as the blog archive.
-  $blogPages = $this->yellow->page->getPages("blog")->sort("title", false);
+  $blogPages = $this->yellow->content->getChildrenRecursive($this->yellow->page->getHomeLocation())->filter("layout", "blog")->sort("title", false);
   $previousPost = $blogPages->getPageNext($this->yellow->page);
   $nextPost = $blogPages->getPagePrevious($this->yellow->page);
 ?>
