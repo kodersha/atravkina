@@ -16,6 +16,7 @@ body {
   margin-top: unset;
 
   min-height: calc(100vh - 5vw - 5vw);
+  min-height: calc(100dvh - 5vw - 5vw);
   max-width: calc(100vw - 5vw - 5vw);
 
   flex-direction: column;
