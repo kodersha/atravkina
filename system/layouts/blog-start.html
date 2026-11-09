@@ -50,6 +50,10 @@
   <input type="hidden" name="clean-url" />
 </form>
 
+<?php
+  $showPostCount = !$this->yellow->page->isRequest("page") || (int)$this->yellow->page->getRequest("page") <= 1;
+  $postIndex = 0;
+?>
 <?php foreach ($pages as $page): ?>
   <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
     <?php
@@ -76,6 +80,10 @@
       echo $contentHtml;
     ?>
   </article>
+  <?php if ($postIndex === 0 && $showPostCount): ?>
+    <div class="blog-post-count">Всего публикаций: <?= $allPages->count() ?></div>
+  <?php endif ?>
+  <?php $postIndex++ ?>
 <?php endforeach ?>
 
 <?php $this->yellow->layout("pagination", $pages) ?>
