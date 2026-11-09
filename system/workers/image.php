@@ -56,24 +56,8 @@ class YellowImage {
     public function onEditMediaFile($file, $action, $email) {
         if ($action=="upload") {
             $fileName = $file->get("fileNameTemp");
-            if ($file->get("type")=="webp") {
-                // Preserve the uploaded WebP file; do not decode or re-encode it.
-                $type = "webp";
-                clearstatcache(true, $fileName);
-                $timestamp = false;
-                if (defined("PHP_OS_FAMILY") && PHP_OS_FAMILY === "Windows") {
-                    $timestamp = @filectime($fileName);
-                }
-                if ($timestamp === false || $timestamp <= 0) {
-                    $timestamp = @filemtime($fileName);
-                }
-                if ($timestamp === false || $timestamp <= 0) $timestamp = time();
-                $file->fileName = dirname($file->fileName)."/".(int)$timestamp.".webp";
-                $file->set("type", $this->yellow->toolbox->getFileType($file->fileName));
-            } else {
-                list($widthInput, $heightInput, $orientation, $type) =
-                    $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
-            }
+            list($widthInput, $heightInput, $orientation, $type) =
+                $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
             $widthMax = $this->yellow->system->get("imageUploadWidthMax");
             $heightMax = $this->yellow->system->get("imageUploadHeightMax");
             if ($type=="gif" || $type=="jpeg" || $type=="png") {
