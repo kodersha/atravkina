@@ -116,11 +116,18 @@
 <?php if ($previousPage || $nextPage): ?>
   <nav class="blog-post-navigation" aria-label="Навигация по постам с общим тегом">
     <?php if ($previousPage): ?>
-      <a class="blog-post-previous" href="<?= $previousPage->getLocation(true) ?>">← предыдущий</a>
+      <a class="blog-post-previous" href="<?= htmlspecialchars($previousPage->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" aria-label="Предыдущая статья" title="Предыдущая статья">
+        <i class="las la-arrow-left" aria-hidden="true"></i>
+      </a>
+    <?php else: ?>
+      <span class="blog-post-navigation-placeholder" aria-hidden="true"></span>
     <?php endif ?>
-      <span>пост</span>
     <?php if ($nextPage): ?>
-      <a class="blog-post-next" href="<?= $nextPage->getLocation(true) ?>">cледующий →</a>
+      <a class="blog-post-next" href="<?= htmlspecialchars($nextPage->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" aria-label="Следующая статья" title="Следующая статья">
+        <i class="las la-arrow-right" aria-hidden="true"></i>
+      </a>
+    <?php else: ?>
+      <span class="blog-post-navigation-placeholder" aria-hidden="true"></span>
     <?php endif ?>
   </nav>
 <?php endif ?>
