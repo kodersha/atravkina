@@ -634,6 +634,7 @@ yellow.edit = {
                 case "link":            yellow.editor.setMarkdown(elementText, "[link](url)", "insert", "", false, yellow.editor.getMarkdownLink); break;
                 case "text":            yellow.editor.setMarkdown(elementText, arguments, "insert"); break;
                 case "status":          yellow.editor.setMetaData(elementText, "status", true); break;
+                case "pin":             yellow.editor.setMetaData(elementText, "pinned", true); break;
                 case "file":            this.showFileDialog(); break;
                 case "undo":            yellow.editor.undo(); break;
                 case "redo":            yellow.editor.redo(); break;
@@ -1224,7 +1225,7 @@ yellow.editor = {
     setMetaData: function(element, key, toggle) {
         var information = this.getMetaDataInformation(element, key);
         if (information.bottom!=0) {
-            var value = "";
+            var value = key=="pinned" ? "1" : "";
             if (key=="status") {
                 var tokens = yellow.system.editStatusValues.split(/\s*,\s*/);
                 var index = tokens.indexOf(information.value);
