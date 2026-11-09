@@ -9,6 +9,21 @@ class YellowPoem {
         $this->yellow = $yellow;
     }
 
+    // Serve extension assets from the worker directory.
+    public function onRequest($scheme, $address, $base, $location, $fileName) {
+        if (trim($location, "/") !== "yellow-poem/poem.css") return 0;
+        $file = __DIR__ . "/yellow-poem/poem.css";
+        if (!is_file($file) || !is_readable($file)) {
+            http_response_code(404);
+            return 404;
+        }
+        header("Content-Type: text/css; charset=utf-8");
+        header("Cache-Control: public, max-age=3600");
+        header("X-Content-Type-Options: nosniff");
+        readfile($file);
+        return 200;
+    }
+
     // Remove the code wrapper from <pre class="poem"><code>...</code></pre>.
     public function onParseContentHtml($page, $output) {
         if (!is_string($output) || stripos($output, 'class="poem"') === false) return null;
@@ -29,7 +44,7 @@ class YellowPoem {
     // Load poem styling only on pages that contain a poem.
     public function onParsePageOutput($page, $output) {
         if (!is_string($output) || strpos($output, 'class="poem"') === false) return null;
-        $stylesheet = '<link rel="stylesheet" href="/media/yellow-poem/poem.css">';
+        $stylesheet = '<link rel="stylesheet" href="/yellow-poem/poem.css">';
         if (stripos($output, "</head>") !== false) {
             return preg_replace("/<\\/head>/i", $stylesheet."</head>", $output, 1);
         }
