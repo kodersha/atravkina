@@ -1,8 +1,7 @@
 <?php $this->yellow->layout("header") ?>
 
 <?php
-  $sortAscending = isset($_COOKIE["blogSortOrder"]) && $_COOKIE["blogSortOrder"] === "oldest";
-  $pages = $this->yellow->page->getPages("blog")->sort("title", $sortAscending)->paginate($this->yellow->system->get("blogPaginationLimit"));
+  $pages = $this->yellow->page->getPages("blog")->sort("title", false)->paginate($this->yellow->system->get("blogPaginationLimit"));
 
   // Fade older posts progressively, starting with the post timestamp 1537522657.
   // Calculate against the complete archive so pagination and sort toggling do not reset opacity.
@@ -30,11 +29,6 @@
 <form class="site-search" action="/search/" method="post" role="search">
   <input id="site-search-query" type="search" name="query" placeholder="Поиск по блогу" />
   <input type="hidden" name="clean-url" />
-  <?php if ($this->yellow->page->get("layout") == "blog-start"): ?>
-  <button type="button" id="blog-sort-toggle" class="blog-sort-button">
-    <?= $sortAscending ? "<i class='las la-sort-alpha-up'></i>" : "<i class='las la-sort-alpha-down'></i>" ?>
-  </button>
-  <?php endif ?>
 </form>
 
 <?php foreach ($pages as $page): ?>
@@ -67,17 +61,5 @@
 
 <?php $this->yellow->layout("pagination", $pages) ?>
 
-<script>
-(function () {
-  var button = document.getElementById("blog-sort-toggle");
-  if (!button) return;
-  button.addEventListener("click", function () {
-    var currentOrder = document.cookie.match(/(?:^|; )blogSortOrder=([^;]*)/);
-    var nextOrder = currentOrder && decodeURIComponent(currentOrder[1]) === "oldest" ? "newest" : "oldest";
-    document.cookie = "blogSortOrder=" + nextOrder + "; max-age=31536000; path=/; SameSite=Lax";
-    window.location.reload();
-  });
-})();
-</script>
 
 <?php $this->yellow->layout("footer") ?>
