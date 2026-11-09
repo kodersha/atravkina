@@ -1,7 +1,26 @@
 <?php $this->yellow->layout("header") ?>
 
 <?php
-  $pages = $this->yellow->page->getPages("blog")->sort("title", false)->paginate($this->yellow->system->get("blogPaginationLimit"));
+  // Keep the archive in reverse chronological order, but place pinned posts first.
+  // Sort before pagination so pinned posts stay at the top of the complete feed.
+  $allPages = $this->yellow->page->getPages("blog")->sort("title", false);
+  $pages = new YellowPageCollection($this->yellow);
+  $pinnedPages = new YellowPageCollection($this->yellow);
+  $regularPages = new YellowPageCollection($this->yellow);
+  foreach ($allPages as $archivePage) {
+      if (trim((string)$archivePage->get("Pinned")) === "1") {
+          $pinnedPages->append($archivePage);
+      } else {
+          $regularPages->append($archivePage);
+      }
+  }
+  foreach ($pinnedPages as $pinnedPage) {
+      $pages->append($pinnedPage);
+  }
+  foreach ($regularPages as $regularPage) {
+      $pages->append($regularPage);
+  }
+  $pages->paginate($this->yellow->system->get("blogPaginationLimit"));
 
   // Fade older posts progressively, starting with the post timestamp 1537522657.
   // Calculate against the complete archive so pagination and sort toggling do not reset opacity.
