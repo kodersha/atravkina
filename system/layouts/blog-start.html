@@ -1,7 +1,7 @@
 <?php $this->yellow->layout("header") ?>
 
 <?php
-  $pages = $this->yellow->page->getPages("blog")->sort("title", false)->paginate($this->yellow->system->get("blogPaginationLimit"));
+  $pages = $this->yellow->page->getPages("blog")->sort("title", false)->sort("pinned", false)->paginate($this->yellow->system->get("blogPaginationLimit"));
 
   // Fade older posts progressively, starting with the post timestamp 1537522657.
   // Calculate against the complete archive so pagination and sort toggling do not reset opacity.
