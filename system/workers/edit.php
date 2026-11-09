@@ -268,6 +268,7 @@ class YellowEdit {
                 case "configure":   $statusCode = $this->processRequestConfigure($scheme, $address, $base, $location, $fileName); break;
                 case "update":      $statusCode = $this->processRequestUpdate($scheme, $address, $base, $location, $fileName); break;
                 case "create":      $statusCode = $this->processRequestCreate($scheme, $address, $base, $location, $fileName); break;
+                case "pin":         $statusCode = $this->processRequestPin($scheme, $address, $base, $location, $fileName); break;
                 case "edit":        $statusCode = $this->processRequestEdit($scheme, $address, $base, $location, $fileName); break;
                 case "delete":      $statusCode = $this->processRequestDelete($scheme, $address, $base, $location, $fileName); break;
                 case "restore":     $statusCode = $this->processRequestRestore($scheme, $address, $base, $location, $fileName); break;
@@ -803,6 +804,37 @@ class YellowEdit {
         return $statusCode;
     }
     
+    // Pin or unpin a blog post without changing its publication timestamp.
+    public function processRequestPin($scheme, $address, $base, $location, $fileName) {
+        $statusCode = 0;
+        if ($this->response->isUserAccess("edit", $location) && is_file($fileName)) {
+            $rawData = $this->yellow->toolbox->readFile($fileName);
+            $page = new YellowPage($this->yellow);
+            $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
+            $page->parseMeta($rawData, 200);
+            $pinned = $this->yellow->page->getRequest("pinned")=="1";
+            if ($page->get("layout")!="blog") {
+                $page->error(400, "Only blog posts can be pinned!");
+            } else {
+                $rawData = $pinned
+                    ? $this->yellow->toolbox->setMetaData($rawData, "pinned", "1")
+                    : $this->yellow->toolbox->unsetMetaData($rawData, "pinned");
+                if ($this->yellow->toolbox->writeFile($fileName, $rawData)) {
+                    $page->parseMeta($rawData, 200);
+                    $this->notifyContentSaved($page);
+                    $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+                    $statusCode = $this->yellow->sendStatus(303, $location);
+                } else {
+                    $this->yellow->page->error(500, "Can't write file '$fileName'!");
+                }
+            }
+            if ($statusCode==0) {
+                $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+            }
+        }
+        return $statusCode;
+    }
+
     // Process request to edit page
     public function processRequestEdit($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
@@ -1296,6 +1328,8 @@ class YellowEditResponse {
         $data["location"] = $this->yellow->page->location;
         if ($this->isUser()) {
             $data["title"] = $this->yellow->toolbox->getMetaData($this->rawDataEdit, "title");
+            $data["layout"] = $page->get("layout");
+            $data["pinned"] = $page->get("pinned")=="1";
             $data["rawDataSource"] = $this->rawDataSource;
             $data["rawDataEdit"] = $this->rawDataEdit;
             $data["rawDataNew"] = $this->getRawDataNew($page);
