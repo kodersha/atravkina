@@ -864,7 +864,7 @@ yellow.edit = {
                 formData.append("action", "upload");
                 formData.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
                 formData.append("file", file);
-                if (extension==".webp" && file.lastModified>0) {
+                if ((extension==".webp" || extension==".gif") && file.lastModified>0) {
                     formData.append("sourceLastModified", Math.floor(file.lastModified/1000).toString());
                 }
                 var request = new XMLHttpRequest();
