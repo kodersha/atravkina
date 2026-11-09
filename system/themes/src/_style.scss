@@ -46,12 +46,13 @@ body {
     -webkit-backdrop-filter: blur(10px);
   }
   &::before {
-    content: "Бездарность";
     position: absolute;
     text-transform: uppercase;
     font-weight: 800;
-    font-size: 256px;
-    color: #111111;
+    font-size: 16.5rem;
+    color: #111;
+    right: -5rem;
+    left: -4rem;
   }
 }
 input, textarea {
