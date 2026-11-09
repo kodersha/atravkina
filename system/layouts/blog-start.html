@@ -46,11 +46,10 @@
 ?>
 
 <form class="site-search" action="/search/" method="post" role="search">
-  <input id="site-search-query" type="search" name="query" placeholder="Поиск по блогу" />
+  <input id="site-search-query" type="search" name="query" placeholder="Всего публикаций: <?= $allPages->count() ?>" />
   <input type="hidden" name="clean-url" />
 </form>
 
-<?php $postCountShown = false ?>
 <?php foreach ($pages as $page): ?>
   <article class="emerge" data-id="<?= htmlspecialchars($page->get("title")) ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
     <?php
@@ -77,10 +76,6 @@
       echo $contentHtml;
     ?>
   </article>
-  <?php if (!$postCountShown): ?>
-    <p class="blog-post-count">Всего публикаций: <?= $allPages->count() ?></p>
-    <?php $postCountShown = true ?>
-  <?php endif ?>
 <?php endforeach ?>
 
 <?php $this->yellow->layout("pagination", $pages) ?>
