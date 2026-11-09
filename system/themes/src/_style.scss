@@ -32,6 +32,19 @@ body {
   font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   font-size: 1.125rem;
   line-height: 1.444;
+
+  &.yellow-body-modal-open::before {
+    background-color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    z-index: 100;
+    content: '';
+    bottom: 0;
+    right: 0;
+    left: 0;
+    top: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
 }
 input, textarea {
   font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
