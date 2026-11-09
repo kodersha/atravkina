@@ -997,7 +997,9 @@ yellow.edit = {
                     var shortcut = this.getShortcut(token);
                     var rawDataShortcut = shortcut ? "&nbsp;&nbsp;"+yellow.toolbox.encodeHtml(shortcut) : "";
                     var rawDataExpandable = this.isExpandable(token) ? " aria-expanded=\"false\"" : "";
-                    rawDataButtons += "<li><a href=\"#\" id=\""+paneId+"-toolbar-"+yellow.toolbox.encodeHtml(token)+"\" class=\"yellow-toolbar-btn-icon yellow-toolbar-tooltip\" data-action=\"toolbar\" data-status=\""+yellow.toolbox.encodeHtml(token)+"\" aria-label=\""+this.getText("Toolbar", "", token)+rawDataShortcut+"\""+rawDataExpandable+"><i class=\"yellow-icon yellow-icon-"+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
+                    var rawDataLabel = token=="pin" ? "Закрепить / открепить" : this.getText("Toolbar", "", token);
+                    var rawDataIcon = token=="pin" ? "📌" : "<i class=\"yellow-icon yellow-icon-"+yellow.toolbox.encodeHtml(token)+"\"></i>";
+                    rawDataButtons += "<li><a href=\"#\" id=\""+paneId+"-toolbar-"+yellow.toolbox.encodeHtml(token)+"\" class=\"yellow-toolbar-btn-icon yellow-toolbar-tooltip\" data-action=\"toolbar\" data-status=\""+yellow.toolbox.encodeHtml(token)+"\" aria-label=\""+rawDataLabel+rawDataShortcut+"\""+rawDataExpandable+">"+rawDataIcon+"</a></li>";
                 } else {
                     rawDataButtons += "<li><a href=\"#\" class=\"yellow-toolbar-btn-separator\"></a></li>";
                 }
