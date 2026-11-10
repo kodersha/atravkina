@@ -55,11 +55,6 @@
       }
   }
 
-  // Fallback for the Telegram post whose sent-state entry is missing or mismatched.
-  $telegramPostId = trim((string)$this->yellow->page->getLocation(), "/");
-  if (!$telegramCommentUrl && $telegramPostId === "1794137098") {
-      $telegramCommentUrl = "tg://resolve?domain=atravkina&post=78";
-  }
 ?>
 
 <?php if ($telegramCommentUrl): ?>
