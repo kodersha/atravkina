@@ -1,5 +1,5 @@
 <?php
-// Publish public blog posts to a Telegram channel only after an editor save.
+// Publish public blog posts to Telegram once, on their first public page render.
 
 class YellowTelegram {
     const VERSION = "1.0.0";
