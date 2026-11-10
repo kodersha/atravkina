@@ -1,3 +1,5 @@
 system/extensions/yellow-github-sync.ini
 system/extensions/yellow-likes/votes.json
 system/extensions/.yellow-github-sync-state.json
+system/extensions/yellow-telegram/config.php
+system/extensions/yellow-telegram/sent.php
