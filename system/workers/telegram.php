@@ -16,8 +16,9 @@ class YellowTelegram {
     }
 
 
-    // Publish immediately after the editor has successfully saved a page.
-    public function onSaveContentFile($page) {
+    // Publish a post on its first public page render. Yellow does not expose
+    // an onSaveContentFile event; onParsePageOutput is a supported page hook.
+    public function onParsePageOutput($page, $outputData) {
         $this->publishPage($page);
     }
 
