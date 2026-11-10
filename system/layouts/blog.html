@@ -31,10 +31,9 @@
       is_file($telegramStateFile) && is_readable($telegramStateFile)) {
       $telegramConfig = include $telegramConfigFile;
       $telegramRaw = file_get_contents($telegramStateFile);
-      $telegramPrefix = "<?php http_response_code(404); exit; ?>\\n";
-      if (strpos($telegramRaw, $telegramPrefix) === 0) {
-          $telegramRaw = substr($telegramRaw, strlen($telegramPrefix));
-      }
+      // sent.php is protected by a PHP guard on its first line; remove
+      // that line independently of the line-ending style.
+      $telegramRaw = preg_replace('/^<\\?php[^\\r\\n]*\\?>\\s*/', '', $telegramRaw, 1);
       $telegramState = json_decode($telegramRaw, true);
       $telegramLocation = $this->yellow->page->getLocation();
       $telegramKey = hash("sha256", $telegramLocation);
