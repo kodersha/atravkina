@@ -78,6 +78,35 @@
   </article>
 <?php endforeach ?>
 
+<script>
+  // Keep the existing article navigation, but allow it only for text clicks.
+  // Links and media must retain their own behavior and never open the full post.
+  document.addEventListener("click", function (event) {
+    const target = event.target instanceof Element ? event.target : event.target.parentElement;
+    if (!target) return;
+
+    const article = target.closest("article.emerge[data-href]");
+    if (!article) return;
+
+    const interactiveOrMedia = target.closest(
+      "a, img, picture, video, audio, canvas, iframe, button, input, select, textarea, summary"
+    );
+    const textBlock = target.closest(
+      "p, li, blockquote, h1, h2, h3, h4, h5, h6, dt, dd, figcaption"
+    );
+
+    if (interactiveOrMedia || !textBlock) {
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      return;
+    }
+  }, true);
+
+  document.querySelectorAll("article.emerge[data-href] p, article.emerge[data-href] li, article.emerge[data-href] blockquote, article.emerge[data-href] h1, article.emerge[data-href] h2, article.emerge[data-href] h3, article.emerge[data-href] h4, article.emerge[data-href] h5, article.emerge[data-href] h6, article.emerge[data-href] dt, article.emerge[data-href] dd, article.emerge[data-href] figcaption").forEach(function (element) {
+    element.style.cursor = "pointer";
+  });
+</script>
+
 <?php $this->yellow->layout("pagination", $pages) ?>
 
 
