@@ -32,6 +32,7 @@
       // Use the individual Telegram publication link on blog posts when available.
       // Everywhere else, link to the public channel.
       $telegramHeaderUrl = "https://t.me/atravkina";
+      $telegramHeaderLabel = "Telegram";
       if ($this->yellow->page->get("layout") === "blog") {
           $extensionDirectory = $this->yellow->system->get("coreExtensionDirectory");
           $telegramDirectory = rtrim($extensionDirectory, "/\\\\")."/yellow-telegram/";
@@ -57,10 +58,11 @@
                   ctype_digit((string)$telegramEntry["channel_message_id"]) &&
                   preg_match('/^[A-Za-z][A-Za-z0-9_]{4,31}$/', $telegramChannel)) {
                   $telegramHeaderUrl = "tg://resolve?domain=".$telegramChannel."&post=".(int)$telegramEntry["channel_message_id"];
+                  $telegramHeaderLabel = "Комментировать";
               }
           }
       }
     ?>
     <header class="site-header">
-      <a class="blog-telegram-comment" href="<?= htmlspecialchars($telegramHeaderUrl, ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" target="_blank" rel="noopener noreferrer"><i class="lab la-telegram" aria-hidden="true"></i> Комментировать</a>
+      <a class="blog-telegram-comment" href="<?= htmlspecialchars($telegramHeaderUrl, ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" target="_blank" rel="noopener noreferrer"><i class="lab la-telegram" aria-hidden="true"></i> <?= htmlspecialchars($telegramHeaderLabel, ENT_QUOTES | ENT_HTML5, "UTF-8") ?></a>
     </header>
