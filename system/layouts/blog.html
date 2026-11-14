@@ -10,7 +10,7 @@
       is_file($telegramStateFile) && is_readable($telegramStateFile)) {
       $telegramConfig = include $telegramConfigFile;
       $telegramRaw = file_get_contents($telegramStateFile);
-      $telegramRaw = preg_replace('/^<\\\\?php[^\\\\r\\\\n]*\\\\?>\\\\s*/', '', $telegramRaw, 1);
+      $telegramRaw = preg_replace('/^<\\?php[^\\r\\n]*\\?>\\s*/', '', $telegramRaw, 1);
       $telegramState = json_decode($telegramRaw, true);
       $telegramLocation = $this->yellow->page->getLocation();
       $telegramKey = hash("sha256", $telegramLocation);
