@@ -83,4 +83,52 @@
   </nav>
 <?php endif ?>
 
+<script>
+  // Swipe left on a post to return to the archive without losing its scroll position.
+  (function () {
+    const article = document.querySelector("article.emerge");
+    if (!article || !("ontouchstart" in window)) return;
+
+    let touchStart = null;
+    const ignored = "a, button, input, textarea, select, video, audio, iframe, [role='button'], [contenteditable='true']";
+
+    article.addEventListener("touchstart", function (event) {
+      if (event.touches.length !== 1 || event.target.closest(ignored)) {
+        touchStart = null;
+        return;
+      }
+      const touch = event.touches[0];
+      touchStart = { x: touch.clientX, y: touch.clientY };
+    }, { passive: true });
+
+    article.addEventListener("touchend", function (event) {
+      if (!touchStart || event.changedTouches.length !== 1) return;
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - touchStart.x;
+      const deltaY = touch.clientY - touchStart.y;
+      touchStart = null;
+
+      // Require a clear leftward horizontal gesture; normal vertical scrolling is untouched.
+      if (deltaX > -90 || Math.abs(deltaY) > 70 || Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return;
+
+      const referrer = document.referrer;
+      if (referrer) {
+        try {
+          if (new URL(referrer).origin === window.location.origin) {
+            window.history.back();
+            return;
+          }
+        } catch (error) {
+          // Fall through to the archive if the referrer cannot be parsed.
+        }
+      }
+      window.location.assign("/");
+    }, { passive: true });
+
+    article.addEventListener("touchcancel", function () {
+      touchStart = null;
+    }, { passive: true });
+  })();
+</script>
+
 <?php $this->yellow->layout("footer") ?>
