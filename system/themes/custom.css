@@ -50,3 +50,9 @@ article.emerge[data-href].has-text > figure.media-last {
 article.emerge[data-href] > .blog-read {
     align-self: center;
 }
+
+
+/* Paragraph spacing */
+article p + p {
+    margin-top: 0.5rem;
+}
