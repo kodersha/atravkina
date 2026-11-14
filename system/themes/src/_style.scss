@@ -94,13 +94,24 @@ p {
 }
 
 header {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 
   .logotype {
     height: 2.5rem;
     width: 2.5rem;
+  }
+
+  .blog-telegram-comment {
+    color: rgb(255, 255, 255);
+    opacity: 0.72;
+    transition: opacity 0.18s ease;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 
