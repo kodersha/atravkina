@@ -99,7 +99,7 @@
       "a, picture, video, audio, canvas, iframe, button, input, select, textarea, summary"
     );
     const textBlock = target.closest(
-      "p, li, blockquote, h1, h2, h3, h4, h5, h6, dt, dd, figcaption"
+      "p, li, blockquote, pre, h1, h2, h3, h4, h5, h6, dt, dd, figcaption"
     );
 
     if (interactiveOrMedia || !textBlock) {
@@ -109,7 +109,7 @@
     }
   }, true);
 
-  document.querySelectorAll("article.emerge[data-href] p, article.emerge[data-href] li, article.emerge[data-href] blockquote, article.emerge[data-href] h1, article.emerge[data-href] h2, article.emerge[data-href] h3, article.emerge[data-href] h4, article.emerge[data-href] h5, article.emerge[data-href] h6, article.emerge[data-href] dt, article.emerge[data-href] dd, article.emerge[data-href] figcaption").forEach(function (element) {
+  document.querySelectorAll("article.emerge[data-href] p, article.emerge[data-href] li, article.emerge[data-href] blockquote, article.emerge[data-href] pre, article.emerge[data-href] h1, article.emerge[data-href] h2, article.emerge[data-href] h3, article.emerge[data-href] h4, article.emerge[data-href] h5, article.emerge[data-href] h6, article.emerge[data-href] dt, article.emerge[data-href] dd, article.emerge[data-href] figcaption").forEach(function (element) {
     element.style.cursor = "pointer";
   });
 </script>
