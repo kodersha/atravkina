@@ -68,8 +68,8 @@
 <?php endforeach ?>
 
 <script>
-  // Keep the existing article navigation, but allow it only for text clicks.
-  // Links and media must retain their own behavior and never open the full post.
+  // Open the full post when the user clicks or taps its text.
+  // Links, images and embedded media keep their native behavior.
   document.addEventListener("click", function (event) {
     const target = event.target instanceof Element ? event.target : event.target.parentElement;
     if (!target) return;
@@ -77,8 +77,7 @@
     const article = target.closest("article.emerge[data-href]");
     if (!article) return;
 
-    // Let medium-zoom receive image clicks at the document bubble phase.
-    // Prevent navigation for linked images without stopping the zoom handler.
+    // Image clicks remain available to medium-zoom.
     if (target.closest("img")) {
       if (target.closest("a")) event.preventDefault();
       return;
@@ -96,6 +95,11 @@
       event.stopImmediatePropagation();
       return;
     }
+
+    // A click event is generated for both mouse and touchscreen activation.
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.assign(article.dataset.href);
   }, true);
 
   document.querySelectorAll("article.emerge[data-href] p, article.emerge[data-href] li, article.emerge[data-href] blockquote, article.emerge[data-href] pre, article.emerge[data-href] h1, article.emerge[data-href] h2, article.emerge[data-href] h3, article.emerge[data-href] h4, article.emerge[data-href] h5, article.emerge[data-href] h6, article.emerge[data-href] dt, article.emerge[data-href] dd, article.emerge[data-href] figcaption").forEach(function (element) {
