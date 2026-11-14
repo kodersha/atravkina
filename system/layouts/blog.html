@@ -84,12 +84,13 @@
 <?php endif ?>
 
 <script>
-  // Swipe left on a post to return to the archive without losing its scroll position.
+  // Standard mobile back gesture: start at the left edge and swipe right.
   (function () {
     const article = document.querySelector("article.emerge");
     if (!article || !("ontouchstart" in window)) return;
 
     let touchStart = null;
+    const edgeWidth = 45;
     const ignored = "a, button, input, textarea, select, video, audio, iframe, [role='button'], [contenteditable='true']";
 
     article.addEventListener("touchstart", function (event) {
@@ -98,6 +99,10 @@
         return;
       }
       const touch = event.touches[0];
+      if (touch.clientX > edgeWidth) {
+        touchStart = null;
+        return;
+      }
       touchStart = { x: touch.clientX, y: touch.clientY };
     }, { passive: true });
 
@@ -108,8 +113,8 @@
       const deltaY = touch.clientY - touchStart.y;
       touchStart = null;
 
-      // Require a clear leftward horizontal gesture; normal vertical scrolling is untouched.
-      if (deltaX > -90 || Math.abs(deltaY) > 70 || Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return;
+      // Require a clear rightward horizontal gesture from the left screen edge.
+      if (deltaX < 90 || Math.abs(deltaY) > 70 || deltaX < Math.abs(deltaY) * 1.5) return;
 
       const referrer = document.referrer;
       if (referrer) {
