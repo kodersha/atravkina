@@ -54,18 +54,7 @@
   <article class="emerge" data-id="<?= htmlspecialchars($page->get("title"), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" data-href="<?= htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
     <?php
       $contentHtml = $page->getContentHtml();
-      $readMore = '<a class="blog-read" href="' . htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") . '"><i class="las la-link"></i></a>';
-
-      if (strpos($contentHtml, "<!--more-->") !== false) {
-          $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false, "<!--more-->", "</p>" . $readMore);
-      } else {
-          $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
-          if (preg_match("~</p>(?!.*</p>)~s", $contentHtml)) {
-              $contentHtml = preg_replace("~</p>(?!.*</p>)~s", "</p>" . $readMore, $contentHtml, 1);
-          } else {
-              $contentHtml .= $readMore;
-          }
-      }
+      $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
 
       $contentHtml = preg_replace(
           '~<p\\b[^>]*>\\s*((?:<a\\b[^>]*>\\s*)?<img\\b[^>]*>(?:\\s*</a>)?)\\s*</p>~i',
