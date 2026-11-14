@@ -88,8 +88,15 @@
     const article = target.closest("article.emerge[data-href]");
     if (!article) return;
 
+    // Let medium-zoom receive image clicks at the document bubble phase.
+    // Prevent navigation for linked images without stopping the zoom handler.
+    if (target.closest("img")) {
+      if (target.closest("a")) event.preventDefault();
+      return;
+    }
+
     const interactiveOrMedia = target.closest(
-      "a, img, picture, video, audio, canvas, iframe, button, input, select, textarea, summary"
+      "a, picture, video, audio, canvas, iframe, button, input, select, textarea, summary"
     );
     const textBlock = target.closest(
       "p, li, blockquote, h1, h2, h3, h4, h5, h6, dt, dd, figcaption"
