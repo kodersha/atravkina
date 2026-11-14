@@ -51,14 +51,13 @@ article.emerge[data-href] > .blog-read {
     align-self: center;
 }
 
-
-/* Paragraph spacing */
-.post-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+/* Post text paragraph spacing */
+article.emerge[data-href] > .post-text {
+  display: grid !important;
+  grid-auto-flow: row;
+  row-gap: 0.75rem;
 }
 
-.post-text p {
-    margin: 0;
+article.emerge[data-href] > .post-text > p {
+  margin: 0 !important;
 }
