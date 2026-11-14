@@ -11,19 +11,6 @@
   );
 ?>
 
-
-  <article class="emerge">
-    <?= $contentHtml ?>
-    <div class="blog-post-actions">
-      <!--yellow-likes-slot-->
-      <?php if ($telegramCommentUrl): ?>
-        <div class="blog-telegram-comment">
-          <a href="<?= htmlspecialchars($telegramCommentUrl, ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" target="_blank" rel="noopener noreferrer">комментировать</a>
-        </div>
-      <?php endif ?>
-    </div>
-  </article>
-
 <?php
   // Link to the Telegram publication when this post has been sent successfully.
   $telegramCommentUrl = false;
@@ -61,6 +48,17 @@
 
 ?>
 
+  <article class="emerge">
+    <?= $contentHtml ?>
+    <div class="blog-post-actions">
+      <!--yellow-likes-slot-->
+      <?php if ($telegramCommentUrl): ?>
+        <div class="blog-telegram-comment">
+          <a href="<?= htmlspecialchars($telegramCommentUrl, ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" target="_blank" rel="noopener noreferrer">комментировать</a>
+        </div>
+      <?php endif ?>
+    </div>
+  </article>
 
 
 <?php
