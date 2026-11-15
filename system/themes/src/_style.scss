@@ -29,7 +29,23 @@ body {
 
   cursor: default;
 
-  font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family:
+    "Tilda Sans",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF UI Text",
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    "Helvetica",
+    "Arial",
+    sans-serif;
   font-size: 1.125rem;
   line-height: 1.444;
 
@@ -37,7 +53,7 @@ body {
     background-color: rgba(0, 0, 0, 0.8);
     position: absolute;
     z-index: 100;
-    content: '';
+    content: "";
     bottom: 0;
     right: 0;
     left: 0;
@@ -46,7 +62,7 @@ body {
     -webkit-backdrop-filter: blur(10px);
   }
   &::before {
-    content: 'Бездарность';
+    content: "Бездарность";
     position: absolute;
     text-transform: uppercase;
     font-weight: 800;
@@ -56,8 +72,25 @@ body {
     left: -4rem;
   }
 }
-input, textarea {
-  font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+input,
+textarea {
+  font-family:
+    "Tilda Sans",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF UI Text",
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    "Helvetica",
+    "Arial",
+    sans-serif;
 }
 h1,
 h2,
@@ -113,6 +146,13 @@ article {
   word-spacing: normal;
   letter-spacing: normal;
 
+  & > .post-text {
+      position: relative;
+      flex-direction: column;
+      display: flex;
+      row-gap: 1rem;
+  }
+
   figure {
     margin-bottom: unset;
     margin-right: unset;
@@ -167,7 +207,23 @@ article {
     margin-bottom: unset;
     margin-top: unset;
 
-    font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    font-family:
+      "Tilda Sans",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF UI Text",
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      "Fira Sans",
+      "Droid Sans",
+      "Helvetica Neue",
+      "Helvetica",
+      "Arial",
+      sans-serif;
     font-size: 1.125rem;
     line-height: 1.444;
   }
@@ -187,7 +243,10 @@ article {
 
   a.readmore {
     opacity: 0.72;
-    transition: color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+    transition:
+      color 0.18s ease,
+      opacity 0.18s ease,
+      transform 0.18s ease;
     color: rgb(255, 255, 255);
 
     &:hover {
@@ -224,7 +283,7 @@ footer {
 }
 
 .blog-post-actions {
-  justify-content: center;
+  justify-content: start;
   align-items: center;
   display: flex;
   gap: 1rem;
@@ -237,7 +296,10 @@ footer {
   }
   .blog-telegram-comment {
     a {
-      transition: color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+      transition:
+        color 0.18s ease,
+        opacity 0.18s ease,
+        transform 0.18s ease;
       color: rgb(255, 255, 255);
       opacity: 0.72;
 
@@ -255,6 +317,8 @@ footer {
   display: flex;
   gap: 0.5rem;
 
+
+  margin-top: auto;
   text-transform: lowercase;
 
   span {
@@ -276,7 +340,7 @@ footer {
 }
 
 /* Post text paragraph spacing */
-article.emerge[data-href] > .post-text {
+article.emerge[data-hrefF] > .post-text {
   display: grid !important;
   grid-auto-flow: row;
   row-gap: 0.75rem;
