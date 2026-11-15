@@ -122,6 +122,21 @@ p {
     }
   }
 }
+ul, ol {
+  li {
+    a {
+      color: rgb(250, 198, 112);
+      border-bottom: 1px solid rgba(250, 198, 112, 0.2);
+
+      &:hover {
+        color: rgb(243, 121, 37);
+        border-color: rgba(243, 121, 37, 0.2);
+      }
+    }
+  }
+}
+
+
 .emerge {
   opacity: 0;
 }
