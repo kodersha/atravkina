@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+RewriteEngine on
+DirectoryIndex index.html yellow.php
+RewriteRule ^(content|system)/ error [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ yellow.php [L]
+</IfModule>

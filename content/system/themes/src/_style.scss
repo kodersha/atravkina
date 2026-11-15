@@ -1,0 +1,351 @@
+html {
+  background-color: rgb(0, 0, 0);
+  overflow-x: hidden;
+}
+body {
+  position: relative;
+
+  padding-bottom: 5vw;
+  padding-right: 5vw;
+  padding-left: 5vw;
+  padding-top: 5vw;
+
+  margin-bottom: unset;
+  margin-right: unset;
+  margin-left: unset;
+  margin-top: unset;
+
+  min-height: calc(100vh - 5vw - 5vw);
+  min-height: calc(100dvh - 5vw - 5vw);
+  max-width: 31.25rem;
+
+  flex-direction: column;
+  align-items: center;
+  display: flex;
+  row-gap: 6rem;
+
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
+
+  cursor: default;
+
+  font-family:
+    "Tilda Sans",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF UI Text",
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    "Helvetica",
+    "Arial",
+    sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.444;
+
+  &.yellow-body-modal-open::before {
+    background-color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    z-index: 100;
+    content: "";
+    bottom: 0;
+    right: 0;
+    left: 0;
+    top: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  &::before {
+    content: "Бездарность";
+    position: absolute;
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 16.5rem;
+    color: #111;
+    right: -5rem;
+    left: -4rem;
+  }
+}
+input,
+textarea {
+  font-family:
+    "Tilda Sans",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF UI Text",
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    "Helvetica",
+    "Arial",
+    sans-serif;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: unset;
+  margin-top: unset;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+a {
+  text-decoration: none;
+}
+p {
+  margin-bottom: unset;
+  margin-top: unset;
+
+  a {
+    color: rgb(250, 198, 112);
+    border-bottom: 1px solid rgba(250, 198, 112, 0.2);
+
+    &:hover {
+      color: rgb(243, 121, 37);
+      border-color: rgba(243, 121, 37, 0.2);
+    }
+  }
+}
+.emerge {
+  opacity: 0;
+}
+
+header {
+  .logotype {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+}
+
+article {
+  position: relative;
+  flex-direction: column;
+  display: flex;
+  row-gap: 1rem;
+  max-width: 31.25rem;
+  text-align-last: left;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
+  word-spacing: normal;
+  letter-spacing: normal;
+
+  & > .post-text {
+      position: relative;
+      flex-direction: column;
+      display: flex;
+      row-gap: 1rem;
+  }
+
+  figure {
+    margin-bottom: unset;
+    margin-right: unset;
+    margin-left: unset;
+    margin-top: unset;
+  }
+
+  p {
+    text-indent: 1.5em;
+
+    &:last-of-type {
+      text-indent: 0;
+    }
+  }
+  * + p {
+    text-indent: 1.5em !important;
+  }
+
+  .flexible {
+    position: relative;
+    overflow: hidden;
+
+    padding-bottom: 56.25%;
+
+    iframe {
+      position: absolute;
+      left: 0;
+      top: 0;
+
+      height: 100%;
+      width: 100%;
+    }
+  }
+  .Player {
+    position: relative;
+    overflow: hidden;
+    display: block;
+
+    video {
+      position: relative;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      top: 0;
+
+      height: 100%;
+      width: 100%;
+    }
+  }
+
+  pre.poem {
+    margin-bottom: unset;
+    margin-top: unset;
+
+    font-family:
+      "Tilda Sans",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF UI Text",
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      "Fira Sans",
+      "Droid Sans",
+      "Helvetica Neue",
+      "Helvetica",
+      "Arial",
+      sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.444;
+  }
+  a.blog-read {
+    border-bottom: none;
+    color: rgb(68, 68, 68);
+
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    display: flex;
+
+    &:hover {
+      color: rgb(255, 255, 255);
+    }
+  }
+
+  a.readmore {
+    opacity: 0.72;
+    transition:
+      color 0.18s ease,
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    color: rgb(255, 255, 255);
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+footer {
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  color: rgb(68, 68, 68);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: auto;
+
+  .contact {
+    display: flex;
+    align-items: center;
+    column-gap: 0.5rem;
+
+    a {
+      color: rgb(68, 68, 68);
+
+      &:hover {
+        color: rgb(255, 255, 255);
+      }
+    }
+  }
+}
+
+.blog-post-actions {
+  justify-content: start;
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+
+  margin-top: auto;
+
+  .yellow-likes {
+    margin: 0;
+    display: flex;
+  }
+  .blog-telegram-comment {
+    a {
+      transition:
+        color 0.18s ease,
+        opacity 0.18s ease,
+        transform 0.18s ease;
+      color: rgb(255, 255, 255);
+      opacity: 0.72;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.pagination,
+.blog-post-navigation {
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+
+
+  margin-top: auto;
+  text-transform: lowercase;
+
+  span {
+    opacity: 0.72;
+    color: rgb(255, 255, 255);
+  }
+  a {
+    opacity: 0.72;
+    transition:
+      color 0.18s ease,
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    color: rgb(255, 255, 255);
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/* Post text paragraph spacing */
+article.emerge[data-hrefF] > .post-text {
+  display: grid !important;
+  grid-auto-flow: row;
+  row-gap: 0.75rem;
+}
+
+article.emerge[data-href] > .post-text > p {
+  margin: 0 !important;
+}

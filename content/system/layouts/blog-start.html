@@ -1,0 +1,113 @@
+<?php $this->yellow->layout("header") ?>
+
+<?php
+  // Keep the archive in reverse chronological order, but place pinned posts first.
+  // Sort before pagination so pinned posts stay at the top of the complete feed.
+  $allPages = $this->yellow->page->getPages("blog")->sort("title", false);
+  $pages = new YellowPageCollection($this->yellow);
+  $pinnedPages = new YellowPageCollection($this->yellow);
+  $regularPages = new YellowPageCollection($this->yellow);
+  foreach ($allPages as $archivePage) {
+      if (trim((string)$archivePage->get("Pinned")) === "1") {
+          $pinnedPages->append($archivePage);
+      } else {
+          $regularPages->append($archivePage);
+      }
+  }
+  foreach ($pinnedPages as $pinnedPage) {
+      $pages->append($pinnedPage);
+  }
+  foreach ($regularPages as $regularPage) {
+      $pages->append($regularPage);
+  }
+  $pages->paginate($this->yellow->system->get("blogPaginationLimit"));
+
+  // Fade older posts progressively, starting with the post timestamp 1537522657.
+  // Calculate against the complete archive so pagination and sort toggling do not reset opacity.
+  $fadeStart = "1537522657";
+  $fadePosts = [];
+  $fadeActive = false;
+  foreach ($this->yellow->page->getPages("blog")->sort("title", false) as $fadePage) {
+      $fadeTimestamp = (string)$fadePage->get("title");
+      if (!$fadeActive && ctype_digit($fadeTimestamp) && $fadeTimestamp <= $fadeStart) {
+          $fadeActive = true;
+      }
+      if ($fadeActive) {
+          $fadePosts[] = $fadeTimestamp;
+      }
+  }
+  $fadeCount = count($fadePosts);
+  $fadeOpacity = [];
+  foreach ($fadePosts as $fadeIndex => $fadeTimestamp) {
+      $fadeOpacity[$fadeTimestamp] = $fadeCount > 1
+          ? 1 - ($fadeIndex * 0.9 / ($fadeCount - 1))
+          : 0.1;
+  }
+?>
+
+<form class="site-search" action="/search/" method="post" role="search">
+  <input id="site-search-query" type="search" name="query" placeholder="Всего заметок <?= $allPages->count() ?>, найти что нибудь?" />
+  <input type="hidden" name="clean-url" />
+</form>
+
+<?php foreach ($pages as $page): ?>
+  <article class="emerge" data-id="<?= htmlspecialchars($page->get("title"), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" data-href="<?= htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
+    <?php
+      $contentHtml = $page->getContentHtml();
+      $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
+
+      $contentHtml = preg_replace(
+          '~<p\\b[^>]*>\\s*((?:<a\\b[^>]*>\\s*)?<img\\b[^>]*>(?:\\s*</a>)?)\\s*</p>~i',
+          '<figure>$1</figure>',
+          $contentHtml
+      );
+      $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
+      echo $contentHtml;
+    ?>
+  </article>
+<?php endforeach ?>
+
+<script>
+  // Open the full post when the user clicks or taps its text.
+  // Links, images and embedded media keep their native behavior.
+  document.addEventListener("click", function (event) {
+    const target = event.target instanceof Element ? event.target : event.target.parentElement;
+    if (!target) return;
+
+    const article = target.closest("article.emerge[data-href]");
+    if (!article) return;
+
+    // Image clicks remain available to medium-zoom.
+    if (target.closest("img")) {
+      if (target.closest("a")) event.preventDefault();
+      return;
+    }
+
+    const interactiveOrMedia = target.closest(
+      "a, picture, video, audio, canvas, iframe, button, input, select, textarea, summary"
+    );
+    const textBlock = target.closest(
+      "p, li, blockquote, pre, h1, h2, h3, h4, h5, h6, dt, dd, figcaption"
+    );
+
+    if (interactiveOrMedia || !textBlock) {
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    // A click event is generated for both mouse and touchscreen activation.
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.assign(article.dataset.href);
+  }, true);
+
+  document.querySelectorAll("article.emerge[data-href] p, article.emerge[data-href] li, article.emerge[data-href] blockquote, article.emerge[data-href] pre, article.emerge[data-href] h1, article.emerge[data-href] h2, article.emerge[data-href] h3, article.emerge[data-href] h4, article.emerge[data-href] h5, article.emerge[data-href] h6, article.emerge[data-href] dt, article.emerge[data-href] dd, article.emerge[data-href] figcaption").forEach(function (element) {
+    element.style.cursor = "pointer";
+  });
+</script>
+
+<?php $this->yellow->layout("pagination", $pages) ?>
+
+
+<?php $this->yellow->layout("footer") ?>
