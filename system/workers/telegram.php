@@ -16,8 +16,12 @@ class YellowTelegram {
     }
 
 
-    // Publish a post on its first public page render. Yellow does not expose
-    // an onSaveContentFile event; onParsePageOutput is a supported page hook.
+    // Publish immediately after Yellow Edit has written a new or updated post.
+    // Keep the public-render hook as a fallback for posts created outside the editor.
+    public function onSaveContentFile($page) {
+        $this->publishPage($page);
+    }
+
     public function onParsePageOutput($page, $outputData) {
         $this->publishPage($page);
     }
