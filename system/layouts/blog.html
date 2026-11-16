@@ -18,6 +18,41 @@
     </div>
   </article>
 
+<?php
+  // Show Telegram comments only after this public post was successfully sent to the channel.
+  $telegramDiscussionId = 0;
+  $telegramStatus = strtolower(trim((string)$this->yellow->page->get("status")));
+  if ($telegramStatus != "draft" && $telegramStatus != "hide") {
+    $telegramStateFile = $this->yellow->system->get("coreExtensionDirectory")."yellow-telegram/sent.php";
+    if (is_file($telegramStateFile) && is_readable($telegramStateFile)) {
+      $telegramStateRaw = file_get_contents($telegramStateFile);
+      $telegramStatePrefix = "<?php http_response_code(404); exit; ?>\\n";
+      if (strpos($telegramStateRaw, $telegramStatePrefix) === 0) {
+        $telegramStateRaw = substr($telegramStateRaw, strlen($telegramStatePrefix));
+      }
+      $telegramState = json_decode($telegramStateRaw, true);
+      $telegramKey = hash("sha256", $this->yellow->page->getLocation());
+      if (is_array($telegramState) && isset($telegramState[$telegramKey]["status"]) &&
+          $telegramState[$telegramKey]["status"] === "sent" &&
+          !empty($telegramState[$telegramKey]["channel_message_id"])) {
+        $telegramDiscussionId = (int)$telegramState[$telegramKey]["channel_message_id"];
+      }
+    }
+  }
+?>
+
+<?php if ($telegramDiscussionId > 0): ?>
+  <div class="telegram-discussion">
+    <script async src="https://telegram.org/js/telegram-widget.js?24"
+      data-telegram-discussion="atravkina/<?= $telegramDiscussionId ?>"
+      data-comments-limit="5"
+      data-colorful="1"
+      data-color="343638"
+      data-dark="1"
+      data-dark-color="FFFFFF"></script>
+  </div>
+<?php endif ?>
+
 
 <?php
   // Navigate through blog posts in the same newest-first order as the blog archive.
