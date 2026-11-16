@@ -26,7 +26,7 @@
     $telegramStateFile = $this->yellow->system->get("coreExtensionDirectory")."yellow-telegram/sent.php";
     if (is_file($telegramStateFile) && is_readable($telegramStateFile)) {
       $telegramStateRaw = file_get_contents($telegramStateFile);
-      $telegramStatePrefix = "<?php http_response_code(404); exit; ?>\\n";
+      $telegramStatePrefix = "<?php http_response_code(404); exit; ?>\n";
       if (strpos($telegramStateRaw, $telegramStatePrefix) === 0) {
         $telegramStateRaw = substr($telegramStateRaw, strlen($telegramStatePrefix));
       }
