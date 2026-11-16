@@ -29,23 +29,7 @@ body {
 
   cursor: default;
 
-  font-family:
-    "Tilda Sans",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF UI Text",
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
-    "Helvetica",
-    "Arial",
-    sans-serif;
+  font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   font-size: 1.125rem;
   line-height: 1.444;
 
@@ -58,11 +42,11 @@ body {
     right: 0;
     left: 0;
     top: 0;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   &::before {
-    content: "Бездарность";
+    // content: "Бездарность";
     position: absolute;
     text-transform: uppercase;
     font-weight: 800;
@@ -72,32 +56,9 @@ body {
     left: -4rem;
   }
 }
-input,
-textarea {
-  font-family:
-    "Tilda Sans",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF UI Text",
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
-    "Helvetica",
-    "Arial",
-    sans-serif;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+input, textarea {
+  font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+h1, h2, h3, h4, h5, h6 {
   margin-bottom: unset;
   margin-top: unset;
 }
@@ -207,23 +168,7 @@ article {
     margin-bottom: unset;
     margin-top: unset;
 
-    font-family:
-      "Tilda Sans",
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "SF UI Text",
-      "Segoe UI",
-      Roboto,
-      Oxygen,
-      Ubuntu,
-      Cantarell,
-      "Fira Sans",
-      "Droid Sans",
-      "Helvetica Neue",
-      "Helvetica",
-      "Arial",
-      sans-serif;
+    font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     font-size: 1.125rem;
     line-height: 1.444;
   }
