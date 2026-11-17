@@ -295,8 +295,8 @@ yellow.edit = {
                 "<textarea id=\"yellow-pane-create-text\" class=\"yellow-edit-text\"></textarea>"+
                 "<div id=\"yellow-pane-create-preview\" class=\"yellow-edit-preview\"></div>"+
                 "<div id=\"yellow-pane-create-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
-                "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a>"+
-                "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("CreateButton")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+(this.isEditFeedMode() ? "Отменить" : this.getText("CancelButton"))+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+(this.isEditFeedMode() ? "Сохранить" : this.getText("CreateButton"))+"</a>"+
                 "</div>"+
                 "</form>";
                 break;
@@ -469,7 +469,7 @@ yellow.edit = {
     // Detect the dedicated inline editor route.
     isEditFeedMode: function() {
         var path = window.location.pathname.replace(/\\/+$/, "");
-        return /\\/edit$/.test(path);
+        return /\\/(?:edit|e)$/.test(path);
     },
 
     // Resize pane
