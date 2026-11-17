@@ -1,68 +1,32 @@
-
 name: Deploy site
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-production
-  cancel-in-progress: true
+  group: deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Sass
-        run: npm install --global sass
-
-      - name: Compile SCSS
-        run: |
-          sass --no-source-map --style=compressed \
-            system/themes/src/build.scss \
-            system/themes/custom.css
-
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Upload via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add server to known hosts
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-        run: |
-          SSH_PORT="${SSH_PORT:-22}"
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-
-      - name: Deploy files
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-        run: |
-          SSH_PORT="${SSH_PORT:-22}"
-          test -n "$SSH_HOST"
-          test -n "$SSH_USER"
-          test -n "$DEPLOY_PATH"
-
-          rsync -az \
-            --no-owner \
-            --no-group \
-            --omit-dir-times \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='content/' \
-            --exclude='media/images/' \
-            -e "ssh -p $SSH_PORT" \
-            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
-
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            README.md
+            GITHUB_SYNC_CRON.md
+            content/**
+            media/**
