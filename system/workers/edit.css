@@ -600,7 +600,8 @@
 
 
 /* Fixed composer workspace in the /e/ feed: normal document flow, not a popup. */
-#yellow-pane-create.yellow-pane-inline {
+#yellow-pane-create.yellow-pane-inline,
+#yellow-pane-edit.yellow-pane-inline {
     position: relative !important;
     inset: auto !important;
     display: block;
@@ -712,112 +713,12 @@
 }
 .yellow-pane-inline #yellow-pane-create-actions a:hover { filter: brightness(0.94); }
 @media (max-width: 480px) {
-    #yellow-pane-create.yellow-pane-inline {
+    #yellow-pane-create.yellow-pane-inline,
+    #yellow-pane-edit.yellow-pane-inline {
         width: 100% !important;
         min-height: 22rem !important;
         padding: 0.65rem;
     }
     .yellow-pane-inline #yellow-pane-create-content,
     .yellow-pane-inline #yellow-pane-create-content form { min-height: 20rem; }
-}
-
-/* Feed editor: persistent Tumblr / classic Twitter-style composer bar. */
-.yellow-bar-inline {
-    position: relative;
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    margin: 0 0 1.25rem;
-    padding: 0.65rem 0;
-    border-top: 1px solid #292929;
-    border-bottom: 1px solid #292929;
-    background: #080808;
-    z-index: 2;
-}
-.yellow-bar-inline #yellow-bar-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-.yellow-bar-inline .yellow-bar-left,
-.yellow-bar-inline .yellow-bar-right {
-    display: flex;
-    align-items: center;
-    float: none;
-    gap: 0.45rem;
-}
-.yellow-bar-inline .yellow-bar-right a,
-.yellow-bar-inline .yellow-bar-left a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.25rem;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0.35rem 0.8rem;
-    border: 1px solid #333;
-    border-radius: 2px;
-    background: transparent;
-    color: #ddd;
-    font-size: 0.9rem;
-    line-height: 1.2;
-    text-decoration: none;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-.yellow-bar-inline .yellow-bar-left a:hover,
-.yellow-bar-inline .yellow-bar-right a:hover {
-    border-color: #777;
-    background: #191919;
-    color: #fff;
-}
-.yellow-bar-inline .yellow-bar-banner {
-    display: none;
-}
-#yellow-pane-create.yellow-pane-inline {
-    border: 1px solid #292929;
-    border-radius: 2px;
-    background: #080808;
-    color: #eee;
-    box-shadow: none;
-}
-#yellow-pane-create.yellow-pane-inline .yellow-toolbar a {
-    border-color: #333;
-    border-radius: 2px;
-    background: #111;
-    color: #ddd;
-}
-#yellow-pane-create.yellow-pane-inline .yellow-toolbar a:hover,
-#yellow-pane-create.yellow-pane-inline .yellow-toolbar .yellow-toolbar-btn-create {
-    border-color: #555;
-    background: #242424;
-    color: #fff;
-}
-#yellow-pane-create.yellow-pane-inline .yellow-edit-text,
-#yellow-pane-create.yellow-pane-inline .yellow-edit-preview {
-    min-height: 16rem;
-    padding: 0.8rem;
-    border: 1px solid #292929;
-    background: #050505;
-    color: #eee;
-    font: inherit;
-    line-height: 1.5;
-}
-@media (max-width: 480px) {
-    .yellow-bar-inline #yellow-bar-content {
-        align-items: stretch;
-        flex-wrap: wrap;
-    }
-    .yellow-bar-inline .yellow-bar-left,
-    .yellow-bar-inline .yellow-bar-right {
-        flex-wrap: wrap;
-    }
-    .yellow-bar-inline .yellow-bar-right {
-        margin-left: auto;
-    }
-    .yellow-bar-inline .yellow-bar-left a,
-    .yellow-bar-inline .yellow-bar-right a {
-        padding: 0.35rem 0.55rem;
-        font-size: 0.82rem;
-    }
 }
