@@ -599,140 +599,17 @@
 }
 
 
-/* Fixed composer workspace in the /e/ feed: normal document flow, not a popup. */
-#yellow-pane-create.yellow-pane-inline,
-#yellow-pane-edit.yellow-pane-inline {
-    position: relative !important;
-    inset: auto !important;
-    display: block;
-    box-sizing: border-box;
-    width: min(100%, 26rem) !important;
-    height: auto !important;
-    min-height: 25rem !important;
-    margin: 0 0 5rem 0;
-    padding: 0.85rem;
-    z-index: 1;
-    overflow: visible;
-    border: 1px solid #d8d8d8;
-    border-radius: 3px;
-    background: #fff;
-    color: #111;
-    box-shadow: none;
-    text-align: left;
-}
-.yellow-pane-inline .yellow-arrow { display: none !important; }
-.yellow-pane-inline #yellow-pane-create-content,
-.yellow-pane-inline #yellow-pane-create-content form {
-    display: flex;
-    flex-direction: column;
-    min-height: 23rem;
-    height: 100%;
-}
-.yellow-pane-inline #yellow-pane-create-toolbar {
-    display: block;
-    flex: 0 0 auto;
-    width: 100%;
-    padding-bottom: 0.65rem;
-    border-bottom: 1px solid #e5e5e5;
-}
-.yellow-pane-inline #yellow-pane-create-toolbar-title { display: none; }
-.yellow-pane-inline #yellow-pane-create-toolbar-buttons {
-    display: flex;
-    float: none;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin: 0;
-    padding: 0;
-}
-.yellow-pane-inline #yellow-pane-create-toolbar-buttons li { margin: 0; }
-.yellow-pane-inline #yellow-pane-create-toolbar-buttons a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2rem;
-    min-height: 2rem;
-    box-sizing: border-box;
-    padding: 0.35rem 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 2px;
-    background: #f7f7f7;
-    color: #222;
-}
-.yellow-pane-inline #yellow-pane-create-toolbar-buttons a:hover {
-    border-color: #aaa;
-    background: #eee;
-    color: #000;
-}
-.yellow-pane-inline #yellow-pane-create-text,
-.yellow-pane-inline #yellow-pane-create-preview {
-    display: block;
-    flex: 1 1 auto;
-    box-sizing: border-box;
-    width: 100% !important;
-    min-height: 17rem;
-    height: 20rem;
-    margin: 0;
-    padding: 0.8rem 0.2rem;
-    border: 0;
-    outline: none;
-    resize: vertical;
-    background: #fff;
-    color: #111;
-    box-shadow: none;
-    font: inherit;
-    line-height: 1.55;
-}
-.yellow-pane-inline #yellow-pane-create-preview { overflow: auto; }
-.yellow-pane-inline #yellow-pane-create-actions {
-    display: flex;
-    flex: 0 0 auto;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.5rem;
-    clear: both;
-    margin: 0;
-    padding-top: 0.7rem;
-    border-top: 1px solid #e5e5e5;
-}
-.yellow-pane-inline #yellow-pane-create-actions a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.25rem;
-    padding: 0.45rem 0.9rem;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    background: #f5f5f5;
-    color: #222;
-    text-decoration: none;
-}
-.yellow-pane-inline #yellow-pane-create-actions #yellow-pane-create-submit {
-    border-color: #222;
-    background: #222;
-    color: #fff;
-}
-.yellow-pane-inline #yellow-pane-create-actions a:hover { filter: brightness(0.94); }
-@media (max-width: 480px) {
-    #yellow-pane-create.yellow-pane-inline,
-    #yellow-pane-edit.yellow-pane-inline {
-        width: 100% !important;
-        min-height: 22rem !important;
-        padding: 0.65rem;
-    }
-    .yellow-pane-inline #yellow-pane-create-content,
-    .yellow-pane-inline #yellow-pane-create-content form { min-height: 20rem; }
-}
-
-
-/* On the dedicated editor feed, editing panes are persistent inline workspaces. */
+/* Inline editing workspaces on the dedicated /e/ feed. */
 #yellow-pane-create.yellow-pane-inline,
 #yellow-pane-edit.yellow-pane-inline,
 #yellow-pane-delete.yellow-pane-inline {
     position: relative !important;
     inset: auto !important;
     display: block !important;
+    float: none !important;
     box-sizing: border-box;
-    width: min(100%, 26rem) !important;
+    width: 100% !important;
+    max-width: none !important;
     height: auto !important;
     min-height: 25rem;
     margin: 0 0 2rem 0;
@@ -747,7 +624,41 @@
     text-align: left;
 }
 .yellow-pane-inline .yellow-arrow { display: none !important; }
-.yellow-pane-inline textarea.yellow-edit-text {
+.yellow-pane-inline .yellow-content,
+.yellow-pane-inline .yellow-content form {
+    box-sizing: border-box;
+    width: 100%;
+}
+.yellow-pane-inline [id$="-toolbar"] {
+    display: block;
+    width: 100%;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+.yellow-pane-inline [id$="-toolbar-buttons"] {
+    display: flex;
+    float: none;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+}
+.yellow-pane-inline [id$="-toolbar-buttons"] li { margin: 0; }
+.yellow-pane-inline [id$="-toolbar-buttons"] a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    min-height: 2rem;
+    box-sizing: border-box;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    background: #f7f7f7;
+    color: #222;
+}
+.yellow-pane-inline [id$="-text"],
+.yellow-pane-inline [id$="-preview"] {
     display: block;
     box-sizing: border-box;
     width: 100% !important;
@@ -760,8 +671,38 @@
     resize: vertical;
     background: #fff;
     color: #111;
+    box-shadow: none;
     font: inherit;
     line-height: 1.55;
+}
+.yellow-pane-inline [id$="-preview"] { overflow: auto; }
+.yellow-pane-inline [id$="-actions"] {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    clear: both;
+    margin: 0;
+    padding-top: 0.7rem;
+    border-top: 1px solid #e5e5e5;
+}
+.yellow-pane-inline [id$="-actions"] a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    background: #f5f5f5;
+    color: #222;
+    text-decoration: none;
+}
+.yellow-pane-inline [id$="-submit"] {
+    border-color: #222 !important;
+    background: #222 !important;
+    color: #fff !important;
 }
 @media (max-width: 480px) {
     #yellow-pane-create.yellow-pane-inline,
