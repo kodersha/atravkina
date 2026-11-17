@@ -283,14 +283,14 @@ yellow.edit = {
                 "<div id=\"yellow-pane-create-toolbar\">"+
                 "<div class=\"yellow-toolbar yellow-toolbar-left\"><h1 id=\"yellow-pane-create-toolbar-title\">"+this.getText("Create")+"</h1></div>"+
                 "<ul id=\"yellow-pane-create-toolbar-buttons\" class=\"yellow-toolbar yellow-toolbar-left\">"+this.getRawDataButtons(paneId)+"</ul>"+
-                "<ul id=\"yellow-pane-create-toolbar-main\" class=\"yellow-toolbar yellow-toolbar-right\">"+
-                "<li><a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a></li>"+
-                "<li><a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("CreateButton")+"</a></li>"+
-                "</ul>"+
                 "<ul class=\"yellow-toolbar yellow-toolbar-banner\"></ul>"+
                 "</div>"+
                 "<textarea id=\"yellow-pane-create-text\" class=\"yellow-edit-text\"></textarea>"+
                 "<div id=\"yellow-pane-create-preview\" class=\"yellow-edit-preview\"></div>"+
+                "<div id=\"yellow-pane-create-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
+                "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("CreateButton")+"</a>"+
+                "</div>"+
                 "</form>";
                 break;
             case "yellow-pane-edit":
@@ -355,6 +355,14 @@ yellow.edit = {
         }
         elementPane.appendChild(elementDiv);
         yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
+        if (paneId=="yellow-pane-create" && this.isEditFeedMode()) {
+            var pageContainer = document.querySelector(".page");
+            var firstPost = pageContainer ? pageContainer.querySelector("article.emerge") : null;
+            if (pageContainer) {
+                pageContainer.insertBefore(elementPane, firstPost || pageContainer.firstChild);
+                yellow.toolbox.addClass(elementPane, "yellow-pane-inline");
+            }
+        }
         this.bindActions(elementPane);
     },
 
@@ -451,9 +459,31 @@ yellow.edit = {
         this.bindActions(document.getElementById(paneId));
     },
 
+    // Detect the dedicated inline editor route.
+    isEditFeedMode: function() {
+        var path = window.location.pathname.replace(/\\/+$/, "");
+        return /\\/edit$/.test(path);
+    },
+
     // Resize pane
     resizePane: function(paneId, paneAction, paneStatus) {
         if (document.getElementById(paneId)) {
+            var inlinePane = document.getElementById(paneId);
+            if (paneId=="yellow-pane-create" && yellow.toolbox.hasClass(inlinePane, "yellow-pane-inline")) {
+                inlinePane.style.position = "relative";
+                inlinePane.style.left = "auto";
+                inlinePane.style.top = "auto";
+                inlinePane.style.width = "100%";
+                inlinePane.style.height = "auto";
+                var inlineText = document.getElementById(paneId+"-text");
+                var inlinePreview = document.getElementById(paneId+"-preview");
+                var inlineWidth = yellow.toolbox.getWidth(inlinePane);
+                yellow.toolbox.setOuterWidth(inlineText, inlineWidth);
+                yellow.toolbox.setOuterWidth(inlinePreview, inlineWidth);
+                yellow.toolbox.setOuterHeight(inlineText, Math.max(320, yellow.toolbox.getWindowHeight()*0.55));
+                yellow.toolbox.setOuterHeight(inlinePreview, Math.max(320, yellow.toolbox.getWindowHeight()*0.55));
+                return;
+            }
             var elementBar = document.getElementById("yellow-bar-content");
             var paneLeft = yellow.toolbox.getOuterLeft(elementBar);
             var paneTop = yellow.toolbox.getOuterTop(elementBar) + yellow.toolbox.getOuterHeight(elementBar) + 10;
