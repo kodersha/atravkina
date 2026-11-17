@@ -26,6 +26,10 @@ yellow.edit = {
         if (body && body.firstChild && !document.getElementById("yellow-bar")) {
             this.createBar("yellow-bar");
             this.processAction(yellow.page.action, yellow.page.status);
+            if (this.isEditFeedMode() && yellow.user.name && this.isUserAccess("create")) {
+                var createPane = document.getElementById("yellow-pane-create");
+                if (!yellow.toolbox.isVisible(createPane)) this.showPane("yellow-pane-create", "create", "none");
+            }
             clearInterval(this.intervalId);
         }
         if (e.type=="DOMContentLoaded") {
@@ -37,7 +41,10 @@ yellow.edit = {
     // Handle keyboard
     keydown: function(e) {
         if (this.paneId=="yellow-pane-create" || this.paneId=="yellow-pane-edit" || this.paneId=="yellow-pane-delete") this.processShortcut(e);
-        if (this.paneId && e.keyCode==27) this.hidePane(this.paneId);
+        if (this.paneId && e.keyCode==27) {
+            var activePane = document.getElementById(this.paneId);
+            if (!activePane || !activePane.classList.contains("yellow-pane-inline")) this.hidePane(this.paneId);
+        }
     },
     
     // Handle drag
@@ -58,7 +65,8 @@ yellow.edit = {
     // Handle mouse clicked
     click: function(e) {
         if (this.popupId && !document.getElementById(this.popupId).contains(e.target)) this.hidePopup(this.popupId, true);
-        if (this.paneId && !document.getElementById(this.paneId).contains(e.target)) this.hidePane(this.paneId, true);
+        var activePane = document.getElementById(this.paneId);
+        if (this.paneId && activePane && !activePane.classList.contains("yellow-pane-inline") && !activePane.contains(e.target)) this.hidePane(this.paneId, true);
     },
     
     // Handle action clicked
@@ -362,7 +370,7 @@ yellow.edit = {
         }
         elementPane.appendChild(elementDiv);
         yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
-        if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") && this.isEditFeedMode()) {
+        if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete") && this.isEditFeedMode()) {
             var pageContainer = document.querySelector(".page");
             var firstPost = pageContainer ? pageContainer.querySelector("article.emerge") : null;
             if (pageContainer) {
@@ -557,6 +565,8 @@ yellow.edit = {
     
     // Show or hide pane
     showPane: function(paneId, paneAction, paneStatus, paneModal) {
+        var currentPane = document.getElementById(paneId);
+        if (this.paneId==paneId && currentPane && currentPane.classList.contains("yellow-pane-inline")) return;
         if (this.paneId!=paneId || this.paneAction!=paneAction) {
             this.hidePane(this.paneId);
             var paneInit = !document.getElementById(paneId);
@@ -584,6 +594,7 @@ yellow.edit = {
     // Hide pane
     hidePane: function(paneId, fadeout) {
         var element = document.getElementById(paneId);
+        if (element && element.classList.contains("yellow-pane-inline")) return;
         if (yellow.toolbox.isVisible(element)) {
             if (yellow.system.coreDebugMode) console.log("yellow.edit.hidePane id:"+paneId);
             yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
@@ -755,6 +766,16 @@ yellow.edit = {
     
     // Process close
     processClose: function() {
+        var activePane = document.getElementById(this.paneId);
+        if (activePane && activePane.classList.contains("yellow-pane-inline")) {
+            var text = document.getElementById(this.paneId+"-text");
+            var preview = document.getElementById(this.paneId+"-preview");
+            if (text && this.paneId=="yellow-pane-create") text.value = yellow.page.rawDataNew;
+            if (text) yellow.toolbox.setVisible(text, true);
+            if (preview) yellow.toolbox.setVisible(preview, false);
+            if (text) text.focus();
+            return;
+        }
         this.hidePane(this.paneId);
         if (yellow.page.action=="login") {
             var url = yellow.system.coreServerScheme+"://"+
