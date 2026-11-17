@@ -107,7 +107,14 @@ yellow.edit = {
             elementDiv.innerHTML = "&nbsp;";
         }
         elementBar.appendChild(elementDiv);
-        yellow.toolbox.insertBefore(elementBar, document.getElementsByTagName("body")[0].firstChild);
+        var pageContainer = this.isEditFeedMode() ? document.querySelector(".page") : null;
+        if (pageContainer) {
+            var firstPost = pageContainer.querySelector("article.emerge");
+            yellow.toolbox.addClass(elementBar, "yellow-bar-inline");
+            pageContainer.insertBefore(elementBar, firstPost || pageContainer.firstChild);
+        } else {
+            yellow.toolbox.insertBefore(elementBar, document.getElementsByTagName("body")[0].firstChild);
+        }
         this.bindActions(elementBar);
     },
 
@@ -288,8 +295,8 @@ yellow.edit = {
                 "<textarea id=\"yellow-pane-create-text\" class=\"yellow-edit-text\"></textarea>"+
                 "<div id=\"yellow-pane-create-preview\" class=\"yellow-edit-preview\"></div>"+
                 "<div id=\"yellow-pane-create-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
-                "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a>"+
-                "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("CreateButton")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+(this.isEditFeedMode() ? "Отменить" : this.getText("CancelButton"))+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+(this.isEditFeedMode() ? "Сохранить" : this.getText("CreateButton"))+"</a>"+
                 "</div>"+
                 "</form>";
                 break;
@@ -355,7 +362,7 @@ yellow.edit = {
         }
         elementPane.appendChild(elementDiv);
         yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
-        if (paneId=="yellow-pane-create" && this.isEditFeedMode()) {
+        if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") && this.isEditFeedMode()) {
             var pageContainer = document.querySelector(".page");
             var firstPost = pageContainer ? pageContainer.querySelector("article.emerge") : null;
             if (pageContainer) {
@@ -461,15 +468,16 @@ yellow.edit = {
 
     // Detect the dedicated inline editor route.
     isEditFeedMode: function() {
-        var path = window.location.pathname.replace(/\\/+$/, "");
-        return /\\/edit$/.test(path);
+        var path = window.location.pathname;
+        while (path.length > 1 && path.charAt(path.length-1)==="/") path = path.slice(0, -1);
+        return path==="/edit" || path==="/e";
     },
 
     // Resize pane
     resizePane: function(paneId, paneAction, paneStatus) {
         if (document.getElementById(paneId)) {
             var inlinePane = document.getElementById(paneId);
-            if (paneId=="yellow-pane-create" && inlinePane.classList.contains("yellow-pane-inline")) {
+            if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") && inlinePane.classList.contains("yellow-pane-inline")) {
                 inlinePane.style.position = "relative";
                 inlinePane.style.left = "auto";
                 inlinePane.style.top = "auto";
@@ -480,8 +488,8 @@ yellow.edit = {
                 var inlineWidth = yellow.toolbox.getWidth(inlinePane);
                 yellow.toolbox.setOuterWidth(inlineText, inlineWidth);
                 yellow.toolbox.setOuterWidth(inlinePreview, inlineWidth);
-                yellow.toolbox.setOuterHeight(inlineText, Math.max(320, yellow.toolbox.getWindowHeight()*0.55));
-                yellow.toolbox.setOuterHeight(inlinePreview, Math.max(320, yellow.toolbox.getWindowHeight()*0.55));
+                yellow.toolbox.setOuterHeight(inlineText, 280);
+                yellow.toolbox.setOuterHeight(inlinePreview, 280);
                 return;
             }
             var elementBar = document.getElementById("yellow-bar-content");
