@@ -107,7 +107,14 @@ yellow.edit = {
             elementDiv.innerHTML = "&nbsp;";
         }
         elementBar.appendChild(elementDiv);
-        yellow.toolbox.insertBefore(elementBar, document.getElementsByTagName("body")[0].firstChild);
+        var pageContainer = this.isEditFeedMode() ? document.querySelector(".page") : null;
+        if (pageContainer) {
+            var firstPost = pageContainer.querySelector("article.emerge");
+            yellow.toolbox.addClass(elementBar, "yellow-bar-inline");
+            pageContainer.insertBefore(elementBar, firstPost || pageContainer.firstChild);
+        } else {
+            yellow.toolbox.insertBefore(elementBar, document.getElementsByTagName("body")[0].firstChild);
+        }
         this.bindActions(elementBar);
     },
 
