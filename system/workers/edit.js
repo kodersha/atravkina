@@ -469,7 +469,7 @@ yellow.edit = {
     resizePane: function(paneId, paneAction, paneStatus) {
         if (document.getElementById(paneId)) {
             var inlinePane = document.getElementById(paneId);
-            if (paneId=="yellow-pane-create" && yellow.toolbox.hasClass(inlinePane, "yellow-pane-inline")) {
+            if (paneId=="yellow-pane-create" && inlinePane.classList.contains("yellow-pane-inline")) {
                 inlinePane.style.position = "relative";
                 inlinePane.style.left = "auto";
                 inlinePane.style.top = "auto";
