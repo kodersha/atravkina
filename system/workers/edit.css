@@ -605,8 +605,8 @@
 #yellow-pane-delete.yellow-pane-inline {
     position: relative !important;
     inset: auto !important;
-    display: block !important;
-    float: none !important;
+    display: block;
+    float: none;
     box-sizing: border-box;
     width: 100% !important;
     max-width: none !important;
