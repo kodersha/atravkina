@@ -147,7 +147,9 @@ yellow.edit = {
     createPane: function(paneId, paneAction, paneStatus) {
         if (yellow.system.coreDebugMode) console.log("yellow.edit.createPane id:"+paneId);
         var elementPane = document.createElement("div");
-        elementPane.className = "yellow-pane";
+        var inlinePane = this.isEditFeedMode() &&
+            (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete");
+        elementPane.className = inlinePane ? "yellow-pane yellow-pane-inline" : "yellow-pane";
         elementPane.setAttribute("id", paneId);
         elementPane.style.display = "none";
         if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") {
@@ -156,7 +158,7 @@ yellow.edit = {
             yellow.toolbox.addEvent(elementPane, "dragover", yellow.onDrag);
             yellow.toolbox.addEvent(elementPane, "drop", yellow.onDrop);
         }
-        if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete" || paneId=="yellow-pane-menu") {
+        if (!inlinePane && (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete" || paneId=="yellow-pane-menu")) {
             var elementArrow = document.createElement("span");
             elementArrow.className = "yellow-arrow";
             elementArrow.setAttribute("id", paneId+"-arrow");
@@ -369,14 +371,19 @@ yellow.edit = {
                 "<div class=\"yellow-error\">Pane '"+paneId+"' was not found. Oh no…</div>";
         }
         elementPane.appendChild(elementDiv);
-        yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
-        if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete") && this.isEditFeedMode()) {
-            var pageContainer = document.querySelector(".page");
-            var firstPost = pageContainer ? pageContainer.querySelector("article.emerge") : null;
-            if (pageContainer) {
-                pageContainer.insertBefore(elementPane, firstPost || pageContainer.firstChild);
-                yellow.toolbox.addClass(elementPane, "yellow-pane-inline");
+        if (inlinePane) {
+            var pageContainer = document.querySelector(".page") || document.querySelector("main") || document.body;
+            var firstPost = pageContainer.querySelector("article.emerge");
+            var searchForm = pageContainer.querySelector("form.site-search");
+            if (firstPost) {
+                pageContainer.insertBefore(elementPane, firstPost);
+            } else if (searchForm && searchForm.parentNode===pageContainer) {
+                yellow.toolbox.insertAfter(elementPane, searchForm);
+            } else {
+                pageContainer.insertBefore(elementPane, pageContainer.firstChild);
             }
+        } else {
+            yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
         }
         this.bindActions(elementPane);
     },
@@ -485,19 +492,21 @@ yellow.edit = {
     resizePane: function(paneId, paneAction, paneStatus) {
         if (document.getElementById(paneId)) {
             var inlinePane = document.getElementById(paneId);
-            if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") && inlinePane.classList.contains("yellow-pane-inline")) {
+            if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete") && inlinePane.classList.contains("yellow-pane-inline")) {
                 inlinePane.style.position = "relative";
                 inlinePane.style.left = "auto";
                 inlinePane.style.top = "auto";
                 inlinePane.style.width = "100%";
                 inlinePane.style.height = "auto";
-                var inlineText = document.getElementById(paneId+"-text");
-                var inlinePreview = document.getElementById(paneId+"-preview");
-                var inlineWidth = yellow.toolbox.getWidth(inlinePane);
-                yellow.toolbox.setOuterWidth(inlineText, inlineWidth);
-                yellow.toolbox.setOuterWidth(inlinePreview, inlineWidth);
-                yellow.toolbox.setOuterHeight(inlineText, 280);
-                yellow.toolbox.setOuterHeight(inlinePreview, 280);
+                if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") {
+                    var inlineText = document.getElementById(paneId+"-text");
+                    var inlinePreview = document.getElementById(paneId+"-preview");
+                    var inlineWidth = yellow.toolbox.getWidth(inlinePane);
+                    yellow.toolbox.setOuterWidth(inlineText, inlineWidth);
+                    yellow.toolbox.setOuterWidth(inlinePreview, inlineWidth);
+                    yellow.toolbox.setOuterHeight(inlineText, 320);
+                    yellow.toolbox.setOuterHeight(inlinePreview, 320);
+                }
                 return;
             }
             var elementBar = document.getElementById("yellow-bar-content");
@@ -575,7 +584,7 @@ yellow.edit = {
             if (!yellow.toolbox.isVisible(element)) {
                 if (yellow.system.coreDebugMode) console.log("yellow.edit.showPane id:"+paneId);
                 yellow.toolbox.setVisible(element, true);
-                if (paneModal) {
+                if (paneModal && !element.classList.contains("yellow-pane-inline")) {
                     yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
                     yellow.toolbox.addValue("meta[name=viewport]", "content", ", maximum-scale=1, user-scalable=0");
                 }
@@ -594,7 +603,6 @@ yellow.edit = {
     // Hide pane
     hidePane: function(paneId, fadeout) {
         var element = document.getElementById(paneId);
-        if (element && element.classList.contains("yellow-pane-inline")) return;
         if (yellow.toolbox.isVisible(element)) {
             if (yellow.system.coreDebugMode) console.log("yellow.edit.hidePane id:"+paneId);
             yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
