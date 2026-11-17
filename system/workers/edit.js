@@ -468,8 +468,9 @@ yellow.edit = {
 
     // Detect the dedicated inline editor route.
     isEditFeedMode: function() {
-        var path = window.location.pathname.replace(/\\/+$/, "");
-        return /\\/(?:edit|e)$/.test(path);
+        var path = window.location.pathname;
+        while (path.length > 1 && path.charAt(path.length-1)==="/") path = path.slice(0, -1);
+        return path==="/edit" || path==="/e";
     },
 
     // Resize pane
@@ -487,8 +488,8 @@ yellow.edit = {
                 var inlineWidth = yellow.toolbox.getWidth(inlinePane);
                 yellow.toolbox.setOuterWidth(inlineText, inlineWidth);
                 yellow.toolbox.setOuterWidth(inlinePreview, inlineWidth);
-                yellow.toolbox.setOuterHeight(inlineText, Math.max(320, yellow.toolbox.getWindowHeight()*0.55));
-                yellow.toolbox.setOuterHeight(inlinePreview, Math.max(320, yellow.toolbox.getWindowHeight()*0.55));
+                yellow.toolbox.setOuterHeight(inlineText, 280);
+                yellow.toolbox.setOuterHeight(inlinePreview, 280);
                 return;
             }
             var elementBar = document.getElementById("yellow-bar-content");
