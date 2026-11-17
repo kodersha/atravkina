@@ -362,7 +362,7 @@ yellow.edit = {
         }
         elementPane.appendChild(elementDiv);
         yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
-        if (paneId=="yellow-pane-create" && this.isEditFeedMode()) {
+        if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") && this.isEditFeedMode()) {
             var pageContainer = document.querySelector(".page");
             var firstPost = pageContainer ? pageContainer.querySelector("article.emerge") : null;
             if (pageContainer) {
@@ -477,7 +477,7 @@ yellow.edit = {
     resizePane: function(paneId, paneAction, paneStatus) {
         if (document.getElementById(paneId)) {
             var inlinePane = document.getElementById(paneId);
-            if (paneId=="yellow-pane-create" && inlinePane.classList.contains("yellow-pane-inline")) {
+            if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") && inlinePane.classList.contains("yellow-pane-inline")) {
                 inlinePane.style.position = "relative";
                 inlinePane.style.left = "auto";
                 inlinePane.style.top = "auto";
