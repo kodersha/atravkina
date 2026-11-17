@@ -597,3 +597,44 @@
     -webkit-mask: url("edit-stack.svg#logo");
     mask: url("edit-stack.svg#logo");
 }
+
+
+/* Inline create form on /edit/ */
+.yellow-pane-inline {
+    position: relative !important;
+    display: block;
+    box-sizing: border-box;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-width: 100%;
+    margin: 0 0 1.5rem 0;
+    padding: 1rem;
+    z-index: 1;
+}
+.yellow-pane-inline #yellow-pane-create-toolbar {
+    display: block;
+    width: 100%;
+}
+.yellow-pane-inline #yellow-pane-create-text,
+.yellow-pane-inline #yellow-pane-create-preview {
+    display: block;
+    box-sizing: border-box;
+    width: 100% !important;
+    min-height: 55vh;
+    height: 55vh;
+}
+.yellow-pane-inline #yellow-pane-create-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    clear: both;
+    margin: 1rem 0 0;
+}
+.yellow-pane-inline #yellow-pane-create-actions a {
+    display: inline-block;
+    padding: 0.5rem 0.75rem;
+}
