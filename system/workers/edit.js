@@ -777,16 +777,7 @@ yellow.edit = {
     
     // Process close
     processClose: function() {
-        var activePane = document.getElementById(this.paneId);
-        if (activePane && activePane.classList.contains("yellow-pane-inline")) {
-            var text = document.getElementById(this.paneId+"-text");
-            var preview = document.getElementById(this.paneId+"-preview");
-            if (text && this.paneId=="yellow-pane-create") text.value = yellow.page.rawDataNew;
-            if (text) yellow.toolbox.setVisible(text, true);
-            if (preview) yellow.toolbox.setVisible(preview, false);
-            if (text) text.focus();
-            return;
-        }
+        // Cancel always closes the active editor without applying its changes.
         this.hidePane(this.paneId);
         if (yellow.page.action=="login") {
             var url = yellow.system.coreServerScheme+"://"+
