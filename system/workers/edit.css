@@ -599,576 +599,122 @@
 }
 
 
-/* Inline editing workspaces on the dedicated /e/ feed. */
-/* Keep the editor controls in a single horizontal row above the writing area. */
-#yellow-pane-create.yellow-pane-inline form,
-#yellow-pane-edit.yellow-pane-inline form,
-#yellow-pane-delete.yellow-pane-inline form {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-}
-.yellow-pane-inline [id$="-toolbar"] {
-    display: flex !important;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.35rem;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    min-height: 3.25rem;
-    padding: 0 0 0.65rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-.yellow-pane-inline [id$="-toolbar"] > .yellow-toolbar-left,
-.yellow-pane-inline [id$="-toolbar"] > .yellow-toolbar-right {
-    display: flex;
-    float: none !important;
-    flex: 0 0 auto;
-    align-items: center;
-    margin: 0;
-}
-.yellow-pane-inline [id$="-toolbar"] h1 {
-    display: none;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] {
-    display: flex !important;
-    float: none !important;
-    flex: 0 0 auto;
-    flex-flow: row nowrap;
-    align-items: center;
-    gap: 0.25rem;
-    width: max-content;
-    margin: 0;
-    padding: 0;
-    white-space: nowrap;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] li {
-    display: inline-flex;
-    flex: 0 0 auto;
-    float: none !important;
-    margin: 0;
-    padding: 0;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] a {
-    flex: 0 0 auto;
-}
-.yellow-pane-inline [id$="-text"],
-.yellow-pane-inline [id$="-preview"] {
-    flex: 0 0 auto;
-    float: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0;
-    min-height: 20rem;
-    height: 20rem !important;
-    margin: 0;
-}
-.yellow-pane-inline [id$="-actions"] {
-    display: flex;
-    float: none !important;
-    width: 100%;
-    box-sizing: border-box;
-}
 
-#yellow-pane-create.yellow-pane-inline,
-#yellow-pane-edit.yellow-pane-inline,
-#yellow-pane-delete.yellow-pane-inline {
-    position: relative !important;
-    inset: auto !important;
-    display: block;
-    float: none;
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;
-    min-height: 25rem;
-    margin: 0 0 2rem 0;
-    padding: 0.85rem;
-    z-index: 1;
-    overflow: visible;
-    border: 1px solid #d8d8d8;
-    border-radius: 3px;
-    background: #fff;
-    color: #111;
-    box-shadow: none;
-    text-align: left;
-}
-.yellow-pane-inline .yellow-arrow { display: none !important; }
-.yellow-pane-inline .yellow-content,
-.yellow-pane-inline .yellow-content form {
-    box-sizing: border-box;
-    width: 100%;
-}
-.yellow-pane-inline [id$="-toolbar"] {
-    display: block;
-    width: 100%;
-    padding-bottom: 0.65rem;
-    border-bottom: 1px solid #e5e5e5;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] {
-    display: flex;
-    float: none;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin: 0;
-    padding: 0;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] li { margin: 0; }
-.yellow-pane-inline [id$="-toolbar-buttons"] a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2rem;
-    min-height: 2rem;
-    box-sizing: border-box;
-    padding: 0.35rem 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 2px;
-    background: #f7f7f7;
-    color: #222;
-}
-.yellow-pane-inline [id$="-text"],
-.yellow-pane-inline [id$="-preview"] {
-    display: block;
-    box-sizing: border-box;
-    width: 100% !important;
-    min-height: 17rem;
-    height: 20rem;
-    margin: 0;
-    padding: 0.8rem 0.2rem;
-    border: 0;
-    outline: none;
-    resize: vertical;
-    background: #fff;
-    color: #111;
-    box-shadow: none;
-    font: inherit;
-    line-height: 1.55;
-}
-.yellow-pane-inline [id$="-preview"] { overflow: auto; }
-.yellow-pane-inline [id$="-actions"] {
-    display: flex;
-    flex: 0 0 auto;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.5rem;
-    clear: both;
-    margin: 0;
-    padding-top: 0.7rem;
-    border-top: 1px solid #e5e5e5;
-}
-.yellow-pane-inline [id$="-actions"] a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.25rem;
-    padding: 0.45rem 0.9rem;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    background: #f5f5f5;
-    color: #222;
-    text-decoration: none;
-}
-.yellow-pane-inline [id$="-submit"] {
-    border-color: #222 !important;
-    background: #222 !important;
-    color: #fff !important;
-}
-@media (max-width: 480px) {
-    #yellow-pane-create.yellow-pane-inline,
-    #yellow-pane-edit.yellow-pane-inline,
-    #yellow-pane-delete.yellow-pane-inline {
-        width: 100% !important;
-        padding: 0.65rem;
-    }
-}
-
-/* Final layout overrides for the dedicated inline editor. */
-#yellow-pane-create.yellow-pane-inline form,
-#yellow-pane-edit.yellow-pane-inline form,
-#yellow-pane-delete.yellow-pane-inline form {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-}
-.yellow-pane-inline [id$="-toolbar"] {
-    display: flex !important;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.35rem;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    min-height: 3.25rem;
-    padding: 0 0 0.65rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-.yellow-pane-inline [id$="-toolbar"] > .yellow-toolbar-left,
-.yellow-pane-inline [id$="-toolbar"] > .yellow-toolbar-right {
-    display: flex;
-    float: none !important;
-    flex: 0 0 auto;
-    align-items: center;
-    margin: 0;
-}
-.yellow-pane-inline [id$="-toolbar"] h1 { display: none; }
-.yellow-pane-inline [id$="-toolbar-buttons"] {
-    display: flex !important;
-    float: none !important;
-    flex: 0 0 auto;
-    flex-flow: row nowrap;
-    align-items: center;
-    gap: 0.25rem;
-    width: max-content;
-    margin: 0;
-    padding: 0;
-    white-space: nowrap;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] li {
-    display: inline-flex;
-    flex: 0 0 auto;
-    float: none !important;
-    margin: 0;
-    padding: 0;
-}
-.yellow-pane-inline [id$="-toolbar-buttons"] a { flex: 0 0 auto; }
-.yellow-pane-inline [id$="-text"],
-.yellow-pane-inline [id$="-preview"] {
-    display: block;
-    flex: 0 0 auto;
-    float: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0;
-    min-height: 20rem;
-    height: 20rem !important;
-    margin: 0;
-}
-.yellow-pane-inline [id$="-actions"] {
-    display: flex;
-    float: none !important;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-
-/* Clean, consistent controls for the stationary create editor. */
-#yellow-pane-create.yellow-pane-inline {
-    --editor-control-height: 2.25rem;
-    --editor-control-border: #d5d9df;
-    --editor-control-bg: #f7f8fa;
-    --editor-control-hover: #eef1f5;
+/* Unified stationary editor layout: create, edit and delete. */
+.yellow-pane-inline,
+.yellow-pane-above-text {
+    --editor-height: 2.25rem;
+    --editor-border: #d5d9df;
+    --editor-bg: #f7f8fa;
+    --editor-hover: #eef1f5;
     --editor-accent: #2563eb;
-    padding: 1rem;
-    border-color: #e1e4e8;
-    border-radius: 0.6rem;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar {
-    display: flex !important;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .5rem;
-    min-height: 0;
-    padding: 0 0 .85rem;
-    overflow: visible;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar-buttons {
-    display: flex !important;
-    flex: 1 1 auto;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .35rem;
-    width: auto;
+    box-sizing: border-box;
+    width: 100%;
     max-width: 100%;
-    white-space: normal;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar-buttons li {
-    display: inline-flex !important;
-    flex: 0 0 auto !important;
-    align-items: center;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar-buttons a {
-    display: inline-flex !important;
-    flex: 0 0 auto !important;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    width: auto;
-    min-width: var(--editor-control-height);
-    height: var(--editor-control-height);
-    min-height: var(--editor-control-height);
-    max-height: var(--editor-control-height);
-    margin: 0 !important;
-    padding: 0 .65rem !important;
-    border: 1px solid var(--editor-control-border);
-    border-radius: .4rem;
-    background: var(--editor-control-bg);
-    color: #30343b;
-    font-size: .875rem;
-    line-height: 1 !important;
-    text-decoration: none;
-    white-space: nowrap;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar-buttons a:hover,
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar-buttons a:focus-visible {
-    background: var(--editor-control-hover);
-    border-color: #b9c2ce;
-    color: #151922;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-toolbar-buttons .yellow-icon {
-    width: 1rem;
-    height: 1rem;
-    min-width: 1rem;
-    margin: 0;
-    flex: 0 0 auto;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-text,
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-preview {
-    width: 100% !important;
-    min-height: 18rem;
-    height: 22rem !important;
-    padding: .9rem;
-    border: 1px solid #e5e7eb;
-    border-radius: .45rem;
+    border: 1px solid #e1e4e8;
+    border-radius: .6rem;
     background: #fff;
-    font-size: 1rem;
-    line-height: 1.65;
+    color: #111;
+    padding: 1rem;
+    margin: 0 0 1.5rem;
 }
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-actions {
-    display: flex !important;
-    flex: 0 0 auto;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: .5rem;
-    margin: 0;
-    padding: .85rem 0 0;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-actions a {
-    display: inline-flex !important;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    height: 2.4rem;
-    min-height: 2.4rem;
-    margin: 0 !important;
-    padding: 0 1rem;
-    border: 1px solid var(--editor-control-border);
-    border-radius: .4rem;
-    background: var(--editor-control-bg);
-    color: #252a32;
-    font-size: .9rem;
-    line-height: 1 !important;
-    text-decoration: none;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-submit {
-    border-color: var(--editor-accent) !important;
-    background: var(--editor-accent) !important;
-    color: #fff !important;
-}
-#yellow-pane-create.yellow-pane-inline #yellow-pane-create-submit:hover {
-    background: #1d4ed8 !important;
-}
-@media (max-width: 600px) {
-    #yellow-pane-create.yellow-pane-inline { padding: .7rem; }
-    #yellow-pane-create.yellow-pane-inline #yellow-pane-create-text,
-    #yellow-pane-create.yellow-pane-inline #yellow-pane-create-preview {
-        height: 18rem !important;
-        min-height: 14rem;
-        padding: .7rem;
-    }
-}
-
-
-/* Standard create/edit panes stay in the document flow above the post text. */
+.yellow-pane-inline,
 .yellow-pane-above-text {
     position: relative !important;
     inset: auto !important;
     display: block !important;
     float: none !important;
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    margin: 0 0 1.5rem !important;
-    padding: 1rem !important;
     overflow: visible !important;
     z-index: 1 !important;
-    border: 1px solid #e1e4e8;
-    border-radius: .6rem;
-    background: #fff;
-    color: #111;
     box-shadow: none !important;
-    text-align: left;
 }
+.yellow-pane-inline .yellow-arrow,
 .yellow-pane-above-text .yellow-arrow { display: none !important; }
+.yellow-pane-inline .yellow-content,
 .yellow-pane-above-text .yellow-content,
+.yellow-pane-inline form,
 .yellow-pane-above-text form { box-sizing: border-box; width: 100%; }
+.yellow-pane-inline form,
 .yellow-pane-above-text form { display: flex; flex-direction: column; align-items: stretch; }
+.yellow-pane-inline [id$="-toolbar"],
 .yellow-pane-above-text [id$="-toolbar"] {
-    display: flex !important;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .5rem;
-    width: 100%;
-    min-height: 0;
-    margin: 0;
-    padding: 0 0 .8rem;
-    border-bottom: 1px solid #e5e7eb;
-    overflow: visible;
+    display: flex !important; flex-wrap: wrap; align-items: center; gap: .5rem;
+    width: 100%; min-height: 0; margin: 0; padding: 0 0 .8rem;
+    border-bottom: 1px solid #e5e7eb; overflow: visible;
 }
+.yellow-pane-inline [id$="-toolbar"] .yellow-toolbar-left,
+.yellow-pane-inline [id$="-toolbar"] .yellow-toolbar-right,
 .yellow-pane-above-text [id$="-toolbar"] .yellow-toolbar-left,
 .yellow-pane-above-text [id$="-toolbar"] .yellow-toolbar-right {
-    display: flex;
-    float: none !important;
-    align-items: center;
-    flex: 0 0 auto;
-    margin: 0;
+    display: flex; float: none !important; flex: 0 0 auto; align-items: center; margin: 0;
 }
+.yellow-pane-inline [id$="-toolbar-buttons"],
+.yellow-pane-inline [id$="-toolbar-main"],
 .yellow-pane-above-text [id$="-toolbar-buttons"],
 .yellow-pane-above-text [id$="-toolbar-main"] {
-    display: flex !important;
-    float: none !important;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .35rem;
-    width: auto;
-    margin: 0;
-    padding: 0;
+    display: flex !important; float: none !important; flex: 0 1 auto; flex-wrap: wrap;
+    align-items: center; gap: .35rem; width: auto; margin: 0; padding: 0;
 }
+.yellow-pane-inline [id$="-toolbar-buttons"] li,
+.yellow-pane-inline [id$="-toolbar-main"] li,
 .yellow-pane-above-text [id$="-toolbar-buttons"] li,
 .yellow-pane-above-text [id$="-toolbar-main"] li { display: inline-flex; flex: 0 0 auto; margin: 0; padding: 0; }
+.yellow-pane-inline [id$="-toolbar-buttons"] a,
+.yellow-pane-inline [id$="-toolbar-main"] a,
 .yellow-pane-above-text [id$="-toolbar-buttons"] a,
 .yellow-pane-above-text [id$="-toolbar-main"] a {
-    display: inline-flex !important;
-    flex: 0 0 auto !important;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    min-width: 2.25rem;
-    width: auto;
-    height: 2.25rem !important;
-    min-height: 2.25rem !important;
-    max-height: 2.25rem !important;
-    margin: 0 !important;
-    padding: 0 .65rem !important;
-    border: 1px solid #d5d9df;
-    border-radius: .4rem;
-    background: #f7f8fa;
-    color: #30343b;
-    font-size: .875rem;
-    line-height: 1 !important;
-    white-space: nowrap;
-    text-decoration: none;
+    display: inline-flex !important; flex: 0 0 auto !important; align-items: center; justify-content: center;
+    box-sizing: border-box; min-width: var(--editor-height); height: var(--editor-height) !important;
+    min-height: var(--editor-height) !important; max-height: var(--editor-height) !important;
+    margin: 0 !important; padding: 0 .65rem !important; border: 1px solid var(--editor-border);
+    border-radius: .4rem; background: var(--editor-bg); color: #30343b; font-size: .875rem;
+    line-height: 1 !important; white-space: nowrap; text-decoration: none;
 }
+.yellow-pane-inline [id$="-toolbar-buttons"] a:hover,
+.yellow-pane-inline [id$="-toolbar-main"] a:hover,
 .yellow-pane-above-text [id$="-toolbar-buttons"] a:hover,
-.yellow-pane-above-text [id$="-toolbar-main"] a:hover { background: #eef1f5; border-color: #b9c2ce; }
+.yellow-pane-above-text [id$="-toolbar-main"] a:hover { background: var(--editor-hover); border-color: #b9c2ce; }
+.yellow-pane-inline [id$="-toolbar-buttons"] .yellow-icon,
 .yellow-pane-above-text [id$="-toolbar-buttons"] .yellow-icon { width: 1rem; height: 1rem; min-width: 1rem; flex: 0 0 auto; }
-.yellow-pane-above-text [id$="-text"],
-.yellow-pane-above-text [id$="-preview"] {
-    display: block;
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0;
-    min-height: 18rem;
-    height: 22rem !important;
-    margin: 0;
-    padding: .9rem;
-    border: 1px solid #e5e7eb;
-    border-radius: .45rem;
-    outline: none;
-    resize: vertical;
-    background: #fff;
-    color: #111;
-    font: inherit;
-    font-size: 1rem;
-    line-height: 1.65;
-    box-shadow: none;
-}
-.yellow-pane-above-text [id$="-preview"] { overflow: auto; }
+.yellow-pane-inline [id$="-toolbar-main"],
 .yellow-pane-above-text [id$="-toolbar-main"] { margin-left: auto; }
-.yellow-pane-above-text [id$="-actions"] { display: flex !important; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .5rem; width: 100%; margin: 0; padding: .8rem 0 0; border-top: 1px solid #e5e7eb; }
-.yellow-pane-above-text [id$="-actions"] a { display: inline-flex; align-items: center; justify-content: center; height: 2.4rem; min-height: 2.4rem; margin: 0 !important; padding: 0 1rem; border: 1px solid #d5d9df; border-radius: .4rem; background: #f7f8fa; color: #252a32; line-height: 1 !important; text-decoration: none; }
-.yellow-pane-above-text [id$="-submit"] { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
-.yellow-pane-above-text [id$="-submit"]:hover { background: #1d4ed8 !important; }
-
-/* Keep toolbar help bubbles clear of the page text below the toolbar. */
-.yellow-toolbar-tooltip::after { top: auto !important; bottom: 100% !important; margin-top: 0 !important; margin-bottom: 6px !important; }
-.yellow-toolbar-tooltip::before { top: -6px !important; bottom: auto !important; border-bottom-color: transparent !important; border-top-color: #111 !important; }
-@media (max-width: 600px) {
-    .yellow-pane-above-text { padding: .7rem !important; }
-    .yellow-pane-above-text [id$="-text"],
-    .yellow-pane-above-text [id$="-preview"] { height: 18rem !important; min-height: 14rem; padding: .7rem; }
+.yellow-pane-inline [id$="-text"],
+.yellow-pane-above-text [id$="-text"],
+.yellow-pane-inline [id$="-preview"],
+.yellow-pane-above-text [id$="-preview"] {
+    display: block; box-sizing: border-box; flex: 0 1 auto; float: none !important;
+    width: 100% !important; max-width: 100% !important; min-width: 0; min-height: 18rem;
+    height: 22rem; margin: 0; padding: .9rem; border: 1px solid #e5e7eb; border-radius: .45rem;
+    outline: none; background: #fff; color: #111; font: inherit; font-size: 1rem;
+    line-height: 1.65; box-shadow: none;
 }
-
-
-/* Match the create and edit action bars: cancel/save always sit below the editor. */
-#yellow-pane-edit.yellow-pane-inline,
-#yellow-pane-edit.yellow-pane-above-text {
-    --editor-control-height: 2.25rem;
-    --editor-control-border: #d5d9df;
-    --editor-control-bg: #f7f8fa;
-    --editor-control-hover: #eef1f5;
-    --editor-accent: #2563eb;
-}
-#yellow-pane-edit [id$="-actions"] {
-    display: flex !important;
-    flex: 0 0 auto;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: .5rem;
-    width: 100%;
-    margin: 0;
-    padding: .85rem 0 0;
+.yellow-pane-inline [id$="-text"],
+.yellow-pane-above-text [id$="-text"] { resize: vertical !important; overflow: auto !important; }
+.yellow-pane-inline [id$="-preview"],
+.yellow-pane-above-text [id$="-preview"] { resize: none; overflow: auto; }
+.yellow-pane-inline [id$="-actions"],
+.yellow-pane-above-text [id$="-actions"] {
+    display: flex !important; flex: 0 0 auto; flex-wrap: wrap; align-items: center;
+    justify-content: flex-end; gap: .5rem; width: 100%; margin: 0; padding: .8rem 0 0;
     border-top: 1px solid #e5e7eb;
 }
-#yellow-pane-edit [id$="-actions"] a {
-    display: inline-flex !important;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    height: 2.4rem;
-    min-height: 2.4rem;
-    margin: 0 !important;
-    padding: 0 1rem;
-    border: 1px solid var(--editor-control-border);
-    border-radius: .4rem;
-    background: var(--editor-control-bg);
-    color: #252a32;
-    font-size: .9rem;
-    line-height: 1 !important;
-    text-decoration: none;
+.yellow-pane-inline [id$="-actions"] a,
+.yellow-pane-above-text [id$="-actions"] a {
+    display: inline-flex !important; flex: 0 0 auto; align-items: center; justify-content: center;
+    box-sizing: border-box; height: 2.4rem; min-height: 2.4rem; margin: 0 !important;
+    padding: 0 1rem; border: 1px solid var(--editor-border); border-radius: .4rem;
+    background: var(--editor-bg); color: #252a32; font-size: .9rem; line-height: 1 !important; text-decoration: none;
 }
-#yellow-pane-edit #yellow-pane-edit-submit {
-    border-color: var(--editor-accent) !important;
-    background: var(--editor-accent) !important;
-    color: #fff !important;
-}
-#yellow-pane-edit #yellow-pane-edit-submit:hover { background: #1d4ed8 !important; }
-
-/* Restore the native textarea drag-resize handle in stationary editors. */
-#yellow-pane-edit.yellow-pane-above-text #yellow-pane-edit-text,
-#yellow-pane-edit.yellow-pane-inline #yellow-pane-edit-text {
-    resize: vertical !important;
-    overflow: auto !important;
-    flex: 0 1 auto !important;
-    min-height: 18rem !important;
-    height: 22rem !important;
-    max-height: none !important;
+.yellow-pane-inline [id$="-submit"],
+.yellow-pane-above-text [id$="-submit"] { border-color: var(--editor-accent) !important; background: var(--editor-accent) !important; color: #fff !important; }
+.yellow-pane-inline [id$="-submit"]:hover,
+.yellow-pane-above-text [id$="-submit"]:hover { background: #1d4ed8 !important; }
+@media (max-width: 600px) {
+    .yellow-pane-inline, .yellow-pane-above-text { padding: .7rem !important; }
+    .yellow-pane-inline [id$="-text"], .yellow-pane-above-text [id$="-text"],
+    .yellow-pane-inline [id$="-preview"], .yellow-pane-above-text [id$="-preview"] {
+        height: 18rem; min-height: 14rem; padding: .7rem;
+    }
 }
