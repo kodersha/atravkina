@@ -1063,6 +1063,7 @@ yellow.edit = {
             var tokens = yellow.system.editToolbarButtons.split(/\s*,\s*/);
             for (var i=0; i<tokens.length; i++) {
                 var token = tokens[i];
+                if (paneId=="yellow-pane-edit" && (token=="pin" || token=="status")) continue;
                 if (token!="separator") {
                     var shortcut = this.getShortcut(token);
                     var rawDataShortcut = shortcut ? "&nbsp;&nbsp;"+yellow.toolbox.encodeHtml(shortcut) : "";
