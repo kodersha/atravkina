@@ -1161,3 +1161,14 @@
     color: #fff !important;
 }
 #yellow-pane-edit #yellow-pane-edit-submit:hover { background: #1d4ed8 !important; }
+
+/* Restore the native textarea drag-resize handle in stationary editors. */
+#yellow-pane-edit.yellow-pane-above-text #yellow-pane-edit-text,
+#yellow-pane-edit.yellow-pane-inline #yellow-pane-edit-text {
+    resize: vertical !important;
+    overflow: auto !important;
+    flex: 0 1 auto !important;
+    min-height: 18rem !important;
+    height: 22rem !important;
+    max-height: none !important;
+}
