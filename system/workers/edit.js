@@ -147,10 +147,12 @@ yellow.edit = {
     createPane: function(paneId, paneAction, paneStatus) {
         if (yellow.system.coreDebugMode) console.log("yellow.edit.createPane id:"+paneId);
         var elementPane = document.createElement("div");
-        var inlinePane = this.isEditFeedMode() &&
+        var path = window.location.pathname.replace(/\/$/, "");
+        var editPostMode = path.match(/^\/e\/[^\/]+$/);
+        var inlinePane = (this.isEditFeedMode() || editPostMode) &&
             (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete");
-        var aboveTextPane = !inlinePane && (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit");
-        elementPane.className = inlinePane ? "yellow-pane yellow-pane-inline" : (aboveTextPane ? "yellow-pane yellow-pane-above-text" : "yellow-pane");
+        var aboveTextPane = !!editPostMode && (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit");
+        elementPane.className = inlinePane ? "yellow-pane yellow-pane-inline"+(aboveTextPane ? " yellow-pane-above-text" : "") : (aboveTextPane ? "yellow-pane yellow-pane-above-text" : "yellow-pane");
         elementPane.setAttribute("id", paneId);
         elementPane.style.display = "none";
         if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") {
