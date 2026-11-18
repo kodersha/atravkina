@@ -335,14 +335,14 @@ yellow.edit = {
                 "<div id=\"yellow-pane-delete-toolbar\">"+
                 "<div class=\"yellow-toolbar yellow-toolbar-left\"><h1 id=\"yellow-pane-delete-toolbar-title\">"+this.getText("Delete")+"</h1></div>"+
                 "<ul id=\"yellow-pane-delete-toolbar-buttons\" class=\"yellow-toolbar yellow-toolbar-left\">"+this.getRawDataButtons(paneId)+"</ul>"+
-                "<ul id=\"yellow-pane-delete-toolbar-main\" class=\"yellow-toolbar yellow-toolbar-right\">"+
-                "<li><a href=\"#\" id=\"yellow-pane-delete-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a></li>"+
-                "<li><a href=\"#\" id=\"yellow-pane-delete-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("DeleteButton")+"</a></li>"+
-                "</ul>"+
                 "<ul class=\"yellow-toolbar yellow-toolbar-banner\"></ul>"+
                 "</div>"+
                 "<textarea id=\"yellow-pane-delete-text\" class=\"yellow-edit-text\"></textarea>"+
                 "<div id=\"yellow-pane-delete-preview\" class=\"yellow-edit-preview\"></div>"+
+                "<div id=\"yellow-pane-delete-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
+                "<a href=\"#\" id=\"yellow-pane-delete-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-delete-submit\" class=\"yellow-toolbar-btn yellow-toolbar-btn-delete\" data-action=\"submit\">"+this.getText("DeleteButton")+"</a>"+
+                "</div>"+
                 "</form>";
                 break;
             case "yellow-pane-menu":
