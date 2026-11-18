@@ -990,3 +990,127 @@
         padding: .7rem;
     }
 }
+
+
+/* Standard create/edit panes stay in the document flow above the post text. */
+.yellow-pane-above-text {
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    float: none !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 0 1.5rem !important;
+    padding: 1rem !important;
+    overflow: visible !important;
+    z-index: 1 !important;
+    border: 1px solid #e1e4e8;
+    border-radius: .6rem;
+    background: #fff;
+    color: #111;
+    box-shadow: none !important;
+    text-align: left;
+}
+.yellow-pane-above-text .yellow-arrow { display: none !important; }
+.yellow-pane-above-text .yellow-content,
+.yellow-pane-above-text form { box-sizing: border-box; width: 100%; }
+.yellow-pane-above-text form { display: flex; flex-direction: column; align-items: stretch; }
+.yellow-pane-above-text [id$="-toolbar"] {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0 0 .8rem;
+    border-bottom: 1px solid #e5e7eb;
+    overflow: visible;
+}
+.yellow-pane-above-text [id$="-toolbar"] .yellow-toolbar-left,
+.yellow-pane-above-text [id$="-toolbar"] .yellow-toolbar-right {
+    display: flex;
+    float: none !important;
+    align-items: center;
+    flex: 0 0 auto;
+    margin: 0;
+}
+.yellow-pane-above-text [id$="-toolbar-buttons"],
+.yellow-pane-above-text [id$="-toolbar-main"] {
+    display: flex !important;
+    float: none !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+.yellow-pane-above-text [id$="-toolbar-buttons"] li,
+.yellow-pane-above-text [id$="-toolbar-main"] li { display: inline-flex; flex: 0 0 auto; margin: 0; padding: 0; }
+.yellow-pane-above-text [id$="-toolbar-buttons"] a,
+.yellow-pane-above-text [id$="-toolbar-main"] a {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 2.25rem;
+    width: auto;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    max-height: 2.25rem !important;
+    margin: 0 !important;
+    padding: 0 .65rem !important;
+    border: 1px solid #d5d9df;
+    border-radius: .4rem;
+    background: #f7f8fa;
+    color: #30343b;
+    font-size: .875rem;
+    line-height: 1 !important;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.yellow-pane-above-text [id$="-toolbar-buttons"] a:hover,
+.yellow-pane-above-text [id$="-toolbar-main"] a:hover { background: #eef1f5; border-color: #b9c2ce; }
+.yellow-pane-above-text [id$="-toolbar-buttons"] .yellow-icon { width: 1rem; height: 1rem; min-width: 1rem; flex: 0 0 auto; }
+.yellow-pane-above-text [id$="-text"],
+.yellow-pane-above-text [id$="-preview"] {
+    display: block;
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    min-height: 18rem;
+    height: 22rem !important;
+    margin: 0;
+    padding: .9rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .45rem;
+    outline: none;
+    resize: vertical;
+    background: #fff;
+    color: #111;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.65;
+    box-shadow: none;
+}
+.yellow-pane-above-text [id$="-preview"] { overflow: auto; }
+.yellow-pane-above-text [id$="-toolbar-main"] { margin-left: auto; }
+.yellow-pane-above-text [id$="-actions"] { display: flex !important; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .5rem; width: 100%; margin: 0; padding: .8rem 0 0; border-top: 1px solid #e5e7eb; }
+.yellow-pane-above-text [id$="-actions"] a { display: inline-flex; align-items: center; justify-content: center; height: 2.4rem; min-height: 2.4rem; margin: 0 !important; padding: 0 1rem; border: 1px solid #d5d9df; border-radius: .4rem; background: #f7f8fa; color: #252a32; line-height: 1 !important; text-decoration: none; }
+.yellow-pane-above-text [id$="-submit"] { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
+.yellow-pane-above-text [id$="-submit"]:hover { background: #1d4ed8 !important; }
+
+/* Keep toolbar help bubbles clear of the page text below the toolbar. */
+.yellow-toolbar-tooltip::after { top: auto !important; bottom: 100% !important; margin-top: 0 !important; margin-bottom: 6px !important; }
+.yellow-toolbar-tooltip::before { top: -6px !important; bottom: auto !important; border-bottom-color: transparent !important; border-top-color: #111 !important; }
+@media (max-width: 600px) {
+    .yellow-pane-above-text { padding: .7rem !important; }
+    .yellow-pane-above-text [id$="-text"],
+    .yellow-pane-above-text [id$="-preview"] { height: 18rem !important; min-height: 14rem; padding: .7rem; }
+}
