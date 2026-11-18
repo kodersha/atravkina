@@ -1114,3 +1114,50 @@
     .yellow-pane-above-text [id$="-text"],
     .yellow-pane-above-text [id$="-preview"] { height: 18rem !important; min-height: 14rem; padding: .7rem; }
 }
+
+
+/* Match the create and edit action bars: cancel/save always sit below the editor. */
+#yellow-pane-edit.yellow-pane-inline,
+#yellow-pane-edit.yellow-pane-above-text {
+    --editor-control-height: 2.25rem;
+    --editor-control-border: #d5d9df;
+    --editor-control-bg: #f7f8fa;
+    --editor-control-hover: #eef1f5;
+    --editor-accent: #2563eb;
+}
+#yellow-pane-edit [id$="-actions"] {
+    display: flex !important;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .5rem;
+    width: 100%;
+    margin: 0;
+    padding: .85rem 0 0;
+    border-top: 1px solid #e5e7eb;
+}
+#yellow-pane-edit [id$="-actions"] a {
+    display: inline-flex !important;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 2.4rem;
+    min-height: 2.4rem;
+    margin: 0 !important;
+    padding: 0 1rem;
+    border: 1px solid var(--editor-control-border);
+    border-radius: .4rem;
+    background: var(--editor-control-bg);
+    color: #252a32;
+    font-size: .9rem;
+    line-height: 1 !important;
+    text-decoration: none;
+}
+#yellow-pane-edit #yellow-pane-edit-submit {
+    border-color: var(--editor-accent) !important;
+    background: var(--editor-accent) !important;
+    color: #fff !important;
+}
+#yellow-pane-edit #yellow-pane-edit-submit:hover { background: #1d4ed8 !important; }
