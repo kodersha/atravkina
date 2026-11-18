@@ -149,7 +149,8 @@ yellow.edit = {
         var elementPane = document.createElement("div");
         var inlinePane = this.isEditFeedMode() &&
             (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete");
-        elementPane.className = inlinePane ? "yellow-pane yellow-pane-inline" : "yellow-pane";
+        var aboveTextPane = !inlinePane && (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit");
+        elementPane.className = inlinePane ? "yellow-pane yellow-pane-inline" : (aboveTextPane ? "yellow-pane yellow-pane-above-text" : "yellow-pane");
         elementPane.setAttribute("id", paneId);
         elementPane.style.display = "none";
         if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") {
@@ -371,7 +372,7 @@ yellow.edit = {
                 "<div class=\"yellow-error\">Pane '"+paneId+"' was not found. Oh no…</div>";
         }
         elementPane.appendChild(elementDiv);
-        if (inlinePane) {
+        if (inlinePane || aboveTextPane) {
             var pageContainer = document.querySelector(".page") || document.querySelector("main") || document.body;
             var firstPost = pageContainer.querySelector("article.emerge");
             var searchForm = pageContainer.querySelector("form.site-search");
@@ -492,7 +493,7 @@ yellow.edit = {
     resizePane: function(paneId, paneAction, paneStatus) {
         if (document.getElementById(paneId)) {
             var inlinePane = document.getElementById(paneId);
-            if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete") && inlinePane.classList.contains("yellow-pane-inline")) {
+            if ((paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete") && (inlinePane.classList.contains("yellow-pane-inline") || inlinePane.classList.contains("yellow-pane-above-text"))) {
                 inlinePane.style.position = "relative";
                 inlinePane.style.left = "auto";
                 inlinePane.style.top = "auto";
