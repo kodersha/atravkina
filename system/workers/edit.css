@@ -622,7 +622,7 @@
 .yellow-pane-above-text {
     position: relative !important;
     inset: auto !important;
-    display: block !important;
+    /* Keep display controlled by yellow.toolbox.setVisible(). */
     float: none !important;
     height: auto !important;
     min-height: 0 !important;
