@@ -53,17 +53,15 @@
 <?php
   require_once $this->yellow->system->get("coreExtensionDirectory")."yellow-post-type/post-type.php";
 ?>
-<?php foreach ($pages as $page): ?>
+<?php foreach ($pages as $page):
+  $contentHtml = $page->getContentHtml();
+  $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
+  $post = YellowPostType::process($contentHtml);
+  $contentHtml = $post["content"];
+  $postType = $post["class"];
+?>
   <article class="emerge<?= $postType ? " ".$postType : "" ?>" data-id="<?= htmlspecialchars($page->get("title"), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" data-href="<?= htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
-    <?php
-      $contentHtml = $page->getContentHtml();
-      $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
-
-      $post = YellowPostType::process($contentHtml);
-      $contentHtml = $post["content"];
-      $postType = $post["class"];
-      echo $contentHtml;
-    ?>
+    <?= $contentHtml ?>
   </article>
 <?php endforeach ?>
 
