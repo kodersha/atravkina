@@ -2,34 +2,6 @@
 <?php
   // Convert standalone image paragraphs into semantic figure elements.
   $contentHtml = (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml());
-  // Classify the rendered post body. Regex counting is intentional here:
-  // Yellow may already render media as figure elements before this layout runs.
-  $postType = "";
-  preg_match_all('~<img\\b~i', $contentHtml, $imageMatches);
-  preg_match_all('~<(?:video|iframe)\\b~i', $contentHtml, $videoMatches);
-  $imageCount = count($imageMatches[0]);
-  $videoCount = count($videoMatches[0]);
-  $hasPoetry = preg_match('~<pre\\b[^>]*(?:class=["\\'][^"\\']*\\bpoetry\\b[^"\\']*["\\'])?[^>]*>.*?(?:language-poetry|\\bpoetry\\b).*?</pre>~is', $contentHtml) === 1;
-  $contentWithoutMedia = $contentHtml;
-  if ($hasPoetry) {
-      $contentWithoutMedia = preg_replace('~<pre\\b[^>]*>.*?</pre>~is', '', $contentWithoutMedia);
-  }
-  $contentWithoutMedia = preg_replace('~<figure\\b[^>]*>.*?</figure>~is', '', $contentWithoutMedia);
-  $contentWithoutMedia = preg_replace('~<(?:img|video|iframe)\\b[^>]*>(?:.*?</(?:video|iframe)>)?~is', '', $contentWithoutMedia);
-  $contentWithoutMedia = preg_replace('~<figcaption\\b[^>]*>.*?</figcaption>~is', '', $contentWithoutMedia);
-  $contentWithoutMedia = html_entity_decode(strip_tags($contentWithoutMedia), ENT_QUOTES | ENT_HTML5, "UTF-8");
-  $contentWithoutMedia = trim(preg_replace('/\\s+/u', ' ', $contentWithoutMedia));
-  if ($imageCount > 1) {
-      $postType = "post-gallery";
-  } elseif ($imageCount === 1 && $videoCount === 0 && $contentWithoutMedia === "") {
-      $postType = "post-image";
-  } elseif ($videoCount === 1 && $imageCount === 0 && $contentWithoutMedia === "") {
-      $postType = "post-video";
-  } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $contentWithoutMedia === "") {
-      $postType = "post-poetry";
-  } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && $contentWithoutMedia !== "") {
-      $postType = "post-text";
-  }
   // Remove empty paragraphs after typography and other HTML transformations.
   $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
   $contentHtml = preg_replace(
@@ -39,7 +11,7 @@
   );
 ?>
 
-  <article class="emerge<?= $postType ? " ".$postType : "" ?>">
+  <article class="emerge">
     <?= $contentHtml ?>
     <div class="blog-post-actions">
       <!--yellow-likes-slot-->
