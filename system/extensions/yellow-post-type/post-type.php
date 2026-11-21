@@ -2,7 +2,7 @@
 // Detect semantic post types in rendered Yellow content.
 
 class YellowPostType {
-    const VERSION = "1.0.1";
+    const VERSION = "1.0.2";
 
     public static function process($contentHtml) {
         $contentHtml = (string)$contentHtml;
@@ -18,11 +18,12 @@ class YellowPostType {
         $imageCount = preg_match_all('~<img\b~i', $contentHtml, $unused);
         $videoCount = preg_match_all('~<(?:video|iframe)\b~i', $contentHtml, $unused);
 
-        // Markdown fenced blocks such as ```poetry are rendered as <pre><code class="language-poetry">.
+        // Fenced Markdown blocks are rendered as <pre><code>...</code></pre>.
         $hasPoetry = preg_match(
             '~<pre\b[^>]*>\s*<code\b[^>]*class=["\'][^"\']*\b(?:language-)?poetry\b[^"\']*["\']~is',
             $contentHtml
         ) === 1;
+        $hasCode = preg_match('~<pre\b[^>]*>\s*<code\b~is', $contentHtml) === 1;
 
         $withoutMedia = preg_replace('~<pre\b[^>]*>.*?</pre>~is', '', $contentHtml);
         $withoutMedia = preg_replace('~<figure\b[^>]*>.*?</figure>~is', '', $withoutMedia);
@@ -39,12 +40,14 @@ class YellowPostType {
             $type = "post-gallery";
         } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $text === "") {
             $type = "post-poetry";
-        } elseif ($videoCount > 0 && $imageCount === 0 && !$hasPoetry && $text === "") {
+        } elseif ($hasCode && !$hasPoetry && $imageCount === 0 && $videoCount === 0 && $text === "") {
+            $type = "post-code";
+        } elseif ($videoCount > 0 && $imageCount === 0 && !$hasPoetry && !$hasCode && $text === "") {
             $type = "post-video";
         } elseif ($imageCount === 1) {
             // A single image defines the post type even when text accompanies it.
             $type = "post-image";
-        } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && $text !== "") {
+        } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && !$hasCode && $text !== "") {
             $type = "post-text";
         }
 
