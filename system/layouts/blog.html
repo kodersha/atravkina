@@ -10,10 +10,11 @@
 
   <article class="emerge<?= $postType ? " ".$postType : "" ?>">
     <?= $contentHtml ?>
-    <div class="blog-post-actions">
-      <!--yellow-likes-slot-->
-    </div>
   </article>
+
+  <div class="blog-post-actions">
+    <!--yellow-likes-slot-->
+  </div>
 
 <?php
   // Show Telegram comments only after this public post was successfully sent to the channel.
