@@ -47,8 +47,11 @@ class YellowPostType {
             $type = "post-code";
         } elseif ($videoCount > 0 && $imageCount === 0 && !$hasPoetry && !$hasCode && $text === "") {
             $type = "post-video";
+        } elseif ($leadingImageFigure && $imageCount === 1 && $text === "") {
+            // A single image without accompanying text gets its own post type.
+            $type = "post-singlemage";
         } elseif ($leadingImageFigure && $imageCount === 1) {
-            // A single leading image defines the post type even when text accompanies it.
+            // A single leading image with accompanying text.
             $type = "post-image";
         } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && !$hasCode && $text !== "") {
             $type = "post-text";
