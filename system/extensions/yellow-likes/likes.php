@@ -30,7 +30,7 @@ class YellowLikes {
   if($this->isEditPath($path)||$page->get("layout")!="blog"||!is_string($output)||strpos($output,'class="yellow-likes"')!==false)return null;
   $widget='<div class="yellow-likes" data-yellow-likes><button class="yellow-likes__button" type="button" aria-label="Поставить лайк" aria-pressed="false"><i class="las la-heart-broken"></i><span class="yellow-likes__count">0</span></button></div>';
   if(strpos($output,"<!--yellow-likes-slot-->")!==false)$output=str_replace("<!--yellow-likes-slot-->",$widget,$output);
-  elseif(stripos($output,"</article>")!==false)$output=preg_replace("/<\\/article>/i",$widget."</article>",$output,1);else $output.=$widget;
+  elseif(stripos($output,"</article>")!==false)$output=preg_replace("/(<\\/article>)/i","$1".$widget,$output,1);else $output.=$widget;
   $assets='<link rel="stylesheet" href="/yellow-likes/likes.css"><script src="/yellow-likes/likes.js" defer></script>';
   if(stripos($output,"</head>")!==false)$output=preg_replace("/<\\/head>/i",$assets."</head>",$output,1);else $output=$assets.$output;
   return $output;
@@ -55,18 +55,58 @@ class YellowLikes {
   setcookie($name,$token,array("expires"=>time()+31536000,"path"=>"/","secure"=>$secure,"httponly"=>true,"samesite"=>"Lax"));$_COOKIE[$name]=$token;return hash("sha256",$token);
  }
  private function readLegacy(){
-  $raw=@file_get_contents($this->legacyFile);$prefix="<?php http_response_code(404); exit; ?>\\n";
-  if(is_string($raw)&&strpos($raw,$prefix)===0)$raw=substr($raw,strlen($prefix));
-  $data=is_string($raw)?json_decode($raw,true):array();return is_array($data)?$data:array();
+  $raw=@file_get_contents($this->legacyFile);
+  if(!is_string($raw))return array();
+  $raw=preg_replace('/^<\\?php\\s+http_response_code\\(404\\);\\s*exit;\\s*\\?>\\s*/','',$raw,1);
+  $data=json_decode($raw,true);
+  return is_array($data)?$data:array();
  }
  private function updateVotes($page,$visitor,$action){
-  $h=@fopen($this->dataFile,"c+");if(!$h||!flock($h,LOCK_EX)){if($h)fclose($h);return false;}
-  rewind($h);$raw=stream_get_contents($h);$data=($raw===""||$raw===false)?$this->readLegacy():json_decode($raw,true);if(!is_array($data))$data=array();
-  if(!isset($data[$page])||!is_array($data[$page]))$data[$page]=array();$liked=in_array($visitor,$data[$page],true);
-  if($action=="like"&&!$liked){$data[$page][]=$visitor;$liked=true;}$count=count($data[$page]);$json=json_encode($data,JSON_UNESCAPED_SLASHES);
-  rewind($h);if(!is_string($json)||!ftruncate($h,0)){flock($h,LOCK_UN);fclose($h);return false;}
-  $pos=0;$len=strlen($json);while($pos<$len){$n=fwrite($h,substr($json,$pos));if($n===false||$n===0){flock($h,LOCK_UN);fclose($h);return false;}$pos+=$n;}
-  if(!fflush($h)){flock($h,LOCK_UN);fclose($h);return false;}flock($h,LOCK_UN);fclose($h);return array("count"=>$count,"liked"=>$liked);
+  // Lock a separate file so the data file can be replaced atomically without losing concurrent votes.
+  $lock=@fopen($this->dataDirectory.".votes.lock","c");
+  if(!$lock||!flock($lock,LOCK_EX)){if($lock)fclose($lock);return false;}
+
+  $raw=is_file($this->dataFile)?@file_get_contents($this->dataFile):false;
+  if($raw===false||trim($raw)===""){
+   $data=$this->readLegacy();
+  }else{
+   $data=json_decode($raw,true);
+   // Never overwrite a non-empty, damaged vote store with an empty one.
+   if(!is_array($data)){flock($lock,LOCK_UN);fclose($lock);return false;}
+  }
+  foreach($data as $storedPage=>$visitors){
+   if(!is_array($visitors)){$data[$storedPage]=array();}
+  }
+  if(!isset($data[$page])||!is_array($data[$page]))$data[$page]=array();
+  $liked=in_array($visitor,$data[$page],true);
+  if($action==="like"&&!$liked){$data[$page][]=$visitor;$liked=true;}
+  $count=count($data[$page]);
+  $json=json_encode($data,JSON_UNESCAPED_SLASHES);
+  if(!is_string($json)){flock($lock,LOCK_UN);fclose($lock);return false;}
+
+  // Write a complete temporary file in the same directory, then atomically replace votes.json.
+  $temp=@tempnam($this->dataDirectory,".votes-");
+  if($temp===false){flock($lock,LOCK_UN);fclose($lock);return false;}
+  $handle=@fopen($temp,"wb");
+  $ok=(bool)$handle;
+  if($ok){
+   $offset=0;$length=strlen($json);
+   while($offset<$length){
+    $written=fwrite($handle,substr($json,$offset));
+    if($written===false||$written===0){$ok=false;break;}
+    $offset+=$written;
+   }
+   if($ok&&!fflush($handle))$ok=false;
+   if($ok&&function_exists("fsync")&&!@fsync($handle))$ok=false;
+   fclose($handle);
+  }
+  if($ok){
+   @chmod($temp,0644);
+   $ok=@rename($temp,$this->dataFile);
+  }
+  if(!$ok)@unlink($temp);
+  flock($lock,LOCK_UN);fclose($lock);
+  return $ok?array("count"=>$count,"liked"=>$liked):false;
  }
  private function sendError($error,$status){$this->sendJson(array("error"=>$error),$status);return $status;}
  private function sendJsonHeaders(){header("Content-Type: application/json; charset=utf-8");header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");header("X-Content-Type-Options: nosniff");header("Vary: Cookie");}
