@@ -1,14 +1,15 @@
 # Yellow Post Type
 
-Automatically assigns a semantic CSS class to blog articles based on their rendered content.
+Automatically assigns a semantic CSS class to a blog article based on its rendered content.
 
 Supported classes:
 
-- `post-image` — one image without text.
-- `post-image-text` — one image with accompanying text; the text is moved into a `figcaption` below the image.
-- `post-gallery` — multiple images.
-- `post-video` — one video without other content.
-- `post-poetry` — a single fenced poetry block.
 - `post-text` — text-only post.
+- `post-image` — post with one image. Text accompanying the image remains ordinary post content and is not moved into `figcaption`.
+- `post-gallery` — post with multiple images.
+- `post-poetry` — post containing a fenced ```poetry code block.
+- `post-video` — post containing a video without images or other content.
 
-The extension is loaded by `system/layouts/blog.html`. The common `emerge` class is retained by the layout.
+Standalone image paragraphs are wrapped in `figure`. The extension does not create or modify `figcaption` elements.
+
+The extension is loaded by `system/layouts/blog.html`. The layout keeps the common `emerge` class and appends the detected post class.
