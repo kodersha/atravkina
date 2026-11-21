@@ -5,7 +5,7 @@ Automatically assigns a semantic CSS class to a blog article based on its render
 Supported classes:
 
 - `post-text` — text-only post.
-- `post-image` — post with one image, including an image accompanied by text.
+- `post-singlemage` — post containing exactly one image and no text.\n- `post-image` — post with one image accompanied by text.
 - `post-gallery` — post with multiple images.
 - `post-poetry` — post containing a fenced ```poetry code block.
 - `post-code` — post containing a regular fenced code block.
