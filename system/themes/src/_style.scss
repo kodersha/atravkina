@@ -1,3 +1,5 @@
+@use "mixins" as *;
+
 html {
   background-color: rgb(0, 0, 0);
   overflow-x: hidden;
@@ -29,23 +31,7 @@ body {
 
   cursor: default;
 
-  font-family:
-    "Tilda Sans",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF UI Text",
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
-    "Helvetica",
-    "Arial",
-    sans-serif;
+  font-family: "Tilda Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF UI Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   font-size: 1.125rem;
   line-height: 1.444;
 
@@ -60,16 +46,6 @@ body {
     top: 0;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-  }
-  &::before {
-    content: "Бездарность";
-    position: absolute;
-    text-transform: uppercase;
-    font-weight: 800;
-    font-size: 16.5rem;
-    color: #111;
-    right: -5rem;
-    left: -4rem;
   }
 }
 input,
@@ -160,6 +136,10 @@ article {
   overflow-wrap: break-word;
   word-spacing: normal;
   letter-spacing: normal;
+  background-color: var(--color-black);
+
+
+  @include goo;
 
   & > .post-text {
       position: relative;

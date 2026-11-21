@@ -1,5 +1,8 @@
+@use "variables";
+@use "mixins";
 @use "fonts";
-@use "style";
-@use "pane";
 
 @use "header";
+@use "pane";
+
+@use "style";
