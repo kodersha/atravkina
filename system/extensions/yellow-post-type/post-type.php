@@ -15,6 +15,9 @@ class YellowPostType {
             $contentHtml
         );
 
+        // Image-based post classes apply only when the first content element is an image figure.
+        $leadingImageFigure = preg_match('~^\s*<figure\b[^>]*>\s*(?:<a\b[^>]*>\s*)?<img\b~i', $contentHtml) === 1;
+
         $imageCount = preg_match_all('~<img\b~i', $contentHtml, $unused);
         $videoCount = preg_match_all('~<(?:video|iframe)\b~i', $contentHtml, $unused);
 
@@ -36,7 +39,7 @@ class YellowPostType {
         ));
 
         $type = "";
-        if ($imageCount > 1) {
+        if ($leadingImageFigure && $imageCount > 1) {
             $type = "post-gallery";
         } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $text === "") {
             $type = "post-poetry";
@@ -44,8 +47,8 @@ class YellowPostType {
             $type = "post-code";
         } elseif ($videoCount > 0 && $imageCount === 0 && !$hasPoetry && !$hasCode && $text === "") {
             $type = "post-video";
-        } elseif ($imageCount === 1) {
-            // A single image defines the post type even when text accompanies it.
+        } elseif ($leadingImageFigure && $imageCount === 1) {
+            // A single leading image defines the post type even when text accompanies it.
             $type = "post-image";
         } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && !$hasCode && $text !== "") {
             $type = "post-text";
