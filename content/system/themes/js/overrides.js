@@ -38,8 +38,6 @@ document.querySelectorAll('article.emerge[data-href]').forEach((article) => {
     });
 
     const textGroups = [...article.querySelectorAll(':scope > .post-text')];
-    const hasText = textGroups.some((group) => group.textContent.trim().length > 0);
-    article.classList.toggle('has-text', hasText);
 
     const contentElements = [...article.children].filter((element) =>
         !element.matches('.blog-read')
