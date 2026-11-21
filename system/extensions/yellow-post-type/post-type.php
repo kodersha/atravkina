@@ -42,11 +42,12 @@ class YellowPostType {
         $withoutMedia = preg_replace('~</(?:video|iframe)>~is', '', $withoutMedia);
         $text = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($withoutMedia), ENT_QUOTES | ENT_HTML5, "UTF-8")));
 
+        $hasCaption = preg_match("~<figcaption\\b~i", $contentHtml) === 1;
         $type = "";
         if ($imageCount > 1) {
             $type = "post-gallery";
         } elseif ($imageCount === 1 && $videoCount === 0) {
-            $type = $text === "" ? "post-image" : "post-image-text";
+            $type = ($hasCaption || $text !== "") ? "post-image-text" : "post-image";
         } elseif ($videoCount === 1 && $imageCount === 0 && $text === "") {
             $type = "post-video";
         } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $text === "") {
