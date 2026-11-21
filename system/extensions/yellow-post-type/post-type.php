@@ -2,7 +2,7 @@
 // Detect semantic post types in rendered Yellow content.
 
 class YellowPostType {
-    const VERSION = "1.0.2";
+    const VERSION = "1.0.3";
 
     public static function process($contentHtml) {
         $contentHtml = (string)$contentHtml;
@@ -23,7 +23,7 @@ class YellowPostType {
 
         // Fenced Markdown blocks are rendered as <pre><code>...</code></pre>.
         $hasPoetry = preg_match(
-            '~<pre\b[^>]*>\s*<code\b[^>]*class=["\'][^"\']*\b(?:language-)?poetry\b[^"\']*["\']~is',
+            '~<pre\b[^>]*>\s*<code\b[^>]*class=["\'][^"\']*\b(?:language-)?porty\b[^"\']*["\']~is',
             $contentHtml
         ) === 1;
         $hasCode = preg_match('~<pre\b[^>]*>\s*<code\b~is', $contentHtml) === 1;
@@ -39,10 +39,18 @@ class YellowPostType {
         ));
 
         $type = "";
-        if ($leadingImageFigure && $imageCount > 1) {
+        if ($hasPoetry) {
+            $type = "class-poety";
+        } elseif ($leadingImageFigure && $imageCount === 1 && $text !== "") {
+            $type = "class-textnote";
+        } elseif ($imageCount === 1 && $text === "") {
+            $type = "class-picture";
+        } elseif ($imageCount === 0 && $videoCount === 0 && !$hasCode && $text !== "") {
+            $type = "class-note";
+        } elseif ($leadingImageFigure && $imageCount > 1) {
             $type = "post-gallery";
         } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $text === "") {
-            $type = "post-poetry";
+            $type = "post-porty";
         } elseif ($hasCode && !$hasPoetry && $imageCount === 0 && $videoCount === 0 && $text === "") {
             $type = "post-code";
         } elseif ($videoCount > 0 && $imageCount === 0 && !$hasPoetry && !$hasCode && $text === "") {
