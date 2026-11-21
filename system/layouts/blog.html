@@ -2,6 +2,34 @@
 <?php
   // Convert standalone image paragraphs into semantic figure elements.
   $contentHtml = (new YellowTypograph())->applyTypograph($this->yellow->page->getContentHtml());
+  // Determine a post type from its rendered content, preserving the emerge hook.
+  $postType = "";
+  $contentDocument = new DOMDocument("1.0", "UTF-8");
+  $previousLibxmlState = libxml_use_internal_errors(true);
+  $contentDocument->loadHTML("<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"></head><body>".$contentHtml."</body></html>");
+  libxml_clear_errors();
+  libxml_use_internal_errors($previousLibxmlState);
+  $contentXPath = new DOMXPath($contentDocument);
+  $imageCount = $contentXPath->query("//body//img")->length;
+  $videoCount = $contentXPath->query("//body//video | //body//iframe")->length;
+  $poetryBlocks = $contentXPath->query("//body//pre[contains(concat(' ', normalize-space(@class), ' '), ' poetry ') or .//code[contains(concat(' ', normalize-space(@class), ' '), ' language-poetry ') or contains(concat(' ', normalize-space(@class), ' '), ' poetry ')]]");
+  $hasPoetry = $poetryBlocks->length === 1;
+  $textContent = trim(preg_replace('/\\s+/u', ' ', $contentDocument->textContent));
+  $contentWithoutMedia = $contentHtml;
+  $contentWithoutMedia = preg_replace('~<figure\\b[^>]*>.*?</figure>~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = preg_replace('~<(?:img|video|iframe)\\b[^>]*>(?:.*?</(?:video|iframe)>)?~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = trim(strip_tags($contentWithoutMedia));
+  if ($imageCount > 1) {
+      $postType = "post-gallery";
+  } elseif ($imageCount === 1 && $videoCount === 0 && $contentWithoutMedia === "") {
+      $postType = "post-image";
+  } elseif ($videoCount === 1 && $imageCount === 0 && $contentWithoutMedia === "") {
+      $postType = "post-video";
+  } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $contentWithoutMedia === "") {
+      $postType = "post-poetry";
+  } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && $textContent !== "") {
+      $postType = "post-text";
+  }
   // Remove empty paragraphs after typography and other HTML transformations.
   $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
   $contentHtml = preg_replace(
@@ -11,7 +39,7 @@
   );
 ?>
 
-  <article class="emerge">
+  <article class="emerge<?= $postType ? " ".$postType : "" ?>">
     <?= $contentHtml ?>
     <div class="blog-post-actions">
       <!--yellow-likes-slot-->
