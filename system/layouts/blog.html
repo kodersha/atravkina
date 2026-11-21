@@ -16,6 +16,8 @@
   $hasPoetry = $poetryBlocks->length === 1;
   $textContent = trim(preg_replace('/\\s+/u', ' ', $contentDocument->textContent));
   $contentWithoutMedia = $contentHtml;
+  if ($hasPoetry) $contentWithoutMedia = preg_replace('~<pre\\b[^>]*>.*?</pre>~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = preg_replace('~<figcaption\\b[^>]*>.*?</figcaption>~is', '', $contentWithoutMedia);
   $contentWithoutMedia = preg_replace('~<figure\\b[^>]*>.*?</figure>~is', '', $contentWithoutMedia);
   $contentWithoutMedia = preg_replace('~<(?:img|video|iframe)\\b[^>]*>(?:.*?</(?:video|iframe)>)?~is', '', $contentWithoutMedia);
   $contentWithoutMedia = trim(strip_tags($contentWithoutMedia));
