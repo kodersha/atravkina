@@ -14,7 +14,7 @@ The worker automatically adds a heart and counter to pages with the `blog` layou
 
 ## Storage and visitor recognition
 
-Vote data is stored in this directory. The visitor receives a random, HttpOnly, SameSite=Lax cookie valid for one year. Only a SHA-256 hash of the cookie value is stored with each vote. No IP address or user-agent is collected.
+Vote data is stored in this directory. The visitor receives a random, HttpOnly, SameSite=Lax cookie valid for one year. Only a SHA-256 hash of the cookie value is stored with each vote. No IP address or user-agent is collected. Updates are serialized with a separate lock file and written to a temporary file before an atomic rename, reducing the risk of lost or partially written votes. Existing data in `votes.php` is imported into `votes.json` on the first request when no current JSON store exists.
 
 The cookie is an anti-duplicate convenience, not strong identity verification. Visitors can vote again after clearing cookies or using another browser/device. The endpoint checks the request method, JSON content type and Origin when provided.
 
