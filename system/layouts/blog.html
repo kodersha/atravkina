@@ -9,9 +9,39 @@
       '<figure>$1</figure>',
       $contentHtml
   );
+
+  // Determine the post type from the final rendered HTML.
+  $postType = "";
+  preg_match_all('~<img\\b~i', $contentHtml, $imageMatches);
+  preg_match_all('~<(?:video|iframe)\\b~i', $contentHtml, $videoMatches);
+  $imageCount = count($imageMatches[0]);
+  $videoCount = count($videoMatches[0]);
+  $hasPoetry = preg_match('~<pre\\b[^>]*>.*?poetry.*?</pre>~is', $contentHtml) === 1;
+
+  $contentWithoutMedia = $contentHtml;
+  if ($hasPoetry) {
+      $contentWithoutMedia = preg_replace('~<pre\\b[^>]*>.*?</pre>~is', '', $contentWithoutMedia);
+  }
+  $contentWithoutMedia = preg_replace('~<figure\\b[^>]*>.*?</figure>~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = preg_replace('~<(?:img|video|iframe)\\b[^>]*>~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = preg_replace('~</(?:video|iframe)>~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = preg_replace('~<figcaption\\b[^>]*>.*?</figcaption>~is', '', $contentWithoutMedia);
+  $contentWithoutMedia = trim(preg_replace('/\\s+/u', ' ', html_entity_decode(strip_tags($contentWithoutMedia), ENT_QUOTES | ENT_HTML5, "UTF-8")));
+
+  if ($imageCount > 1) {
+      $postType = "post-gallery";
+  } elseif ($imageCount === 1 && $videoCount === 0 && $contentWithoutMedia === "") {
+      $postType = "post-image";
+  } elseif ($videoCount === 1 && $imageCount === 0 && $contentWithoutMedia === "") {
+      $postType = "post-video";
+  } elseif ($hasPoetry && $imageCount === 0 && $videoCount === 0 && $contentWithoutMedia === "") {
+      $postType = "post-poetry";
+  } elseif ($imageCount === 0 && $videoCount === 0 && !$hasPoetry && $contentWithoutMedia !== "") {
+      $postType = "post-text";
+  }
 ?>
 
-  <article class="emerge">
+  <article class="emerge<?= $postType ? " ".$postType : "" ?>">
     <?= $contentHtml ?>
     <div class="blog-post-actions">
       <!--yellow-likes-slot-->
