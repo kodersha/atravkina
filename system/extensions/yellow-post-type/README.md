@@ -5,9 +5,10 @@ Automatically assigns a semantic CSS class to a blog article based on its render
 Supported classes:
 
 - `post-text` — text-only post.
-- `post-image` — post with one image. Text accompanying the image remains ordinary post content and is not moved into `figcaption`.
+- `post-image` — post with one image, including an image accompanied by text.
 - `post-gallery` — post with multiple images.
 - `post-poetry` — post containing a fenced ```poetry code block.
+- `post-code` — post containing a regular fenced code block.
 - `post-video` — post containing a video without images or other content.
 
 Standalone image paragraphs are wrapped in `figure`. The extension does not create or modify `figcaption` elements.
