@@ -675,7 +675,6 @@ yellow.edit = {
         var data = new FormData();
         data.append("action", "telegram-repost");
         data.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
-        data.append("postlocation", yellow.page.location);
         fetch(window.location.pathname, {method:"POST", body:data, credentials:"same-origin"})
             .then(function(response) {
                 return response.json().then(function(result) {
