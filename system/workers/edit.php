@@ -274,6 +274,7 @@ class YellowEdit {
                 case "preview":     $statusCode = $this->processRequestPreview($scheme, $address, $base, $location, $fileName); break;
                 case "upload":      $statusCode = $this->processRequestUpload($scheme, $address, $base, $location, $fileName); break;
                 case "media-cleanup": $statusCode = $this->processRequestMediaCleanup(); break;
+                case "telegram-repost": $statusCode = $this->processRequestTelegramRepost(); break;
             }
         } elseif ($this->checkUserUnauth($scheme, $address, $base, $location, $fileName)) {
             $this->yellow->lookup->requestHandler = "core";
@@ -319,6 +320,41 @@ class YellowEdit {
         return $statusCode;
     }
 
+
+    // Manually publish the saved post to Telegram.
+    public function processRequestTelegramRepost() {
+        if (!$this->response->isUserAccess("edit")) {
+            $this->yellow->sendStatus(403);
+            return 403;
+        }
+        $token = $this->yellow->page->getRequest("yellowcsrftoken");
+        if (is_string_empty($token) || $token!=$this->yellow->toolbox->getCookie("yellowcsrftoken")) {
+            $this->yellow->sendStatus(403);
+            return 403;
+        }
+        $location = $this->yellow->page->getRequest("postlocation");
+        if (!is_string($location) || $location=="" || strpos($location, "/")!==0 || strpos($location, "..")!==false) {
+            $this->yellow->sendStatus(400);
+            return 400;
+        }
+        $page = $this->yellow->content->find($location);
+        if (!$page || $page->get("layout")!="blog" || in_array(strtolower(trim((string)$page->get("status"))), array("draft", "hide"), true) || !$this->response->isUserAccess("edit", $location)) {
+            $this->yellow->sendStatus(404);
+            return 404;
+        }
+        $published = false;
+        foreach ($this->yellow->extension->data as $value) {
+            $object = $value["object"];
+            if (method_exists($object, "publishManual")) {
+                $published = $object->publishManual($page);
+                break;
+            }
+        }
+        header("Content-Type: application/json; charset=utf-8");
+        header("Cache-Control: no-store");
+        echo json_encode(array("ok" => $published, "message" => $published ? "Публикация отправлена в Telegram." : "Не удалось отправить публикацию. Проверьте журнал ошибок."));
+        return $published ? 200 : 502;
+    }
 
     // Scan/delete media files not referenced by published Markdown posts
     public function processRequestMediaCleanup() {
