@@ -310,7 +310,6 @@ yellow.edit = {
                 "<div id=\"yellow-pane-create-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
                 "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+(this.isEditFeedMode() ? "Отменить" : this.getText("CancelButton"))+"</a>"+
                 "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+(this.isEditFeedMode() ? "Сохранить" : this.getText("CreateButton"))+"</a>"+
-                (editPostMode ? "<a href=\"#\" id=\"yellow-pane-create-telegram\" class=\"yellow-toolbar-btn\" data-action=\"telegram-repost\">Репост</a>" : "")+
                 "</div>"+
                 "</form>";
                 break;
