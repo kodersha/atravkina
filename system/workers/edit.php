@@ -338,6 +338,7 @@ class YellowEdit {
             return 400;
         }
         $page = $this->yellow->content->find($location);
+        if ($page) $page->rawData = $this->yellow->toolbox->readFile($fileName);
         if (!$page || $page->get("layout")!="blog" || in_array(strtolower(trim((string)$page->get("status"))), array("draft", "hide"), true) || !$this->response->isUserAccess("edit", $location)) {
             $this->yellow->sendStatus(404);
             return 404;
