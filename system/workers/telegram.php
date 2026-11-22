@@ -1,5 +1,5 @@
 <?php
-// Publish public blog posts to Telegram once, on their first public page render.
+// Publish blog posts to Telegram only on an explicit editor action.
 
 class YellowTelegram {
     const VERSION = "1.0.0";
@@ -16,14 +16,24 @@ class YellowTelegram {
     }
 
 
-    // Publish immediately after Yellow Edit has written a new or updated post.
-    // Keep the public-render hook as a fallback for posts created outside the editor.
-    public function onSaveContentFile($page) {
-        $this->publishPage($page);
-    }
+    // Automatic publishing is intentionally disabled. Telegram is a manual action.
 
-    public function onParsePageOutput($page, $outputData) {
-        $this->publishPage($page);
+    public function publishManual($page) {
+        if (!$page || $page->get("layout")!="blog") return false;
+        $status = strtolower(trim((string)$page->get("status")));
+        if ($status=="draft" || $status=="hide") return false;
+        if (!is_file($this->configFile) || !is_readable($this->configFile)) {
+            $this->yellow->toolbox->log("error", "Telegram: configuration file is missing or unreadable");
+            return false;
+        }
+        $config = include $this->configFile;
+        if (!is_array($config) || empty($config["bot_token"]) || empty($config["channel"])) {
+            $this->yellow->toolbox->log("error", "Telegram: bot token or channel is not configured");
+            return false;
+        }
+        $location = $page->getLocation();
+        if (!is_string($location) || $location=="") return false;
+        return $this->publishOnce($page, $config, $location, true);
     }
 
     private function publishPage($page) {
@@ -41,12 +51,12 @@ class YellowTelegram {
         $this->publishOnce($page, $config, $location);
     }
 
-    private function publishOnce($page, $config, $location) {
+    private function publishOnce($page, $config, $location, $force = false) {
         $handle = @fopen($this->stateFile, "c+");
         if (!$handle || !flock($handle, LOCK_EX)) {
             if ($handle) fclose($handle);
             $this->yellow->toolbox->log("error", "Telegram: cannot lock publication state");
-            return;
+            return false;
         }
 
         rewind($handle);
@@ -57,12 +67,10 @@ class YellowTelegram {
         if (!is_array($state)) $state = array();
 
         $key = hash("sha256", $location);
-        if (isset($state[$key]) && (
-            (isset($state[$key]["status"]) && in_array($state[$key]["status"], array("sent", "sending"), true))
-        )) {
+        if (!$force && isset($state[$key]) && isset($state[$key]["status"]) && in_array($state[$key]["status"], array("sent", "sending"), true)) {
             flock($handle, LOCK_UN);
             fclose($handle);
-            return;
+            return false;
         }
 
         $state[$key] = array("status" => "sending", "time" => time());
@@ -94,16 +102,18 @@ class YellowTelegram {
                 // Keep an uncertain/failed attempt reserved: Telegram may have
                 // accepted the request even if the response was lost. This
                 // favors at-most-once delivery over accidental duplicate posts.
-                $state[$key] = array("status" => "sending", "time" => time(), "post_url" => $url);
+                $state[$key] = array("status" => "failed", "time" => time(), "post_url" => $url);
             }
             $this->writeState($handle, $prefix, $state);
             flock($handle, LOCK_UN);
             fclose($handle);
         }
-        if (!$sent) $this->yellow->toolbox->log("error", "Telegram: publication failed for ".$location);
-        else {
-            $this->yellow->toolbox->log("info", "Telegram: published ".$location);
+        if (!$sent) {
+            $this->yellow->toolbox->log("error", "Telegram: publication failed for ".$location);
+            return false;
         }
+        $this->yellow->toolbox->log("info", "Telegram: published ".$location);
+        return true;
     }
 
     private function buildMessage($content, $url) {
