@@ -14,7 +14,12 @@
   <article class="emerge">
     <?= $contentHtml ?>
     <div class="blog-post-actions">
-      <!--yellow-likes-slot-->
+      <div class="yellow-likes" data-yellow-likes>
+        <button class="yellow-likes__button" type="button" aria-label="Поставить лайк" aria-pressed="false">
+          <i class="las la-heart-broken" aria-hidden="true"></i>
+          <span class="yellow-likes__count">0</span>
+        </button>
+      </div>
     </div>
   </article>
 
