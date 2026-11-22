@@ -472,12 +472,15 @@ yellow.edit = {
                 if (!document.getElementById(paneId+"-text").readOnly) {
                     paneAction = this.paneAction = this.getPaneAction(paneId);
                     var className = "yellow-toolbar-btn yellow-toolbar-btn-"+paneAction;
-                    if (document.getElementById(paneId+"-submit").className != className) {
-                        document.getElementById(paneId+"-submit").className = className;
-                        document.getElementById(paneId+"-submit").innerHTML = this.getText(paneAction+"Button");
-                        document.getElementById(paneId+"-submit").setAttribute("data-arguments", "action:"+paneAction);
+                    var submitButton = document.getElementById(paneId+"-submit");
+                    if (submitButton.className != className) {
+                        submitButton.className = className;
+                        submitButton.innerHTML = this.getText(paneAction+"Button");
                         this.resizePane(paneId, paneAction, paneStatus);
                     }
+                    // Keep the submit action in sync even when the button already has
+                    // the expected class (notably the dedicated delete pane).
+                    submitButton.setAttribute("data-arguments", "action:"+paneAction);
                 }
                 break;
         }
