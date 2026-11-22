@@ -1,16 +1,26 @@
-/* Yellow Pane */
-
 .yellow-bar {
   font-size: 0.875rem;
   max-width: 31.25rem;
   width: -webkit-fill-available;
+
+  .yellow-bar-left,
+  .yellow-bar-right,
+  .yellow-bar-banner {
+    a {
+      text-decoration: none;
+      color: rgb(250, 198, 112);
+      border-bottom: 1px solid rgba(250, 198, 112, 0.2);
+
+      &:hover {
+        color: rgb(243, 121, 37);
+        border-color: rgba(243, 121, 37, 0.2);
+      }
+    }
+  }
 }
-.yellow-bar a {
-  color: rgb(250, 198, 112);
-}
-.yellow-bar a:hover {
-  color: rgb(243, 121, 37);
-}
+
+/* Yellow Pane */
+
 .yellow-pane {
   background-color: rgb(0, 0, 0);
   color: rgb(255, 255, 255);
@@ -30,26 +40,11 @@
   padding: unset;
   margin: unset;
 }
-.yellow-toolbar a:hover {
-  background-color: rgb(250, 198, 112);
-  border-color: rgba(250, 198, 112, 0.2);
-  color: rgb(0, 0, 0);
-}
-.yellow-toolbar .yellow-toolbar-btn-create,
-.yellow-toolbar .yellow-toolbar-btn-edit {
-  background-color: transparent;
-  border-color: transparent;
-  color: rgb(250, 198, 112);
-}
 .yellow-toolbar li {
   display: inline-block !important;
 }
 .yellow-toolbar li .yellow-toolbar-btn-separator {
   display: none !important;
-}
-.yellow-toolbar li a:hover {
-  background-color: transparent;
-  color: rgb(250, 198, 112);
 }
 .yellow-toolbar-right {
   display: flex;
@@ -67,13 +62,6 @@
 }
 .yellow-arrow::after {
   border-bottom-color: rgb(0, 0, 0);
-}
-.yellow-dropdown a {
-  color: rgb(250, 198, 112);
-}
-.yellow-dropdown a:hover {
-  background-color: transparent;
-  color: rgb(243, 121, 37);
 }
 #yellow-pane-create-toolbar-buttons,
 #yellow-pane-delete-toolbar-buttons,

@@ -1,3 +1,5 @@
+@use 'mixin' as *;
+
 html {
   background-color: rgb(0, 0, 0);
   overflow-x: hidden;
@@ -163,6 +165,8 @@ article {
     margin-right: unset;
     margin-left: unset;
     margin-top: unset;
+
+    @include goo;
   }
 
   p {

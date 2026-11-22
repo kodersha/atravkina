@@ -1,0 +1,7 @@
+@mixin goo($radius: var(--border-radius), $blur: 6, $strength: 19, $threshold: -9) {
+  $filter: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><defs><filter id='goo'><feGaussianBlur in='SourceGraphic' stdDeviation='#{$blur}' result='blur'/><feColorMatrix in='blur' mode='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 #{$strength} #{$threshold}' result='goo'/><feComposite in2='goo' in='SourceGraphic' operator='atop'/></filter></defs></svg>#goo";
+
+  -webkit-filter: url("#{$filter}");
+  filter: url("#{$filter}");
+  border-radius: $radius;
+}
