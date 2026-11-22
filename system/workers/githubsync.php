@@ -3,7 +3,7 @@
 // Synchronizes only content/ and media/ with the configured GitHub repository.
 
 class YellowGithubSync {
-    const VERSION = "1.3.0";
+    const VERSION = "1.3.1";
 
     public $yellow;
     public $settings = array();
@@ -302,7 +302,8 @@ class YellowGithubSync {
             $response = curl_exec($curl);
             $status = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
             $error = curl_error($curl);
-            curl_close($curl);
+            // PHP 8.0+ releases the cURL handle automatically; curl_close() is deprecated in PHP 8.5.
+            if (PHP_VERSION_ID < 80000) curl_close($curl);
         } else {
             $options = array(
                 "method" => $method,
