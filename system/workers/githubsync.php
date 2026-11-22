@@ -92,18 +92,32 @@ class YellowGithubSync {
         }
         foreach (file($file, FILE_IGNORE_NEW_LINES) as $line) {
             $line = trim($line);
+            // Ignore a UTF-8 BOM on the first line and blank/comment lines.
+            $line = preg_replace("/^\\xEF\\xBB\\xBF/", "", $line);
             if ($line=="" || $line[0]=="#" || $line[0]==";") continue;
             $separator = strpos($line, ":");
             if ($separator===false) continue;
             $key = trim(substr($line, 0, $separator));
             $value = trim(substr($line, $separator+1));
-            if ($key!="") $settings[$key] = $value;
+            // Accept both plain values and values wrapped in matching quotes.
+            if (strlen($value)>=2) {
+                $first = substr($value, 0, 1);
+                $last = substr($value, -1);
+                if (($first=="\"" && $last=="\"") || ($first=="'" && $last=="'")) {
+                    $value = substr($value, 1, -1);
+                }
+            }
+            if ($key!="") $settings[$key] = trim($value);
         }
         return $settings;
     }
 
     private function syncChanges($scope = "all") {
         if (!$this->isConfigured()) return 400;
+
+        // Validate credentials and repository access once, before scanning files.
+        $access = $this->validateAccess();
+        if ($access!=200) return $access;
 
         $directories = array();
         if ($scope=="all" || $scope=="content") $directories["content"] = $this->contentDirectory();
@@ -143,8 +157,12 @@ class YellowGithubSync {
                 continue;
             }
             if (isset($state[$path]) && $state[$path]==$fingerprint) continue;
-            if ($this->uploadFile($fileName, $path)==200) {
+            $uploadStatus = $this->uploadFile($fileName, $path);
+            if ($uploadStatus==200) {
                 $state[$path] = $fingerprint;
+            } elseif ($this->isAccessFailure($uploadStatus)) {
+                // Stop immediately: further requests would only repeat the auth/permission error.
+                return $uploadStatus;
             } else {
                 $status = 500;
             }
@@ -158,8 +176,11 @@ class YellowGithubSync {
             if (($scope=="content" && strpos($path, "content/")!==0) ||
                 ($scope=="media" && strpos($path, "media/")!==0)) continue;
             if (isset($files[$path])) continue;
-            if ($this->deleteFile($path)==200) {
+            $deleteStatus = $this->deleteFile($path);
+            if ($deleteStatus==200) {
                 unset($state[$path]);
+            } elseif ($this->isAccessFailure($deleteStatus)) {
+                return $deleteStatus;
             } else {
                 $status = 500;
             }
@@ -171,6 +192,28 @@ class YellowGithubSync {
         }
         $this->yellow->toolbox->log($status==200 ? "info" : "error", "GitHub Sync: ".$scope." synchronization finished with status ".$status);
         return $status;
+    }
+
+    private function validateAccess() {
+        $url = "https://api.github.com/repos/".$this->repository();
+        $result = $this->request("GET", $url);
+        if ($result["status"]==200) return 200;
+
+        $message = isset($result["json"]["message"]) ? $result["json"]["message"] : $result["error"];
+        if ($result["status"]==401) {
+            $this->yellow->toolbox->log("error", "GitHub Sync: authentication failed (HTTP 401). The Token in yellow-github-sync.ini was rejected. Check that it is current and copied without extra characters.");
+        } elseif ($result["status"]==403) {
+            $this->yellow->toolbox->log("error", "GitHub Sync: access denied (HTTP 403). Check token permissions and repository access. GitHub: ".$message);
+        } elseif ($result["status"]==404) {
+            $this->yellow->toolbox->log("error", "GitHub Sync: repository not found or not accessible: ".$this->repository().". Check Repository and token access.");
+        } else {
+            $this->yellow->toolbox->log("error", "GitHub Sync: repository access check failed (HTTP ".$result["status"]."): ".$message);
+        }
+        return $result["status"] ? $result["status"] : 500;
+    }
+
+    private function isAccessFailure($status) {
+        return $status==401 || $status==403;
     }
 
     private function uploadFile($fileName, $path) {
