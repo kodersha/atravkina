@@ -326,6 +326,7 @@ yellow.edit = {
                 "<div id=\"yellow-pane-edit-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
                 "<a href=\"#\" id=\"yellow-pane-edit-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a>"+
                 "<a href=\"#\" id=\"yellow-pane-edit-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("EditButton")+"</a>"+
+                (editPostMode ? "<a href=\"#\" id=\"yellow-pane-edit-telegram\" class=\"yellow-toolbar-btn\" data-action=\"telegram-repost\">Репост</a>" : "")+
                 "</div>"+
                 "</form>";
                 break;
@@ -658,10 +659,42 @@ yellow.edit = {
                 case "close":       this.processClose(); break;
                 case "media-cleanup-scan": this.processMediaCleanup("scan"); break;
                 case "media-cleanup-delete": this.processMediaCleanup("delete"); break;
+                case "telegram-repost": this.processTelegramRepost(); break;
             }
         }
     },
     
+    // Send the currently saved post to Telegram explicitly.
+    processTelegramRepost: function() {
+        var thisObject = this;
+        var button = document.getElementById("yellow-pane-edit-telegram");
+        if (!button || button.getAttribute("aria-disabled")=="true") return;
+        button.setAttribute("aria-disabled", "true");
+        var originalText = button.textContent;
+        button.textContent = "Отправка…";
+        var data = new FormData();
+        data.append("action", "telegram-repost");
+        data.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
+        data.append("postlocation", yellow.page.location);
+        fetch(window.location.pathname, {method:"POST", body:data, credentials:"same-origin"})
+            .then(function(response) {
+                return response.json().then(function(result) {
+                    if (!response.ok || !result.ok) throw new Error(result.message || ("HTTP " + response.status));
+                    return result;
+                });
+            })
+            .then(function(result) {
+                button.textContent = "Отправлено";
+                window.setTimeout(function() { button.textContent = originalText; }, 2500);
+            })
+            .catch(function(error) {
+                button.textContent = "Ошибка";
+                window.alert(error.message || "Не удалось отправить публикацию в Telegram.");
+                window.setTimeout(function() { button.textContent = originalText; }, 2500);
+            })
+            .then(function() { button.removeAttribute("aria-disabled"); });
+    },
+
     // Request unused media scan/deletion
     processMediaCleanup: function(mode) {
         var box = document.getElementById("yellow-pane-media-cleanup-results"); if (!box) return;
