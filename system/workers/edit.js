@@ -310,6 +310,7 @@ yellow.edit = {
                 "<div id=\"yellow-pane-create-actions\" class=\"yellow-toolbar yellow-toolbar-right\">"+
                 "<a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+(this.isEditFeedMode() ? "Отменить" : this.getText("CancelButton"))+"</a>"+
                 "<a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+(this.isEditFeedMode() ? "Сохранить" : this.getText("CreateButton"))+"</a>"+
+                (editPostMode ? "<a href=\"#\" id=\"yellow-pane-create-telegram\" class=\"yellow-toolbar-btn\" data-action=\"telegram-repost\">Репост</a>" : "")+
                 "</div>"+
                 "</form>";
                 break;
@@ -667,7 +668,7 @@ yellow.edit = {
     // Send the currently saved post to Telegram explicitly.
     processTelegramRepost: function() {
         var thisObject = this;
-        var button = document.getElementById("yellow-pane-edit-telegram");
+        var button = document.getElementById("yellow-pane-create-telegram") || document.getElementById("yellow-pane-edit-telegram");
         if (!button || button.getAttribute("aria-disabled")=="true") return;
         button.setAttribute("aria-disabled", "true");
         var originalText = button.textContent;
