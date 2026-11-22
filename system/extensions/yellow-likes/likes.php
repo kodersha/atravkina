@@ -10,7 +10,7 @@ class YellowLikes {
   $asset=trim($location,"/");
   if($asset==="yellow-likes/likes.css")return $this->sendAsset("likes.css","text/css; charset=utf-8");
   if($asset==="yellow-likes/likes.js")return $this->sendAsset("likes.js","application/javascript; charset=utf-8");
-  if(rtrim($location,"/")."/"!=$this->endpoint)return 0; $this->sendJsonHeaders();
+  if("/".trim($location,"/")."/"!=$this->endpoint)return 0; $this->sendJsonHeaders();
   if(!isset($_SERVER["REQUEST_METHOD"])||$_SERVER["REQUEST_METHOD"]!="POST")return $this->sendError("method_not_allowed",405);
   $type=isset($_SERVER["CONTENT_TYPE"])?strtolower(trim(explode(";",$_SERVER["CONTENT_TYPE"])[0])):"";
   if($type!="application/json")return $this->sendError("unsupported_media_type",415);
