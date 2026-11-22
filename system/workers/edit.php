@@ -274,7 +274,7 @@ class YellowEdit {
                 case "preview":     $statusCode = $this->processRequestPreview($scheme, $address, $base, $location, $fileName); break;
                 case "upload":      $statusCode = $this->processRequestUpload($scheme, $address, $base, $location, $fileName); break;
                 case "media-cleanup": $statusCode = $this->processRequestMediaCleanup(); break;
-                case "telegram-repost": $statusCode = $this->processRequestTelegramRepost(); break;
+                case "telegram-repost": $statusCode = $this->processRequestTelegramRepost($fileName); break;
             }
         } elseif ($this->checkUserUnauth($scheme, $address, $base, $location, $fileName)) {
             $this->yellow->lookup->requestHandler = "core";
@@ -322,7 +322,7 @@ class YellowEdit {
 
 
     // Manually publish the saved post to Telegram.
-    public function processRequestTelegramRepost() {
+    public function processRequestTelegramRepost($fileName) {
         if (!$this->response->isUserAccess("edit")) {
             $this->yellow->sendStatus(403);
             return 403;
@@ -332,7 +332,7 @@ class YellowEdit {
             $this->yellow->sendStatus(403);
             return 403;
         }
-        $location = $this->yellow->page->getRequest("postlocation");
+        $location = $this->yellow->lookup->findContentLocationFromFile($fileName);
         if (!is_string($location) || $location=="" || strpos($location, "/")!==0 || strpos($location, "..")!==false) {
             $this->yellow->sendStatus(400);
             return 400;
