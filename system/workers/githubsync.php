@@ -3,7 +3,7 @@
 // Synchronizes only content/ and media/ with the configured GitHub repository.
 
 class YellowGithubSync {
-    const VERSION = "1.2.0";
+    const VERSION = "1.3.0";
 
     public $yellow;
     public $settings = array();
