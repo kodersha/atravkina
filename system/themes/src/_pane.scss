@@ -82,10 +82,6 @@
   align-items: center;
   justify-content: space-between;
   width: -moz-available;
-  margin-bottom: 1rem;
-  margin-right: 1rem;
-  margin-left: 1rem;
-  margin-top: 1rem;
 }
 
 
@@ -100,8 +96,10 @@
   height: auto !important;
   min-height: 0 !important;
   max-width: 100%;
-  margin: 0 0 1.5rem;
-  padding: 1rem;
+  padding-bottom: unset;
+  padding-right: unset;
+  padding-left: unset;
+  padding-top: unset;
   z-index: 1;
 
   #yellow-pane-create-toolbar {
@@ -131,4 +129,15 @@
       padding: 0.5rem 0.75rem;
     }
   }
+}
+
+/* Editor */
+
+.yellow-pane-inline [id$="-toolbar"],
+.yellow-pane-above-text [id$="-toolbar"] {
+  border-bottom: none;
+}
+
+.yellow-toolbar.yellow-toolbar-right {
+  margin-top: 1rem;
 }

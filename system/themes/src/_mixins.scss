@@ -1,5 +1,0 @@
-@mixin goo {
-  -webkit-filter: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><defs><filter id='goo'><feGaussianBlur in='SourceGraphic' stdDeviation='6' result='blur'></feGaussianBlur><feColorMatrix in='blur' mode='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 19 -9' result='goo'></feColorMatrix><feComposite in2='goo' in='SourceGraphic' operator='atop'></feComposite></filter></defs></svg>#goo");
-  filter: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><defs><filter id='goo'><feGaussianBlur in='SourceGraphic' stdDeviation='6' result='blur'></feGaussianBlur><feColorMatrix in='blur' mode='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 19 -9' result='goo'></feColorMatrix><feComposite in2='goo' in='SourceGraphic' operator='atop'></feComposite></filter></defs></svg>#goo");
-  border-radius: var(--border-radius);
-}

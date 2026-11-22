@@ -50,18 +50,20 @@
   <input type="hidden" name="clean-url" />
 </form>
 
-<?php
-  require_once $this->yellow->system->get("coreExtensionDirectory")."yellow-post-type/post-type.php";
-?>
-<?php foreach ($pages as $page):
-  $contentHtml = $page->getContentHtml();
-  $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
-  $post = YellowPostType::process($contentHtml);
-  $contentHtml = $post["content"];
-  $postType = $post["class"];
-?>
-  <article class="emerge<?= $postType ? " ".$postType : "" ?>" data-id="<?= htmlspecialchars($page->get("title"), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" data-href="<?= htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
-    <?= $contentHtml ?>
+<?php foreach ($pages as $page): ?>
+  <article class="emerge" data-id="<?= htmlspecialchars($page->get("title"), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>" data-href="<?= htmlspecialchars($page->getLocation(true), ENT_QUOTES | ENT_HTML5, "UTF-8") ?>"<?php if (isset($fadeOpacity[(string)$page->get("title")])): ?> data-post-opacity="<?= number_format($fadeOpacity[(string)$page->get("title")], 4, ".", "") ?>"<?php endif ?>>
+    <?php
+      $contentHtml = $page->getContentHtml();
+      $contentHtml = (new YellowTypograph())->applyTypograph($contentHtml, 0, false);
+
+      $contentHtml = preg_replace(
+          '~<p\\b[^>]*>\\s*((?:<a\\b[^>]*>\\s*)?<img\\b[^>]*>(?:\\s*</a>)?)\\s*</p>~i',
+          '<figure>$1</figure>',
+          $contentHtml
+      );
+      $contentHtml = preg_replace('~<p(?:\\s[^>]*)?>\\s*</p>~i', "", $contentHtml);
+      echo $contentHtml;
+    ?>
   </article>
 <?php endforeach ?>
 

@@ -1,7 +1,15 @@
 <IfModule mod_rewrite.c>
-RewriteEngine on
+RewriteEngine On
+
+# HTTP → HTTPS
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 DirectoryIndex index.html yellow.php
+
 RewriteRule ^(content|system)/ error [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ yellow.php [L]
