@@ -134,7 +134,7 @@ class YellowTelegram {
         $fullText = implode("\n\n", $paragraphs);
         $imageCount = preg_match_all("/<img\\b/i", $content);
         $needsSiteLink = $imageCount > 1 || $this->telegramUtf16Length($fullText) > 4096;
-        $linkLabel = "На сайте →";
+        $linkLabel = "Читать в блоге →";
         $separator = $fullText !== "" ? "\n\n" : "";
         $bodyLimit = 4096;
         if ($needsSiteLink) $bodyLimit -= $this->telegramUtf16Length($separator.$linkLabel);
@@ -177,7 +177,7 @@ class YellowTelegram {
         $imageCount = preg_match_all("/<img\\b/i", $content);
         $accepted = array();
         $omitted = $imageCount > 1;
-        $linkLabel = "На сайте →";
+        $linkLabel = "Читать в блоге →";
         $linkValid = is_string($url) && filter_var($url, FILTER_VALIDATE_URL) && preg_match('/^https?:\\/\\//i', $url);
         $linkLength = $linkValid ? $this->telegramUtf16Length("\\n\\n".$linkLabel) : 0;
         $limit = 1024;
