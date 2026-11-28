@@ -30,3 +30,4 @@ jobs:
             GITHUB_SYNC_CRON.md
             content/**
             media/**
+            system/themes/src/**
