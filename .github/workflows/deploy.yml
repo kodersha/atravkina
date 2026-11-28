@@ -44,6 +44,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /public_html/
+          state-name: .ftp-deploy-sync-state-v2.json
           exclude: |
             **/.git*
             **/.git*/**
