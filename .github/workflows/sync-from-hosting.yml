@@ -3,7 +3,7 @@ name: Sync from hosting
 on:
   schedule:
     - cron: '0 21 * * *'   # каждый день в 21:00 UTC (02:00 по Алматы)
-  workflow_dispatch:        # возможность запустить вручную кнопкой
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -25,8 +25,9 @@ jobs:
         run: |
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<'EOF'
           set ssl:verify-certificate no
-          mirror --delete /public_html/contents ./contents
-          mirror --delete /public_html/media ./media
+          set cmd:fail-exit yes
+          mirror --delete --exclude-glob media /domains/atravkina.ru/public_html/content ./content
+          mirror --delete /domains/atravkina.ru/public_html/content/media ./media
           quit
           EOF
 
