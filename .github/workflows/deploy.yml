@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    name: Compile SCSS and upload site via SFTP
+    name: Compile SCSS and upload site via SSH
     runs-on: ubuntu-latest
 
     steps:
@@ -54,33 +54,41 @@ jobs:
             --exclude='system/extensions/yellow-likes/' \
             --exclude='system/trash/'
 
-      - name: Configure SSH for SFTP
+      - name: Configure SSH
         env:
-          SFTP_KEY: ${{ secrets.SFTP_KEY }}
-          SFTP_KNOWN_HOSTS: ${{ secrets.SFTP_KNOWN_HOSTS }}
+          SFTP_KEY: \${{ secrets.SFTP_KEY }}
+          SFTP_KNOWN_HOSTS: \${{ secrets.SFTP_KNOWN_HOSTS }}
         run: |
           install -d -m 700 ~/.ssh
-          printf '%s\\n' "$SFTP_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SFTP_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          printf '%s\\n' "$SFTP_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SFTP_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      - name: Install lftp
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes lftp
-
-      - name: Upload files via SFTP
+      - name: Verify SSH access and remote rsync
         env:
-          SFTP_HOST: ${{ secrets.SFTP_HOST }}
-          SFTP_USER: ${{ secrets.SFTP_USER }}
-          SFTP_PORT: ${{ secrets.SFTP_PORT }}
-          SFTP_PATH: ${{ secrets.SFTP_PATH }}
+          SFTP_HOST: \${{ secrets.SFTP_HOST }}
+          SFTP_USER: \${{ secrets.SFTP_USER }}
+          SFTP_PORT: \${{ secrets.SFTP_PORT }}
         run: |
-          lftp -e "
-            set sftp:connect-program 'ssh -a -x -i ~/.ssh/deploy_key -p $SFTP_PORT';
-            set sftp:auto-confirm no;
-            open sftp://$SFTP_USER@$SFTP_HOST;
-            mirror --reverse --verbose --no-perms --parallel=4 $RUNNER_TEMP/site-deploy/ $SFTP_PATH/;
-            bye
-          "
+          ssh -i ~/.ssh/deploy_key \
+            -p "$SFTP_PORT" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SFTP_USER@$SFTP_HOST" \
+            'command -v rsync'
+
+      - name: Upload files via rsync over SSH
+        env:
+          SFTP_HOST: \${{ secrets.SFTP_HOST }}
+          SFTP_USER: \${{ secrets.SFTP_USER }}
+          SFTP_PORT: \${{ secrets.SFTP_PORT }}
+          SFTP_PATH: \${{ secrets.SFTP_PATH }}
+        run: |
+          rsync -avz \
+            --no-perms \
+            --omit-dir-times \
+            -e "ssh -i ~/.ssh/deploy_key -p $SFTP_PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            "$RUNNER_TEMP/site-deploy/" \
+            "$SFTP_USER@$SFTP_HOST:$SFTP_PATH/"
