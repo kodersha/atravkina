@@ -31,3 +31,4 @@ jobs:
             content/**
             media/**
             system/themes/src/**
+            system/trash/**
