@@ -1,0 +1,13 @@
+{
+  "useMarkdownLinks": true,
+  "newLinkFormat": "relative",
+  "attachmentFolderPath": "media/images",
+  "alwaysUpdateLinks": true,
+  "userIgnoreFilters": [
+    "/.git/",
+    "/.github/",
+    "/system/",
+    "/node_modules/",
+    "/favicon/"
+  ]
+}
