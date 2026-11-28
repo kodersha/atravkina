@@ -1,0 +1,48 @@
+name: Inspect hosting files
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Download website files over FTPS
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p ftp-snapshot
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<'LFTP'
+          set cmd:fail-exit yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate yes
+          pwd
+          mirror --verbose --parallel=2 \
+            --exclude-glob .git \
+            --exclude-glob .git/** \
+            --exclude-glob cache/** \
+            --exclude-glob tmp/** \
+            --exclude-glob logs/** \
+            --exclude-glob backup/** \
+            --exclude-glob backups/** \
+            . ftp-snapshot
+          bye
+          LFTP
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: atravkina-ftp-snapshot
+          path: ftp-snapshot/
+          if-no-files-found: error
+          retention-days: 1
