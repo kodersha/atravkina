@@ -1,0 +1,59 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: site-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Compile SCSS and upload site
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dart Sass
+        run: npm install --global sass
+
+      - name: Compile SCSS
+        run: |
+          sass --version
+          sass --style=compressed --no-source-map --quiet-deps \
+            system/themes/src/build.scss \
+            system/themes/custom.css
+
+      - name: Upload site via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .github/**
+            README.md
+            GITHUB_SYNC_CRON.md
+            content/**
+            favicon/**
+            media/**
+            system/themes/src/**
+            system/themes/custom.css.map
+            system/trash/**
