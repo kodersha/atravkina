@@ -3,7 +3,7 @@
 // https://github.com/kodersha/yellow-fotorama
 
 class YellowFotorama {
-    const VERSION = "2.0.0";
+    const VERSION = "2.1.0";
 
     public $yellow;
     private $assetsRequired = false;
@@ -24,12 +24,10 @@ class YellowFotorama {
     private function getGalleryHtml($page, $text) {
         $names = preg_split('/\\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
         if (empty($names)) {
-            $page->error(400, "Fotorama: add one or more image filenames.");
             return "";
         }
 
-        // Read the configured image directory, but compare against Yellow's
-        // public media locations rather than filesystem paths or regexes.
+        // Resolve image names against Yellow's configured public image directory.
         $imageDirectory = trim(str_replace("\\", "/", $this->yellow->system->get("coreImageLocation")), "/");
         $imagePrefix = "/".$imageDirectory."/";
         $filesByName = array();
@@ -37,29 +35,27 @@ class YellowFotorama {
         foreach ($this->yellow->media->index() as $mediaFile) {
             $location = "/".ltrim(str_replace("\\", "/", $mediaFile->location), "/");
             if (strpos($location, $imagePrefix)!==0) continue;
-            $name = basename($location);
-            $filesByName[$name] = $mediaFile;
+            $filesByName[basename($location)] = $mediaFile;
         }
 
+        // A missing image must not turn an otherwise valid post into an HTTP 404.
+        // Keep the requested order and render every image that is available.
         $selected = array();
-        $missing = array();
         foreach ($names as $name) {
-            // Only accept simple filenames. Paths are intentionally not allowed.
             if ($name!==basename(str_replace("\\", "/", $name)) ||
                 $name=="." || $name==".." ||
                 strpos($name, "/")!==false || strpos($name, "\\")!==false) {
-                $missing[] = $name;
                 continue;
             }
-            if (isset($filesByName[$name])) {
-                $selected[] = $filesByName[$name];
-            } else {
-                $missing[] = $name;
-            }
+            if (!isset($filesByName[$name])) continue;
+
+            $mediaFile = $filesByName[$name];
+            if (!is_file($mediaFile->fileName)) continue;
+            $selected[] = $mediaFile;
         }
 
-        if (!empty($missing)) {
-            $page->error(404, "Fotorama: image files not found in ".$imagePrefix.": ".implode(", ", $missing));
+        // If none of the requested files exists, omit the gallery but preserve the page.
+        if (empty($selected)) {
             return "";
         }
 
@@ -69,8 +65,6 @@ class YellowFotorama {
 
         foreach ($selected as $mediaFile) {
             $diskPath = $mediaFile->fileName;
-            if (!is_file($diskPath)) continue;
-
             $publicLocation = "/".ltrim(str_replace("\\", "/", $mediaFile->location), "/");
             $src = $serverBase.$publicLocation;
             $imageInfo = @getimagesize($diskPath);
@@ -101,7 +95,7 @@ class YellowFotorama {
 
         // Check the current page first.
         if (!$this->assetsRequired && method_exists($page, "getContentRaw")) {
-            $this->assetsRequired = preg_match('/\[fotorama(?:\s+[^\]]*)?\]/i', $page->getContentRaw())==1;
+            $this->assetsRequired = preg_match('/\\[fotorama(?:\\s+[^\\]]*)?\\]/i', $page->getContentRaw())==1;
         }
 
         // Blog posts are rendered after the listing page header, so their
@@ -109,7 +103,7 @@ class YellowFotorama {
         if (!$this->assetsRequired && $page->get("layout")=="blog-start") {
             foreach ($this->yellow->page->getPages("blog") as $blogPage) {
                 if (method_exists($blogPage, "getContentRaw") &&
-                    preg_match('/\[fotorama(?:\s+[^\]]*)?\]/i', $blogPage->getContentRaw())) {
+                    preg_match('/\\[fotorama(?:\\s+[^\\]]*)?\\]/i', $blogPage->getContentRaw())) {
                     $this->assetsRequired = true;
                     break;
                 }
@@ -122,9 +116,9 @@ class YellowFotorama {
         $assetDirectory = trim($this->yellow->system->get("coreAssetLocation"), "/");
         $assetUrl = $base."/".$assetDirectory."/";
 
-        $html = '<link rel="stylesheet" href="'.htmlspecialchars($assetUrl."fotorama.css", ENT_QUOTES, "UTF-8").'" />'."\n";
-        $html .= '<script defer src="'.htmlspecialchars($assetUrl."jquery.min.js", ENT_QUOTES, "UTF-8").'"></script>'."\n";
-        $html .= '<script defer src="'.htmlspecialchars($assetUrl."fotorama.js", ENT_QUOTES, "UTF-8").'"></script>'."\n";
+        $html = '<link rel="stylesheet" href="'.htmlspecialchars($assetUrl."fotorama.css", ENT_QUOTES, "UTF-8").'" />'."\\n";
+        $html .= '<script defer src="'.htmlspecialchars($assetUrl."jquery.min.js", ENT_QUOTES, "UTF-8").'"></script>'."\\n";
+        $html .= '<script defer src="'.htmlspecialchars($assetUrl."fotorama.js", ENT_QUOTES, "UTF-8").'"></script>'."\\n";
         return $html;
     }
 }
