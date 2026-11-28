@@ -21,6 +21,11 @@
 .yellow-likes__button:active {
     transform: scale(.94);
 }
+.yellow-likes__button i {
+    display: inline-block;
+    font-size: 1.2em;
+    line-height: 1;
+}
 .yellow-likes__button svg {
     width: 1.2em;
     height: 1.2em;
