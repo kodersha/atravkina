@@ -3,7 +3,7 @@
 // https://github.com/kodersha/yellow-fotorama
 
 class YellowFotorama {
-    const VERSION = "2.1.0";
+    const VERSION = "2.2.0";
 
     public $yellow;
     private $assetsRequired = false;
@@ -18,46 +18,41 @@ class YellowFotorama {
             return null;
         }
         $this->assetsRequired = true;
-        return $this->getGalleryHtml($page, $text);
+
+        // A gallery must never prevent Yellow from rendering the containing page.
+        try {
+            return $this->getGalleryHtml($page, $text);
+        } catch (Throwable $e) {
+            if ($this->yellow->system->get("coreDebugMode")>=1) {
+                $this->yellow->toolbox->log("error", "Fotorama: ".$e->getMessage());
+            }
+            return "";
+        }
     }
 
     private function getGalleryHtml($page, $text) {
-        $names = preg_split('/\\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
-        if (empty($names)) {
-            return "";
-        }
+        $names = preg_split('/\\s+/', trim((string)$text), -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($names)) return "";
 
-        // Resolve image names against Yellow's configured public image directory.
         $imageDirectory = trim(str_replace("\\", "/", $this->yellow->system->get("coreImageLocation")), "/");
+        if ($imageDirectory=="") return "";
         $imagePrefix = "/".$imageDirectory."/";
-        $filesByName = array();
-
-        foreach ($this->yellow->media->index() as $mediaFile) {
-            $location = "/".ltrim(str_replace("\\", "/", $mediaFile->location), "/");
-            if (strpos($location, $imagePrefix)!==0) continue;
-            $filesByName[basename($location)] = $mediaFile;
-        }
-
-        // A missing image must not turn an otherwise valid post into an HTTP 404.
-        // Keep the requested order and render every image that is available.
         $selected = array();
+
+        // Resolve only the requested files instead of scanning the entire media tree.
         foreach ($names as $name) {
-            if ($name!==basename(str_replace("\\", "/", $name)) ||
-                $name=="." || $name==".." ||
-                strpos($name, "/")!==false || strpos($name, "\\")!==false) {
+            $name = str_replace("\\", "/", $name);
+            if ($name!==basename($name) || $name=="." || $name==".." || $name=="") continue;
+
+            $mediaFile = $this->yellow->media->find($imagePrefix.$name);
+            if (!$mediaFile || empty($mediaFile->fileName) || !is_file($mediaFile->fileName) || !is_readable($mediaFile->fileName)) {
                 continue;
             }
-            if (!isset($filesByName[$name])) continue;
-
-            $mediaFile = $filesByName[$name];
-            if (!is_file($mediaFile->fileName)) continue;
             $selected[] = $mediaFile;
         }
 
-        // If none of the requested files exists, omit the gallery but preserve the page.
-        if (empty($selected)) {
-            return "";
-        }
+        // Missing or unreadable images should only be omitted, not turn the post into a 404.
+        if (empty($selected)) return "";
 
         $serverBase = rtrim($this->yellow->system->get("coreServerBase"), "/");
         $html = '<div class="fotorama-gallery"><div class="fotorama" data-allowfullscreen="true" data-fit="contain">';
@@ -68,17 +63,18 @@ class YellowFotorama {
             $publicLocation = "/".ltrim(str_replace("\\", "/", $mediaFile->location), "/");
             $src = $serverBase.$publicLocation;
             $imageInfo = @getimagesize($diskPath);
-            $width = is_array($imageInfo) ? $imageInfo[0] : 0;
-            $height = is_array($imageInfo) ? $imageInfo[1] : 0;
+            $width = is_array($imageInfo) ? (int)$imageInfo[0] : 0;
+            $height = is_array($imageInfo) ? (int)$imageInfo[1] : 0;
 
             $alt = $mediaFile->get("title");
-            if (trim($alt)=="") $alt = basename($diskPath);
+            if (!is_string($alt) || trim($alt)=="") $alt = basename($diskPath);
 
             $html .= '<img src="'.htmlspecialchars($src, ENT_QUOTES, "UTF-8").'"';
             if ($width>0 && $height>0) {
                 $html .= ' width="'.$width.'" height="'.$height.'"';
             }
             $html .= ' alt="'.htmlspecialchars($alt, ENT_QUOTES, "UTF-8").'" />';
+
             $modified = $this->yellow->toolbox->getFileModified($diskPath);
             if ($modified>$lastModified) $lastModified = $modified;
         }
@@ -93,13 +89,10 @@ class YellowFotorama {
     public function onParsePageExtra($page, $name) {
         if ($name!="header") return null;
 
-        // Check the current page first.
         if (!$this->assetsRequired && method_exists($page, "getContentRaw")) {
             $this->assetsRequired = preg_match('/\\[fotorama(?:\\s+[^\\]]*)?\\]/i', $page->getContentRaw())==1;
         }
 
-        // Blog posts are rendered after the listing page header, so their
-        // shortcuts must be detected before the header assets are generated.
         if (!$this->assetsRequired && $page->get("layout")=="blog-start") {
             foreach ($this->yellow->page->getPages("blog") as $blogPage) {
                 if (method_exists($blogPage, "getContentRaw") &&
