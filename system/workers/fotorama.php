@@ -3,7 +3,7 @@
 // https://github.com/kodersha/yellow-fotorama
 
 class YellowFotorama {
-    const VERSION = "2.2.0";
+    const VERSION = "2.3.0";
 
     public $yellow;
     private $assetsRequired = false;
@@ -36,8 +36,8 @@ class YellowFotorama {
 
         // Resolve image files directly from Yellow's configured filesystem paths.
         // YellowMedia::find() performs a directory scan and can fail on custom media paths.
-        $imageLocation = str_replace("\\\\", "/", $this->yellow->system->get("coreImageLocation"));
-        $mediaLocation = str_replace("\\\\", "/", $this->yellow->system->get("coreMediaLocation"));
+        $imageLocation = str_replace("\\", "/", $this->yellow->system->get("coreImageLocation"));
+        $mediaLocation = str_replace("\\", "/", $this->yellow->system->get("coreMediaLocation"));
         $mediaDirectory = $this->yellow->system->get("coreMediaDirectory");
         $imageRelative = ltrim($imageLocation, "/");
 
@@ -50,7 +50,7 @@ class YellowFotorama {
         $selected = array();
 
         foreach ($names as $name) {
-            $name = str_replace("\\\\", "/", $name);
+            $name = str_replace("\\", "/", $name);
             if ($name!==basename($name) || $name=="." || $name==".." || $name=="") continue;
 
             $diskPath = $imageDirectory.DIRECTORY_SEPARATOR.$name;
