@@ -2,7 +2,7 @@ name: Sync from hosting
 
 on:
   schedule:
-    - cron: '0 21 * * *'   # каждый день в 21:00 UTC (02:00 по Алматы)
+    - cron: '0 21 * * *' # каждый день в 02:00 по Алматы
   workflow_dispatch:
 
 permissions:
@@ -26,8 +26,14 @@ jobs:
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<'EOF'
           set ssl:verify-certificate no
           set cmd:fail-exit yes
-          mirror --delete --exclude-glob media /domains/atravkina.ru/public_html/content ./content
-          mirror --delete /domains/atravkina.ru/public_html/content/media ./media
+
+          # Проверяем оба удалённых каталога до начала синхронизации.
+          cd /domains/atravkina.ru/public_html/content
+          cd /domains/atravkina.ru/public_html/media/images
+
+          # Возвращаемся к корню и синхронизируем только нужные каталоги.
+          mirror --delete /domains/atravkina.ru/public_html/content ./content
+          mirror --delete /domains/atravkina.ru/public_html/media/images ./media/images
           quit
           EOF
 
