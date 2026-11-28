@@ -56,4 +56,5 @@ jobs:
             media/**
             system/themes/src/**
             system/themes/custom.css.map
+            system/extensions/yellow-likes/votes.json
             system/trash/**
