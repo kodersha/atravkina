@@ -56,8 +56,8 @@ jobs:
 
       - name: Configure SSH
         env:
-          SFTP_KEY: \${{ secrets.SFTP_KEY }}
-          SFTP_KNOWN_HOSTS: \${{ secrets.SFTP_KNOWN_HOSTS }}
+          SFTP_KEY: ${{ secrets.SFTP_KEY }}
+          SFTP_KNOWN_HOSTS: ${{ secrets.SFTP_KNOWN_HOSTS }}
         run: |
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SFTP_KEY" > ~/.ssh/deploy_key
@@ -67,9 +67,9 @@ jobs:
 
       - name: Verify SSH access and remote rsync
         env:
-          SFTP_HOST: \${{ secrets.SFTP_HOST }}
-          SFTP_USER: \${{ secrets.SFTP_USER }}
-          SFTP_PORT: \${{ secrets.SFTP_PORT }}
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
         run: |
           ssh -i ~/.ssh/deploy_key \
             -p "$SFTP_PORT" \
@@ -81,10 +81,10 @@ jobs:
 
       - name: Upload files via rsync over SSH
         env:
-          SFTP_HOST: \${{ secrets.SFTP_HOST }}
-          SFTP_USER: \${{ secrets.SFTP_USER }}
-          SFTP_PORT: \${{ secrets.SFTP_PORT }}
-          SFTP_PATH: \${{ secrets.SFTP_PATH }}
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+          SFTP_PATH: ${{ secrets.SFTP_PATH }}
         run: |
           rsync -avz \
             --no-perms \
