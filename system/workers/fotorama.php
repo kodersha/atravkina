@@ -34,46 +34,51 @@ class YellowFotorama {
         $names = preg_split('/\\s+/', trim((string)$text), -1, PREG_SPLIT_NO_EMPTY);
         if (empty($names)) return "";
 
-        $imageDirectory = trim(str_replace("\\", "/", $this->yellow->system->get("coreImageLocation")), "/");
-        if ($imageDirectory=="") return "";
-        $imagePrefix = "/".$imageDirectory."/";
-        $selected = array();
+        // Resolve image files directly from Yellow's configured filesystem paths.
+        // YellowMedia::find() performs a directory scan and can fail on custom media paths.
+        $imageLocation = str_replace("\\\\", "/", $this->yellow->system->get("coreImageLocation"));
+        $mediaLocation = str_replace("\\\\", "/", $this->yellow->system->get("coreMediaLocation"));
+        $mediaDirectory = $this->yellow->system->get("coreMediaDirectory");
+        $imageRelative = ltrim($imageLocation, "/");
 
-        // Resolve only the requested files instead of scanning the entire media tree.
-        foreach ($names as $name) {
-            $name = str_replace("\\", "/", $name);
-            if ($name!==basename($name) || $name=="." || $name==".." || $name=="") continue;
-
-            $mediaFile = $this->yellow->media->find($imagePrefix.$name);
-            if (!$mediaFile || empty($mediaFile->fileName) || !is_file($mediaFile->fileName) || !is_readable($mediaFile->fileName)) {
-                continue;
-            }
-            $selected[] = $mediaFile;
+        if ($mediaLocation!="" && strpos($imageLocation, $mediaLocation)===0) {
+            $imageRelative = substr($imageLocation, strlen($mediaLocation));
         }
 
-        // Missing or unreadable images should only be omitted, not turn the post into a 404.
+        $imageDirectory = rtrim($mediaDirectory, "/\\\\").DIRECTORY_SEPARATOR.
+            str_replace("/", DIRECTORY_SEPARATOR, trim($imageRelative, "/"));
+        $selected = array();
+
+        foreach ($names as $name) {
+            $name = str_replace("\\\\", "/", $name);
+            if ($name!==basename($name) || $name=="." || $name==".." || $name=="") continue;
+
+            $diskPath = $imageDirectory.DIRECTORY_SEPARATOR.$name;
+            if (is_file($diskPath) && is_readable($diskPath)) {
+                $selected[] = array("path"=>$diskPath, "name"=>$name);
+            }
+        }
+
+        // A missing image must never make the containing post unavailable.
         if (empty($selected)) return "";
 
         $serverBase = rtrim($this->yellow->system->get("coreServerBase"), "/");
+        $imageUrl = rtrim($imageLocation, "/")."/";
         $html = '<div class="fotorama-gallery"><div class="fotorama" data-allowfullscreen="true" data-fit="contain">';
         $lastModified = 0;
 
-        foreach ($selected as $mediaFile) {
-            $diskPath = $mediaFile->fileName;
-            $publicLocation = "/".ltrim(str_replace("\\", "/", $mediaFile->location), "/");
-            $src = $serverBase.$publicLocation;
+        foreach ($selected as $image) {
+            $diskPath = $image["path"];
+            $src = $serverBase.$imageUrl.rawurlencode($image["name"]);
             $imageInfo = @getimagesize($diskPath);
             $width = is_array($imageInfo) ? (int)$imageInfo[0] : 0;
             $height = is_array($imageInfo) ? (int)$imageInfo[1] : 0;
-
-            $alt = $mediaFile->get("title");
-            if (!is_string($alt) || trim($alt)=="") $alt = basename($diskPath);
 
             $html .= '<img src="'.htmlspecialchars($src, ENT_QUOTES, "UTF-8").'"';
             if ($width>0 && $height>0) {
                 $html .= ' width="'.$width.'" height="'.$height.'"';
             }
-            $html .= ' alt="'.htmlspecialchars($alt, ENT_QUOTES, "UTF-8").'" />';
+            $html .= ' alt="'.htmlspecialchars($image["name"], ENT_QUOTES, "UTF-8").'" />';
 
             $modified = $this->yellow->toolbox->getFileModified($diskPath);
             if ($modified>$lastModified) $lastModified = $modified;
